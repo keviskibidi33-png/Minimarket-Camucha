@@ -1,0 +1,32 @@
+{
+  "sampleSale": {
+    "documentType": "Boleta",
+    "paymentMethod": "Efectivo",
+    "items": [
+      {
+        "productId": 1,
+        "quantity": 3,
+        "unitPrice": 3.50
+      },
+      {
+        "productId": 2,
+        "quantity": 2,
+        "unitPrice": 4.00
+      }
+    ],
+    "amountPaid": 50.00
+  },
+  "invoiceSale": {
+    "documentType": "Factura",
+    "paymentMethod": "Tarjeta",
+    "customerId": 1,
+    "items": [
+      {
+        "productId": 1,
+        "quantity": 5,
+        "unitPrice": 3.50
+      }
+    ]
+  }
+}
+

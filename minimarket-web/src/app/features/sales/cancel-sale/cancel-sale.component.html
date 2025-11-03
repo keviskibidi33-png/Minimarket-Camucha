@@ -1,0 +1,68 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-6">
+      <button 
+        (click)="cancel()"
+        class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+        Anular Venta
+      </h1>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+          <span class="material-symbols-outlined align-middle mr-2">warning</span>
+          Al anular esta venta, el stock de los productos será restaurado automáticamente.
+        </p>
+      </div>
+
+      <form [formGroup]="cancelForm" (ngSubmit)="onSubmit()">
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Razón de Anulación <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            formControlName="reason"
+            rows="4"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Ingrese la razón por la cual se anula esta venta..."
+            [class.border-red-500]="cancelForm.get('reason')?.invalid && cancelForm.get('reason')?.touched"></textarea>
+          @if (cancelForm.get('reason')?.invalid && cancelForm.get('reason')?.touched) {
+            <p class="mt-1 text-sm text-red-500">
+              @if (cancelForm.get('reason')?.errors?.['required']) {
+                La razón de anulación es requerida
+              } @else if (cancelForm.get('reason')?.errors?.['maxlength']) {
+                La razón no puede exceder 500 caracteres
+              }
+            </p>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4">
+          <button
+            type="button"
+            (click)="cancel()"
+            class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="cancelForm.invalid || isLoading()"
+            class="px-6 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isLoading()) {
+              <span class="material-symbols-outlined animate-spin mr-2 inline-block">refresh</span>
+            }
+            Anular Venta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

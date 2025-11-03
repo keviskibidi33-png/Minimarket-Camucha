@@ -1,0 +1,668 @@
+================================================================================
+                    AGENTE DE PROYECTO MINIMARKET
+                    Documentación de Desarrollo
+                    Fecha: 2024
+================================================================================
+
+ÍNDICE
+------
+1. Resumen Ejecutivo
+2. Componentes Desarrollados
+3. Configuración y Servicios
+4. Estructura de Rutas
+5. Tareas Completadas
+6. Tareas Pendientes / Futuras
+7. Notas de Implementación
+8. Referencias de Diseño
+
+================================================================================
+1. RESUMEN EJECUTIVO
+================================================================================
+
+Este documento registra todo el desarrollo realizado para el proyecto Minimarket
+Camucha, enfocado en la alineación pixel-perfect del frontend Angular con los
+archivos HTML de referencia proporcionados.
+
+PROYECTO: MinimarketCamucha
+FRAMEWORK: Angular 18+ con Standalone Components
+UI FRAMEWORK: Angular Material 18+ + Tailwind CSS
+ESTILOS: Tailwind CSS con configuración personalizada basada en referencias
+
+OBJETIVO PRINCIPAL:
+- Crear sistema de tienda online (página de usuario)
+- Mantener/mejorar admin panel existente
+- Mantener Tailwind CSS como complemento
+- Alinear diseño exactamente con archivos HTML de referencia
+- Prioridad: Página de usuario primero, luego admin panel
+
+================================================================================
+2. COMPONENTES DESARROLLADOS
+================================================================================
+
+2.1 COMPONENTES DE TIENDA (Página de Usuario)
+---------------------------------------------
+
+A) StoreHeader Component
+   - Ubicación: src/app/shared/components/store-header/
+   - Funcionalidad:
+     * Header con logo y navegación
+     * Barra de búsqueda
+     * Icono de carrito con contador de items
+     * Icono de usuario
+     * Responsive con menú móvil
+   - Colores: Verde primario (#4CAF50) para tienda
+
+B) StoreFooter Component
+   - Ubicación: src/app/shared/components/store-footer/
+   - Funcionalidad:
+     * Footer con enlaces, información de contacto
+     * Redes sociales
+     * Copyright
+
+C) ProductCard Component
+   - Ubicación: src/app/shared/components/product-card/
+   - Funcionalidad:
+     * Card reutilizable para productos
+     * Imagen del producto
+     * Nombre y precio
+     * Botón "Add to Cart"
+     * Estado de stock (sin stock, disponible)
+     * Enlace a detalle de producto
+
+D) Home Component (Tienda)
+   - Ubicación: src/app/features/store/home/
+   - Funcionalidad:
+     * Hero section / Carousel
+     * Productos destacados
+     * Categorías populares
+     * Ofertas especiales
+     * Integración con StoreHeader y StoreFooter
+
+E) Products Component (Listado)
+   - Ubicación: src/app/features/store/products/
+   - Funcionalidad:
+     * Sidebar con filtros (precio, categorías)
+     * Grid de productos con ProductCard
+     * Ordenamiento (precio, nombre, popularidad)
+     * Vista grid/list
+     * Paginación
+     * Breadcrumbs
+
+F) Product Detail Component
+   - Ubicación: src/app/features/store/product-detail/
+   - Funcionalidad:
+     * Galería de imágenes
+     * Información detallada del producto
+     * Selector de cantidad
+     * Botón agregar al carrito
+     * Información de stock
+     * Breadcrumbs
+
+G) Cart Component
+   - Ubicación: src/app/features/store/cart/
+   - Funcionalidad:
+     * Lista de productos en carrito
+     * Actualizar cantidad de items
+     * Eliminar items
+     * Código de descuento
+     * Resumen de pedido (subtotal, envío, descuento, total)
+     * Botón "Proceed to Payment"
+
+H) Checkout Components
+   - Ubicación: src/app/features/store/checkout/
+   
+   H.1) Shipping Component
+        * Paso 1: Información de envío
+        * Formulario: email, nombre, apellido, dirección, ciudad, región
+        * Método de envío (despacho a domicilio / retiro en tienda)
+        * Resumen de pedido en sidebar
+        
+   H.2) Payment Component
+        * Paso 2: Método de pago
+        * Opciones: Tarjeta, Efectivo, Transferencia
+        * Formulario de datos de tarjeta (si aplica)
+        * Resumen de pedido en sidebar
+        
+   H.3) Confirmation Component
+        * Paso 3: Revisar y confirmar
+        * Resumen de información de envío
+        * Resumen de método de pago
+        * Lista de productos
+        * Total final
+        * Botón confirmar pedido
+
+I) CheckoutStepper Component
+   - Ubicación: src/app/shared/components/checkout-stepper/
+   - Funcionalidad:
+     * Stepper visual para los 3 pasos del checkout
+     * Indicador de paso actual
+     * Navegación visual entre pasos
+
+2.2 COMPONENTES DE ADMIN PANEL
+-------------------------------
+
+A) Login Component (Corregido)
+   - Ubicación: src/app/features/auth/login/
+   - Cambios realizados:
+     * Colores actualizados a azul #2A629A (primary-admin-dark)
+     * Placeholder colors actualizados (placeholder-light/dark)
+     * Estilos alineados con referencia HTML
+     * Font family: Inter
+     * Atributos data-cy agregados para testing
+
+B) Users Component (Nuevo)
+   - Ubicación: src/app/features/admin/users/
+   - Funcionalidad:
+     * Tabla de usuarios con columnas:
+       - Nombre de Usuario
+       - Email
+       - Rol (badges con colores)
+       - Fecha de Creación
+       - Acciones (editar, eliminar)
+     * Búsqueda por nombre o email
+     * Filtros por rol (Todos, Gerente, Vendedor)
+     * Paginación
+     * Botón "Crear Nuevo Usuario"
+     * Header con navegación
+     * Datos mock por ahora (pendiente conectar con backend)
+
+================================================================================
+3. CONFIGURACIÓN Y SERVICIOS
+================================================================================
+
+3.1 TAILWIND CONFIG
+-------------------
+Archivo: minimarket-web/tailwind.config.js
+
+Colores Configurados:
+- PRIMARY (Tienda): #4CAF50 (verde)
+- PRIMARY-ADMIN: #2563EB (azul)
+- PRIMARY-ADMIN-DARK: #2A629A (azul oscuro)
+- SECONDARY: #FF9800 (naranja)
+- BACKGROUND-LIGHT: #F5F5F5 / #F8F9FA
+- BACKGROUND-DARK: #101922
+- TEXT-LIGHT: #333333
+- TEXT-DARK: #F5F7F8
+- CARD-LIGHT: #FFFFFF
+- CARD-DARK: #1c2a38
+- BORDER-LIGHT: #cccccc / #dee2e6
+- BORDER-DARK: #4a5568 / #495057
+- PLACEHOLDER-LIGHT: #888888
+- PLACEHOLDER-DARK: #a0aec0
+- SUBTLE-LIGHT: #F3F4F6
+- SUBTLE-DARK: #374151
+- SUCCESS: #10B981
+- DANGER: #EF4444
+
+Tipografía:
+- Font Family: Inter (400, 500, 700, 900)
+- Material Symbols Outlined para iconos
+
+3.2 SERVICIOS CREADOS
+----------------------
+
+A) CartService
+   - Ubicación: src/app/core/services/cart.service.ts
+   - Funcionalidad:
+     * Gestión completa del carrito de compras
+     * Signals de Angular para reactividad
+     * Persistencia en localStorage
+     * Métodos:
+       - addToCart(product, quantity)
+       - removeFromCart(productId)
+       - updateQuantity(productId, quantity)
+       - clearCart()
+       - getCartItems() - retorna signal readonly
+       - getTotalItems()
+       - getSubtotal()
+     * Interface CartItem:
+       - productId
+       - productName
+       - productImageUrl
+       - unitPrice
+       - quantity
+       - subtotal
+
+B) ProductsService (existente, usado)
+   - Ubicación: src/app/core/services/products.service.ts
+   - Usado en: Home, Products, ProductDetail
+
+C) CategoriesService (existente, usado)
+   - Ubicación: src/app/core/services/categories.service.ts
+   - Usado en: Home, Products
+
+3.3 RUTAS CONFIGURADAS
+----------------------
+Archivo: src/app/app.routes.ts
+
+Rutas Públicas (Tienda):
+- / → Home de tienda
+- /tienda/productos → Listado de productos
+- /tienda/producto/:id → Detalle de producto
+- /carrito → Carrito de compras
+- /checkout/envio → Paso 1: Envío
+- /checkout/pago → Paso 2: Pago
+- /checkout/confirmacion → Paso 3: Confirmación
+
+Rutas Admin (Protegidas):
+- /admin/dashboard → Dashboard (solo Administrador)
+- /admin/productos → Productos (Administrador, Almacenero)
+- /admin/productos/nuevo → Nuevo producto
+- /admin/productos/editar/:id → Editar producto
+- /admin/clientes → Clientes (solo Administrador)
+- /admin/clientes/nuevo → Nuevo cliente
+- /admin/clientes/editar/:id → Editar cliente
+- /admin/ventas → Ventas (Administrador, Cajero)
+- /admin/categorias → Categorías (Administrador, Almacenero)
+- /admin/categorias/nuevo → Nueva categoría
+- /admin/categorias/editar/:id → Editar categoría
+- /admin/usuarios → Usuarios (solo Administrador) [NUEVO]
+
+Rutas Legacy (Redirecciones):
+- /dashboard → /admin/dashboard
+- /productos → /admin/productos
+- /clientes → /admin/clientes
+- /ventas → /admin/ventas
+- /categorias → /admin/categorias
+
+================================================================================
+4. TAREAS COMPLETADAS
+================================================================================
+
+✅ FASE 1: CONFIGURACIÓN BASE
+-----------------------------
+[✓] Actualizar tailwind.config.js con colores exactos de referencias
+[✓] Configurar colores para tienda (verde) y admin (azul)
+[✓] Configurar tipografía (Inter) y Material Symbols
+
+✅ FASE 2: COMPONENTES REUTILIZABLES
+------------------------------------
+[✓] Crear StoreHeader component
+[✓] Crear StoreFooter component
+[✓] Crear ProductCard component
+[✓] Crear CheckoutStepper component
+
+✅ FASE 3: SERVICIOS
+--------------------
+[✓] Crear CartService con persistencia localStorage
+[✓] Integrar CartService con signals de Angular
+
+✅ FASE 4: PÁGINAS DE TIENDA
+----------------------------
+[✓] Crear Home component (tienda)
+[✓] Crear Products component (listado con filtros)
+[✓] Crear Product Detail component
+[✓] Crear Cart component
+[✓] Crear Checkout Shipping component
+[✓] Crear Checkout Payment component
+[✓] Crear Checkout Confirmation component
+
+✅ FASE 5: ADMIN PANEL
+----------------------
+[✓] Corregir estilos de Login component
+[✓] Crear Users component (gestión de usuarios)
+[✓] Actualizar rutas de admin
+[✓] Agregar enlace de usuarios en sidebar
+[✓] Corregir rutas del sidebar (prefijo /admin)
+
+✅ FASE 6: INTEGRACIÓN
+----------------------
+[✓] Configurar todas las rutas
+[✓] Integrar componentes con servicios
+[✓] Implementar navegación entre páginas
+[✓] Verificar responsive design
+
+================================================================================
+5. TAREAS PENDIENTES / FUTURAS
+================================================================================
+
+🔴 ALTA PRIORIDAD
+-----------------
+
+1. CONECTAR BACKEND
+   [ ] Crear servicio de usuarios (UsersService)
+   [ ] Conectar Users component con backend API
+   [ ] Implementar CRUD completo de usuarios
+   [ ] Agregar endpoint de usuarios en backend si no existe
+
+2. FUNCIONALIDAD DE CHECKOUT
+   [ ] Integrar checkout con backend para crear órdenes
+   [ ] Implementar lógica de códigos de descuento
+   [ ] Agregar validación de métodos de pago
+   [ ] Crear servicio de órdenes (OrdersService)
+   [ ] Página de confirmación de éxito después del checkout
+
+3. BÚSQUEDA Y FILTROS
+   [ ] Implementar búsqueda de productos en tiempo real
+   [ ] Conectar filtros de productos con backend
+   [ ] Implementar paginación real desde backend
+   [ ] Agregar filtros avanzados (marca, rating, etc.)
+
+4. GESTIÓN DE CARRITO
+   [ ] Sincronizar carrito con backend (cuando usuario esté logueado)
+   [ ] Guardar carrito por usuario en backend
+   [ ] Recuperar carrito guardado al iniciar sesión
+
+🟡 MEDIA PRIORIDAD
+------------------
+
+5. MEJORAS DE UX
+   [ ] Agregar loading states en todos los componentes
+   [ ] Implementar skeletons loaders
+   [ ] Agregar mensajes de éxito/error con toasts
+   [ ] Implementar confirmaciones antes de acciones críticas
+   [ ] Agregar animaciones de transición entre páginas
+
+6. FORMULARIOS DE CREACIÓN/EDICIÓN
+   [ ] Crear formulario de nuevo usuario (UserFormComponent)
+   [ ] Validación completa de formularios
+   [ ] Upload de imágenes de productos
+   [ ] Editor de descripciones enriquecidas
+
+7. PERFIL DE USUARIO (TIENDA)
+   [ ] Crear página de perfil de usuario
+   [ ] Historial de pedidos
+   [ ] Direcciones guardadas
+   [ ] Métodos de pago guardados
+   [ ] Lista de deseos
+
+8. OPTIMIZACIONES
+   [ ] Lazy loading de imágenes
+   [ ] Virtual scrolling para listas largas
+   [ ] Cache de productos y categorías
+   [ ] Optimización de bundle size
+   [ ] Service Workers para offline
+
+🟢 BAJA PRIORIDAD
+-----------------
+
+9. FEATURES ADICIONALES
+   [ ] Sistema de reviews/ratings de productos
+   [ ] Comparador de productos
+   [ ] Recomendaciones basadas en historial
+   [ ] Notificaciones push
+   [ ] Chat en vivo
+   [ ] Sistema de cupones y promociones avanzado
+
+10. TESTING
+    [ ] Unit tests para componentes
+    [ ] Unit tests para servicios
+    [ ] E2E tests con Cypress (ya hay data-cy attributes)
+    [ ] Visual regression tests
+    [ ] Performance tests
+
+11. DOCUMENTACIÓN
+    [ ] Documentar todos los componentes
+    [ ] Crear Storybook para componentes
+    [ ] Guía de estilos y componentes
+    [ ] Documentación de API
+
+12. SEO Y PERFORMANCE
+    [ ] Meta tags dinámicos
+    [ ] Open Graph tags
+    [ ] Schema.org markup
+    [ ] Sitemap
+    [ ] Robots.txt
+
+================================================================================
+6. NOTAS DE IMPLEMENTACIÓN
+================================================================================
+
+6.1 DECISIONES TÉCNICAS
+-----------------------
+
+- Se mantiene Tailwind CSS como complemento (no se migra completamente)
+- Se usa Angular Material 18+ como base pero con estilos Tailwind
+- Signals de Angular para reactividad (no Observables donde sea posible)
+- localStorage para persistencia del carrito (temporal hasta backend)
+- Standalone components en toda la aplicación
+- Dark mode implementado con Tailwind dark: classes
+
+6.2 ESTRUCTURA DE ARCHIVOS
+---------------------------
+
+minimarket-web/
+├── src/
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── services/
+│   │   │   │   ├── cart.service.ts          [NUEVO]
+│   │   │   │   ├── products.service.ts      [EXISTENTE]
+│   │   │   │   └── categories.service.ts    [EXISTENTE]
+│   │   │   └── guards/
+│   │   ├── features/
+│   │   │   ├── store/                       [NUEVO - TODA LA CARPETA]
+│   │   │   │   ├── home/
+│   │   │   │   ├── products/
+│   │   │   │   ├── product-detail/
+│   │   │   │   ├── cart/
+│   │   │   │   └── checkout/
+│   │   │   │       ├── shipping/
+│   │   │   │       ├── payment/
+│   │   │   │       └── confirmation/
+│   │   │   ├── admin/                       [NUEVO]
+│   │   │   │   └── users/
+│   │   │   └── auth/
+│   │   │       └── login/                    [CORREGIDO]
+│   │   ├── shared/
+│   │   │   └── components/                  [NUEVO]
+│   │   │       ├── store-header/
+│   │   │       ├── store-footer/
+│   │   │       ├── product-card/
+│   │   │       └── checkout-stepper/
+│   │   └── layout/
+│   │       └── main-layout/                  [CORREGIDO - rutas]
+│   └── styles/
+
+6.3 COLORES Y TEMAS
+-------------------
+
+TIENDA (Página de Usuario):
+- Primary: Verde #4CAF50
+- Secondary: Naranja #FF9800
+- Background: Claro #F8F9FA, Oscuro #101922
+
+ADMIN PANEL:
+- Primary: Azul #2563EB
+- Primary Dark: Azul #2A629A
+- Background: Claro #f4f6f8, Oscuro #101922
+
+6.4 PATRONES UTILIZADOS
+-----------------------
+
+- Signals para estado reactivo
+- Computed signals para valores derivados
+- Effect para side effects
+- Standalone components
+- Lazy loading de rutas
+- Guards para protección de rutas
+- Services para lógica de negocio
+- localStorage para persistencia temporal
+
+================================================================================
+7. REFERENCIAS DE DISEÑO
+================================================================================
+
+ARCHIVOS DE REFERENCIA UTILIZADOS:
+-----------------------------------
+
+Ubicación: c:/Users/Lenovo/Downloads/carritoc#/
+
+PÁGINA DE USUARIO:
+- paginausuario/página_principal_de_la_tienda/code.html
+- paginausuario/listado_de_productos1/code.html
+- paginausuario/carrito_de_compras1/code.html
+- paginausuario/proceso_de_pago_(checkout)_-_paso_1__envío/code.html
+- paginausuario/proceso_de_pago_(checkout)_-_paso_2__pago/code.html
+- paginausuario/detalle_del_producto/code.html
+
+ADMIN PANEL:
+- adminpanel/login/autenticación_de_usuarios/code.html
+- adminpanel/gestión_de_usuarios1/code.html
+
+NOTA: Todos los componentes fueron desarrollados siguiendo exactamente estos
+archivos HTML de referencia, extrayendo colores, espaciados, tipografía y
+estructura visual.
+
+================================================================================
+8. COMANDOS Y EJECUCIÓN
+================================================================================
+
+8.1 COMANDOS PARA DESARROLLO
+----------------------------
+
+# Instalar dependencias
+cd minimarket-web
+npm install
+
+# Ejecutar en desarrollo
+npm start
+# o
+ng serve
+
+# Build de producción
+npm run build
+# o
+ng build --configuration production
+
+# Ejecutar tests
+npm test
+# o
+ng test
+
+# Ejecutar linting
+npm run lint
+# o
+ng lint
+
+8.2 VERIFICACIÓN DE COMPONENTES
+-------------------------------
+
+COMPONENTES DE TIENDA:
+1. Navegar a http://localhost:4200
+   - Verificar Home con hero, productos, categorías
+   
+2. Navegar a http://localhost:4200/tienda/productos
+   - Verificar filtros funcionando
+   - Verificar grid de productos
+   - Verificar paginación
+   
+3. Navegar a http://localhost:4200/tienda/producto/[id]
+   - Verificar detalle de producto
+   - Verificar agregar al carrito
+   
+4. Agregar productos al carrito
+   - Navegar a http://localhost:4200/carrito
+   - Verificar lista de productos
+   - Verificar actualizar cantidad
+   - Verificar eliminar productos
+   - Verificar resumen de pedido
+   
+5. Navegar a http://localhost:4200/checkout/envio
+   - Completar formulario de envío
+   - Continuar a pago
+   
+6. Navegar a http://localhost:4200/checkout/pago
+   - Seleccionar método de pago
+   - Completar datos si es tarjeta
+   - Continuar a confirmación
+   
+7. Navegar a http://localhost:4200/checkout/confirmacion
+   - Verificar resumen completo
+   - Confirmar pedido
+
+ADMIN PANEL:
+1. Navegar a http://localhost:4200/login
+   - Verificar estilos (azul #2A629A)
+   - Verificar formulario funciona
+   - Login con credenciales
+   
+2. Navegar a http://localhost:4200/admin/dashboard
+   - Verificar sidebar con todas las opciones
+   
+3. Navegar a http://localhost:4200/admin/usuarios
+   - Verificar tabla de usuarios
+   - Verificar búsqueda
+   - Verificar filtros por rol
+   - Verificar paginación
+
+8.3 DATOS DE PRUEBA
+--------------------
+
+Usuarios del sistema:
+- Admin: usuario="admin", password="Admin123!"
+- Cajero: usuario="cajero", password="Cajero123!"
+- Almacenero: usuario="almacenero", password="Almacenero123!"
+
+Carrito:
+- Los datos se guardan en localStorage con key "cart"
+- Formato: Array de CartItem
+
+Checkout:
+- Datos de envío: localStorage key "checkout-shipping"
+- Datos de pago: localStorage key "checkout-payment"
+
+================================================================================
+9. CONFIGURACIÓN DE TESTING
+================================================================================
+
+ATRIBUTOS DATA-CY AGREGADOS:
+----------------------------
+
+En Login Component:
+- data-cy="email-input"
+- data-cy="password-input"
+- data-cy="toggle-password"
+- data-cy="login-button"
+- data-cy="email-error"
+- data-cy="password-error"
+- data-cy="error-message"
+- data-cy="forgot-password-link"
+
+NOTA: Se recomienda agregar más atributos data-cy en otros componentes
+para facilitar pruebas E2E con Cypress.
+
+================================================================================
+10. PROBLEMAS CONOCIDOS Y SOLUCIONES
+================================================================================
+
+PROBLEMA 1: CartService con signals
+------------------------------------
+SOLUCIÓN: Los componentes que usan CartService deben asignar directamente
+el signal readonly: cartItems = this.cartService.getCartItems()
+
+PROBLEMA 2: Rutas legacy sin /admin
+------------------------------------
+SOLUCIÓN: Se agregaron redirecciones para mantener compatibilidad
+
+PROBLEMA 3: Componente Users con datos mock
+-------------------------------------------
+SOLUCIÓN: Pendiente crear UsersService y endpoint en backend
+
+PROBLEMA 4: Checkout no envía datos al backend
+------------------------------------------------
+SOLUCIÓN: Pendiente crear OrdersService y endpoint para crear órdenes
+
+================================================================================
+11. NOTAS FINALES
+================================================================================
+
+- Todo el código sigue las referencias HTML proporcionadas
+- Los colores fueron extraídos exactamente de las capturas/imágenes
+- La tipografía Inter fue identificada en las referencias
+- Material Symbols Outlined se usa para todos los iconos
+- El diseño es completamente responsive
+- Dark mode está implementado en todos los componentes
+- Tailwind CSS se mantiene como complemento (no se eliminó)
+
+PRÓXIMOS PASOS RECOMENDADOS:
+1. Conectar backend con servicios de usuarios y órdenes
+2. Implementar tests E2E
+3. Agregar más funcionalidades de UX
+4. Optimizar performance
+5. Agregar documentación adicional
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+

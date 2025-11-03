@@ -1,0 +1,30 @@
+<div class="group flex flex-col overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-xl transition-shadow duration-300">
+  <a [routerLink]="['/tienda/producto', product.id]" class="w-full bg-center bg-no-repeat aspect-square bg-cover cursor-pointer" 
+     [style.background-image]="product.imageUrl ? 'url(' + product.imageUrl + ')' : 'none'"
+     [style.background-color]="!product.imageUrl ? '#f3f4f6' : 'transparent'">
+    @if (!product.imageUrl) {
+      <div class="w-full h-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-gray-400 text-6xl">inventory_2</span>
+      </div>
+    }
+  </a>
+  <div class="p-4 flex flex-col flex-1">
+    <a [routerLink]="['/tienda/producto', product.id]" class="cursor-pointer">
+      <p class="text-base font-medium leading-normal flex-1 text-text-light dark:text-text-dark">{{ product.name }}</p>
+    </a>
+    <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal mt-1">{{ getPriceFormatted() }}</p>
+    @if (showAddButton) {
+      <button 
+        (click)="addToCart()"
+        [disabled]="product.stock === 0"
+        class="mt-3 flex w-full items-center justify-center rounded-lg h-9 px-3 bg-secondary/20 text-secondary-800 text-sm font-bold hover:bg-secondary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        @if (product.stock === 0) {
+          Sin Stock
+        } @else {
+          Add to Cart
+        }
+      </button>
+    }
+  </div>
+</div>
+

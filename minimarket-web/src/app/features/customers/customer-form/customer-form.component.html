@@ -1,0 +1,154 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+        {{ isEditMode() ? 'Editar Cliente' : 'Nuevo Cliente' }}
+      </h1>
+      <button 
+        (click)="cancel()"
+        class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <span class="material-symbols-outlined">close</span>
+        Cancelar
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      <form [formGroup]="customerForm" (ngSubmit)="onSubmit()">
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <div class="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+            <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Tipo de Documento -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tipo de Documento <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="documentType"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              [class.border-red-500]="customerForm.get('documentType')?.invalid && customerForm.get('documentType')?.touched">
+              @for (type of documentTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+            @if (getFieldError('documentType')) {
+              <p class="mt-1 text-sm text-red-500">{{ getFieldError('documentType') }}</p>
+            }
+          </div>
+
+          <!-- Número de Documento -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Número de Documento <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="documentNumber"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              [class.border-red-500]="customerForm.get('documentNumber')?.invalid && customerForm.get('documentNumber')?.touched"
+              [placeholder]="customerForm.get('documentType')?.value === 'DNI' ? '12345678' : '20123456789'"
+              maxlength="11">
+            @if (getFieldError('documentNumber')) {
+              <p class="mt-1 text-sm text-red-500">{{ getFieldError('documentNumber') }}</p>
+            }
+          </div>
+
+          <!-- Nombre -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nombre Completo <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="name"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              [class.border-red-500]="customerForm.get('name')?.invalid && customerForm.get('name')?.touched"
+              placeholder="Nombre completo del cliente">
+            @if (getFieldError('name')) {
+              <p class="mt-1 text-sm text-red-500">{{ getFieldError('name') }}</p>
+            }
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              formControlName="email"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              [class.border-red-500]="customerForm.get('email')?.invalid && customerForm.get('email')?.touched"
+              placeholder="cliente@example.com">
+            @if (getFieldError('email')) {
+              <p class="mt-1 text-sm text-red-500">{{ getFieldError('email') }}</p>
+            }
+          </div>
+
+          <!-- Teléfono -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Teléfono
+            </label>
+            <input
+              type="tel"
+              formControlName="phone"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              placeholder="999999999">
+          </div>
+
+          <!-- Dirección -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Dirección
+            </label>
+            <textarea
+              formControlName="address"
+              rows="3"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              placeholder="Dirección del cliente"></textarea>
+          </div>
+
+          <!-- Estado (solo en modo edición) -->
+          @if (isEditMode()) {
+            <div class="md:col-span-2">
+              <label class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  formControlName="isActive"
+                  class="w-4 h-4 text-primary-admin bg-gray-100 border-gray-300 rounded focus:ring-primary-admin">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Cliente Activo</span>
+              </label>
+            </div>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="cancel()"
+            class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="customerForm.invalid || isLoading()"
+            class="px-6 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isLoading()) {
+              <span class="material-symbols-outlined animate-spin mr-2 inline-block">refresh</span>
+            }
+            {{ isEditMode() ? 'Actualizar' : 'Crear' }} Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

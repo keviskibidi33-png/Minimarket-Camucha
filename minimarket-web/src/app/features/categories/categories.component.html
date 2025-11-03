@@ -1,0 +1,95 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- PageHeading & Filters -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Categorías</h1>
+      <a
+        routerLink="/categorias/nuevo"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90">
+        <span class="material-symbols-outlined">add</span>
+        Nueva Categoría
+      </a>
+    </div>
+
+    <!-- SearchBar -->
+    <div class="mb-6 max-w-md">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">search</span>
+        <input 
+          class="form-input w-full min-w-0 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary-admin/50 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900/50 h-10 placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-10 pr-4 text-sm font-normal"
+          placeholder="Buscar categorías..."
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value); onSearch()"
+          type="text">
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th class="px-6 py-3" scope="col">Nombre</th>
+              <th class="px-6 py-3" scope="col">Descripción</th>
+              <th class="px-6 py-3" scope="col">Estado</th>
+              <th class="px-6 py-3 text-right" scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr>
+                <td colspan="4" class="px-6 py-8 text-center">
+                  <span class="material-symbols-outlined animate-spin text-primary-admin">refresh</span>
+                  <p class="mt-2 text-gray-500">Cargando categorías...</p>
+                </td>
+              </tr>
+            } @else if (filteredCategories().length === 0) {
+              <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                  No se encontraron categorías
+                </td>
+              </tr>
+            } @else {
+              @for (category of filteredCategories(); track category.id) {
+                <tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ category.name }}</td>
+                  <td class="px-6 py-4">{{ category.description || '-' }}</td>
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ category.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
+                      {{ category.isActive ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right space-x-2">
+                    <button 
+                      [routerLink]="['/categorias/editar', category.id]"
+                      class="text-primary-admin hover:text-primary-admin/80">
+                      <span class="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button 
+                      (click)="confirmDelete(category.id)"
+                      class="text-red-500 hover:text-red-400">
+                      <span class="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+@if (showConfirmDialog()) {
+  <app-confirm-dialog
+    [isOpen]="showConfirmDialog()"
+    title="Eliminar Categoría"
+    message="¿Está seguro de eliminar esta categoría? Si tiene productos asociados, la categoría se desactivará."
+    (onConfirm)="onDeleteConfirmed()"
+    (onCancel)="onDeleteCanceled()">
+  </app-confirm-dialog>
+}
+

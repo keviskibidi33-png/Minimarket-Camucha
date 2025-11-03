@@ -1,0 +1,99 @@
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+  <div class="w-full max-w-md p-6">
+    <div class="flex flex-col items-center rounded-xl border border-border-light/50 bg-card-light p-8 shadow-sm dark:border-border-dark/50 dark:bg-card-dark">
+      <!-- Logo and Title -->
+      <div class="mb-6 flex flex-col items-center">
+        <div class="mb-4">
+          <svg class="h-14 w-14 text-primary-admin-dark" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" x2="21" y1="6" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Minimarket Camucha</h1>
+        <p class="mt-1 text-base text-text-light/70 dark:text-text-dark/70">Bienvenido al Sistema de Gestión</p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="w-full">
+        <div class="flex w-full flex-col gap-4">
+          <!-- Username Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="user">Usuario</label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">person</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary-admin-dark/50 transition-all duration-200 focus:border-primary-admin-dark focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary-admin-dark"
+                id="user"
+                type="text"
+                placeholder="Ingresa tu usuario"
+                formControlName="username"
+                data-cy="email-input"
+                [class.border-red-500]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+            </div>
+            @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
+              <span class="mt-1 text-sm text-red-500" data-cy="email-error">El usuario es requerido</span>
+            }
+          </div>
+
+          <!-- Password Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="password">Contraseña</label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">lock</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-10 text-base text-text-light placeholder-placeholder-light ring-primary-admin-dark/50 transition-all duration-200 focus:border-primary-admin-dark focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary-admin-dark"
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                placeholder="Ingresa tu contraseña"
+                formControlName="password"
+                data-cy="password-input"
+                [class.border-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              <button
+                type="button"
+                class="absolute right-3 text-placeholder-light dark:text-placeholder-dark hover:text-text-light dark:hover:text-text-dark"
+                data-cy="toggle-password"
+                (click)="togglePasswordVisibility()">
+                <span class="material-symbols-outlined text-xl">
+                  {{ showPassword() ? 'visibility' : 'visibility_off' }}
+                </span>
+              </button>
+            </div>
+            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+              <span class="mt-1 text-sm text-red-500" data-cy="password-error">La contraseña es requerida</span>
+            }
+          </div>
+
+          <!-- Error Message -->
+          @if (errorMessage()) {
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3" data-cy="error-message">
+              <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="pt-4">
+            <button
+              type="submit"
+              [disabled]="loginForm.invalid || isLoading()"
+              data-cy="login-button"
+              class="flex h-12 w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary-admin-dark px-5 text-base font-bold leading-normal text-white transition-colors duration-200 hover:bg-primary-admin-dark/90 focus:outline-none focus:ring-2 focus:ring-primary-admin-dark/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (isLoading()) {
+                <span class="material-symbols-outlined animate-spin mr-2">refresh</span>
+              }
+              <span class="truncate">Acceder</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Forgot Password Link -->
+      <div class="mt-6 w-full text-center">
+        <a class="text-sm text-primary-admin-dark transition-colors duration-200 hover:text-primary-admin-dark/80 focus:outline-none focus:underline" href="#" data-cy="forgot-password-link">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+

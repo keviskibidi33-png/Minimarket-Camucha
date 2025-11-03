@@ -1,0 +1,24 @@
+<header class="flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-gray-700 px-6 py-3 bg-white dark:bg-background-dark/50 flex-shrink-0">
+  <div class="flex items-center gap-4 text-gray-900 dark:text-white">
+    <button 
+      (click)="goToDashboard()"
+      class="size-6 text-primary-admin hover:opacity-80">
+      <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
+      </svg>
+    </button>
+    <h2 class="text-lg font-bold tracking-tight">Minimarket Camucha</h2>
+    <span class="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">Caja 01</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <span class="text-sm text-gray-600 dark:text-gray-300">Usuario: {{ authService.currentUser()?.username }}</span>
+    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" 
+         style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzj00K22jvV9gfRXmUkPBZ9DXXy5vpjyoCDRFuOm3c8FDewvZ8pcTrCalOneosWGlCMlL9e2p6ZHzGU8KsqNpSggFmZLeHKjGP--Ffa0mur3KSnkq0PfkisB3ijiFRrJdgn62PjMRxv4okkzBAJlmaBGPYVV22DiFAYd6zuY4oUGqUSgI7-jBvhVp5ltSbE-NF-ia3es20-HLLgMqkw37y_lauHy6msLzObilopS4fviDrJWDrmFzOj_MhqRvaKBZ8kA3gLt53WsYf');"></div>
+    <button 
+      (click)="logout()"
+      class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-bold leading-normal tracking-wide hover:bg-gray-200 dark:hover:bg-gray-600">
+      <span class="truncate">Cerrar Sesión</span>
+    </button>
+  </div>
+</header>
+

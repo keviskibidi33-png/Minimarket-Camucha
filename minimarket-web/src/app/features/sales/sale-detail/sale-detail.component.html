@@ -1,0 +1,169 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <button 
+          (click)="goBack()"
+          class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
+          <span class="material-symbols-outlined">arrow_back</span>
+          Volver
+        </button>
+        <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+          Detalle de Venta
+        </h1>
+      </div>
+      <div class="flex gap-2">
+        <button 
+          (click)="downloadReceipt()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600">
+          <span class="material-symbols-outlined">download</span>
+          PDF
+        </button>
+        <button 
+          (click)="sendReceipt()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600">
+          <span class="material-symbols-outlined">email</span>
+          Enviar
+        </button>
+        <button 
+          (click)="printReceipt()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90">
+          <span class="material-symbols-outlined">print</span>
+          Imprimir
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+      </div>
+    } @else if (sale()) {
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+        <!-- Sale Header -->
+        <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ sale()?.documentNumber }}</h2>
+              <p class="text-gray-500 dark:text-gray-400 mt-1">{{ formatDate(sale()!.saleDate) }}</p>
+            </div>
+            <div class="text-right">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ sale()?.documentType === 'Factura' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' }}">
+                {{ sale()?.documentType }}
+              </span>
+              <p class="mt-2 text-lg font-bold text-gray-900 dark:text-white">S/ {{ sale()?.total.toFixed(2) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Info (if exists) -->
+        @if (sale()?.customerName) {
+          <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cliente</h3>
+            <p class="text-gray-900 dark:text-white font-medium">{{ sale()?.customerName }}</p>
+          </div>
+        }
+
+        <!-- Sale Details -->
+        <div class="mb-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Productos</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <th class="text-left py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Producto</th>
+                  <th class="text-center py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</th>
+                  <th class="text-right py-2 text-sm font-medium text-gray-700 dark:text-gray-300">P. Unit</th>
+                  <th class="text-right py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (detail of sale()?.saleDetails; track detail.id) {
+                  <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <td class="py-3 text-gray-900 dark:text-white">
+                      <div>
+                        <p class="font-medium">{{ detail.productName }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ detail.productCode }}</p>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center text-gray-600 dark:text-gray-300">{{ detail.quantity }}</td>
+                    <td class="py-3 text-right text-gray-600 dark:text-gray-300">S/ {{ detail.unitPrice.toFixed(2) }}</td>
+                    <td class="py-3 text-right font-medium text-gray-900 dark:text-white">S/ {{ detail.subtotal.toFixed(2) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+          <div class="flex justify-between text-gray-600 dark:text-gray-400">
+            <span>Subtotal</span>
+            <span>S/ {{ sale()?.subtotal.toFixed(2) }}</span>
+          </div>
+          @if ((sale()?.discount || 0) > 0) {
+            <div class="flex justify-between text-gray-600 dark:text-gray-400">
+              <span>Descuento</span>
+              <span>S/ {{ sale()?.discount.toFixed(2) }}</span>
+            </div>
+          }
+          <div class="flex justify-between text-gray-600 dark:text-gray-400">
+            <span>IGV (18%)</span>
+            <span>S/ {{ sale()?.tax.toFixed(2) }}</span>
+          </div>
+          <div class="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
+            <span>TOTAL</span>
+            <span>S/ {{ sale()?.total.toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Método de Pago</p>
+              <p class="font-medium text-gray-900 dark:text-white">{{ getPaymentMethodText(sale()!.paymentMethod) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Monto Pagado</p>
+              <p class="font-medium text-gray-900 dark:text-white">S/ {{ sale()?.amountPaid.toFixed(2) }}</p>
+            </div>
+            @if (sale()?.change && sale()!.change > 0) {
+              <div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Vuelto</p>
+                <p class="font-medium text-green-600 dark:text-green-400">S/ {{ sale()?.change.toFixed(2) }}</p>
+              </div>
+            }
+            <div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Estado</p>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ sale()?.status === 'Pagado' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : sale()?.status === 'Anulado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }}">
+                {{ sale()?.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cancellation Reason (if cancelled) -->
+        @if (sale()?.status === 'Anulado' && sale()?.cancellationReason) {
+          <div class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+            <p class="text-sm font-medium text-red-800 dark:text-red-300 mb-1">Razón de Anulación</p>
+            <p class="text-sm text-red-700 dark:text-red-400">{{ sale()?.cancellationReason }}</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Send Receipt Dialog -->
+    <app-send-receipt-dialog
+      [isOpen]="showSendReceiptDialog()"
+      [saleNumber]="sale()?.documentNumber || ''"
+      [documentType]="sale()?.documentType || 'Boleta'"
+      [customerEmail]="null"
+      (onClose)="showSendReceiptDialog.set(false)"
+      (onSend)="onSendReceipt($event)">
+    </app-send-receipt-dialog>
+  </div>
+</div>
+

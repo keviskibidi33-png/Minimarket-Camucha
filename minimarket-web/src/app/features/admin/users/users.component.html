@@ -1,0 +1,165 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+  <header class="sticky top-0 z-10 w-full border-b border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark/80 backdrop-blur-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between">
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined text-primary-admin text-3xl">store</span>
+          <h2 class="text-lg font-bold text-text-light dark:text-text-dark">Minimarket Camucha</h2>
+        </div>
+        <nav class="hidden md:flex items-center gap-8">
+          <a routerLink="/admin/dashboard" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Inicio</a>
+          <a routerLink="/admin/ventas" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Ventas</a>
+          <a routerLink="/admin/productos" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Inventario</a>
+          <a routerLink="/admin/usuarios" class="text-sm font-bold text-primary-admin">Usuarios</a>
+        </nav>
+        <div class="flex items-center gap-4">
+          <button class="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-subtle-light dark:bg-subtle-dark">
+            <span class="material-symbols-outlined">person</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col gap-6">
+        <!-- Page Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h1 class="text-3xl font-black tracking-tight">Administración de Usuarios</h1>
+          <button class="flex h-10 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-primary-admin px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-admin/90">
+            <span class="material-symbols-outlined text-base">add_circle</span>
+            <span class="truncate">Crear Nuevo Usuario</span>
+          </button>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-4 shadow-sm">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center">
+            <div class="flex-grow">
+              <label class="flex flex-col w-full">
+                <div class="relative flex w-full flex-1 items-stretch">
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-xl">search</span>
+                  </div>
+                  <input 
+                    type="text"
+                    [value]="searchTerm()"
+                    (input)="searchTerm.set($any($event.target).value); onSearch()"
+                    class="form-input h-10 w-full min-w-0 flex-1 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark pl-10 pr-4 text-sm placeholder:text-gray-500 focus:border-primary-admin focus:ring-primary-admin dark:focus:border-primary-admin" 
+                    placeholder="Buscar por nombre o email..." />
+                </div>
+              </label>
+            </div>
+            <div class="flex gap-2">
+              <button 
+                (click)="onRoleFilterChange('all')"
+                [class.bg-subtle-light]="selectedRole() === 'all'"
+                [class.dark:bg-subtle-dark]="selectedRole() === 'all'"
+                class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                <p class="text-sm font-medium">Todos</p>
+              </button>
+              <button 
+                (click)="onRoleFilterChange('Gerente')"
+                [class.bg-subtle-light]="selectedRole() === 'Gerente'"
+                [class.dark:bg-subtle-dark]="selectedRole() === 'Gerente'"
+                class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                <p class="text-sm font-medium">Gerente</p>
+              </button>
+              <button 
+                (click)="onRoleFilterChange('Vendedor')"
+                [class.bg-subtle-light]="selectedRole() === 'Vendedor'"
+                [class.dark:bg-subtle-dark]="selectedRole() === 'Vendedor'"
+                class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                <p class="text-sm font-medium">Vendedor</p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="overflow-hidden rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-border-light dark:divide-border-dark">
+              <thead class="bg-subtle-light dark:bg-subtle-dark/50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" scope="col">Nombre de Usuario</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" scope="col">Email</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" scope="col">Rol</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" scope="col">Fecha de Creación</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-light dark:divide-border-dark">
+                @if (isLoading()) {
+                  <tr>
+                    <td colspan="5" class="px-6 py-8 text-center">
+                      <span class="material-symbols-outlined animate-spin text-primary-admin text-2xl">refresh</span>
+                    </td>
+                  </tr>
+                } @else if (filteredUsers().length === 0) {
+                  <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      No se encontraron usuarios
+                    </td>
+                  </tr>
+                } @else {
+                  @for (user of filteredUsers(); track user.id) {
+                    <tr class="hover:bg-subtle-light/50 dark:hover:bg-subtle-dark/50">
+                      <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">{{ user.username }}</td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm">
+                        <span [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+                      </td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.createdAt }}</td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                        <div class="flex items-center gap-2">
+                          <button 
+                            class="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                            <span class="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button 
+                            (click)="deleteUser(user.id)"
+                            class="flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-danger/10">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-between border-t border-border-light dark:border-border-dark px-4 py-3 sm:px-6">
+            <div class="flex flex-1 justify-between sm:hidden">
+              <button class="relative inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark">Previous</button>
+              <button class="relative ml-3 inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark">Next</button>
+            </div>
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                  Mostrando <span class="font-medium">1</span> a <span class="font-medium">{{ filteredUsers().length }}</span> de <span class="font-medium">{{ filteredUsers().length }}</span> resultados
+                </p>
+              </div>
+              <div>
+                <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                  <button class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0">
+                    <span class="material-symbols-outlined text-base">chevron_left</span>
+                  </button>
+                  <button aria-current="page" class="relative z-10 inline-flex items-center bg-primary-admin/20 px-4 py-2 text-sm font-semibold text-primary-admin focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-admin">1</button>
+                  <button class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0">
+                    <span class="material-symbols-outlined text-base">chevron_right</span>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+

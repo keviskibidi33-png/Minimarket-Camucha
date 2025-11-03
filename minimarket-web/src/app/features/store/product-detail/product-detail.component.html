@@ -1,0 +1,139 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+  <!-- Header -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="flex-1">
+    <div class="container mx-auto px-4 py-8">
+      @if (isLoading()) {
+        <div class="flex items-center justify-center min-h-96">
+          <span class="material-symbols-outlined animate-spin text-primary text-4xl">refresh</span>
+        </div>
+      } @else if (product()) {
+        <!-- Breadcrumbs -->
+        <div class="flex flex-wrap gap-2 mb-8">
+          <a routerLink="/" class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal hover:text-primary">Inicio</a>
+          <span class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal">/</span>
+          <a routerLink="/tienda/productos" [queryParams]="{category: product()?.categoryId}" class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal hover:text-primary">{{ getCategoryName() }}</a>
+          <span class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal">/</span>
+          <span class="text-text-light dark:text-text-dark text-sm font-medium leading-normal">{{ product()?.name }}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <!-- Image Gallery -->
+          <div class="flex flex-col gap-4">
+            <div 
+              class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden bg-slate-100 rounded-xl min-h-80 aspect-square" 
+              [style.background-image]="product()?.imageUrl ? 'url(' + product()?.imageUrl + ')' : 'none'"
+              [style.background-color]="!product()?.imageUrl ? '#f1f5f9' : 'transparent'">
+              @if (!product()?.imageUrl) {
+                <div class="w-full h-full flex items-center justify-center">
+                  <span class="material-symbols-outlined text-gray-400 text-6xl">inventory_2</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Product Info -->
+          <div class="flex flex-col">
+            <h1 class="text-4xl font-black leading-tight tracking-tight text-text-light dark:text-text-dark mb-4">{{ product()?.name }}</h1>
+            
+            @if (product()?.description) {
+              <p class="text-base text-text-secondary-light dark:text-text-secondary-dark mb-6">{{ product()?.description }}</p>
+            }
+
+            <!-- Price -->
+            <div class="mb-6">
+              <p class="text-4xl font-black text-primary">{{ getPriceFormatted() }}</p>
+            </div>
+
+            <!-- Stock Info -->
+            @if (product()!.stock === 0) {
+              <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p class="text-red-600 dark:text-red-400 font-medium">Producto Agotado</p>
+              </div>
+            } @else if (product()!.stock <= product()!.minimumStock) {
+              <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p class="text-yellow-600 dark:text-yellow-400 font-medium">Últimas unidades disponibles ({{ product()!.stock }} en stock)</p>
+              </div>
+            } @else {
+              <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p class="text-green-600 dark:text-green-400 font-medium">En stock ({{ product()!.stock }} disponibles)</p>
+              </div>
+            }
+
+            <!-- Quantity Selector -->
+            <div class="mb-6">
+              <label class="block text-base font-medium text-text-light dark:text-text-dark mb-2">Cantidad</label>
+              <div class="flex items-center gap-4">
+                <button 
+                  (click)="decreaseQuantity()"
+                  [disabled]="quantity() === 1"
+                  class="flex h-10 w-10 items-center justify-center rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span class="material-symbols-outlined">remove</span>
+                </button>
+                <input 
+                  type="number"
+                  [value]="quantity()"
+                  (change)="quantity.set(parseInt($any($event.target).value) || 1)"
+                  [max]="product()!.stock"
+                  min="1"
+                  class="w-20 text-center text-lg font-bold border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary"/>
+                <button 
+                  (click)="increaseQuantity()"
+                  [disabled]="quantity() >= (product()?.stock || 0)"
+                  class="flex h-10 w-10 items-center justify-center rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span class="material-symbols-outlined">add</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button 
+              (click)="addToCart()"
+              [disabled]="product()!.stock === 0"
+              class="w-full flex items-center justify-center gap-2 rounded-lg h-14 px-6 bg-primary text-white text-lg font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+              <span class="material-symbols-outlined">add_shopping_cart</span>
+              @if (product()!.stock === 0) {
+                Sin Stock
+              } @else {
+                Agregar al Carrito
+              }
+            </button>
+
+            <!-- Product Details -->
+            <div class="border-t border-border-light dark:border-border-dark pt-6">
+              <h3 class="text-lg font-bold text-text-light dark:text-text-dark mb-4">Detalles del Producto</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-text-secondary-light dark:text-text-secondary-dark">Código:</span>
+                  <span class="text-text-light dark:text-text-dark font-medium">{{ product()?.code }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-text-secondary-light dark:text-text-secondary-dark">Categoría:</span>
+                  <span class="text-text-light dark:text-text-dark font-medium">{{ product()?.categoryName }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-text-secondary-light dark:text-text-secondary-dark">Stock disponible:</span>
+                  <span class="text-text-light dark:text-text-dark font-medium">{{ product()?.stock }} unidades</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="text-center py-12">
+          <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">inventory_2</span>
+          <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">Producto no encontrado</p>
+          <a routerLink="/tienda/productos" class="inline-flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold hover:bg-primary/90 transition-colors">
+            Volver a Productos
+          </a>
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <app-store-footer></app-store-footer>
+</div>
+

@@ -1,0 +1,34 @@
+{
+  "validProduct": {
+    "code": "TEST001",
+    "name": "Producto de Prueba E2E",
+    "purchasePrice": 5.00,
+    "salePrice": 8.50,
+    "stock": 50,
+    "categoryId": 1,
+    "categoryName": "Bebidas"
+  },
+  "lowStockProduct": {
+    "code": "LOW001",
+    "name": "Producto Bajo Stock",
+    "purchasePrice": 3.00,
+    "salePrice": 5.00,
+    "stock": 5,
+    "categoryId": 1
+  },
+  "searchProducts": [
+    {
+      "code": "COCA001",
+      "name": "Coca Cola 500ml",
+      "salePrice": 3.50,
+      "stock": 100
+    },
+    {
+      "code": "PAPAS001",
+      "name": "Papas Lays 150g",
+      "salePrice": 4.00,
+      "stock": 80
+    }
+  ]
+}
+

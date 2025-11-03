@@ -1,0 +1,146 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+  <!-- Top Navigation Bar -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 lg:px-6 py-8 flex-grow">
+    <!-- Breadcrumbs -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <a routerLink="/" class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary">Home</a>
+      <span class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">/</span>
+      <span class="text-[#333333] dark:text-gray-200 text-sm font-medium leading-normal">Shopping Cart</span>
+    </div>
+
+    <!-- Page Heading -->
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-8">
+      <h1 class="text-[#333333] dark:text-white text-4xl font-black leading-tight tracking-tight">Shopping Cart</h1>
+      <a routerLink="/tienda/productos" class="text-primary dark:text-primary-light text-sm font-medium hover:underline">Continue Shopping</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <!-- Left Column: Product List -->
+      <div class="lg:col-span-2 bg-white dark:bg-background-dark/80 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700 mb-4">
+          <h2 class="text-lg font-bold text-[#333333] dark:text-white">Your Items ({{ cartItems().length }})</h2>
+          @if (cartItems().length > 0) {
+            <button 
+              (click)="clearAll()"
+              class="text-sm font-medium text-red-500 hover:text-red-700 dark:hover:text-red-400">Clear All</button>
+          }
+        </div>
+
+        <!-- Product List Items -->
+        @if (cartItems().length === 0) {
+          <div class="text-center py-12">
+            <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">shopping_cart</span>
+            <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">Tu carrito está vacío</p>
+            <a routerLink="/tienda/productos" class="inline-flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold hover:bg-primary/90 transition-colors">
+              Ir a Comprar
+            </a>
+          </div>
+        } @else {
+          <div class="space-y-4">
+            @for (item of cartItems(); track item.productId) {
+              <div class="flex flex-col sm:flex-row items-center gap-4 py-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                <div class="flex items-center gap-4 flex-grow w-full sm:w-auto">
+                  <div 
+                    class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16" 
+                    [style.background-image]="item.productImageUrl ? 'url(' + item.productImageUrl + ')' : 'none'"
+                    [style.background-color]="!item.productImageUrl ? '#f3f4f6' : 'transparent'">
+                    @if (!item.productImageUrl) {
+                      <div class="w-full h-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-gray-400">inventory_2</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="flex flex-col justify-center flex-grow">
+                    <p class="text-[#333333] dark:text-white text-base font-medium leading-normal line-clamp-1">{{ item.productName }}</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal line-clamp-2">{{ getPriceFormatted(item.unitPrice) }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between">
+                  <div class="shrink-0">
+                    <div class="flex items-center gap-2 text-[#333333] dark:text-white">
+                      <button 
+                        (click)="updateQuantity(item, item.quantity - 1)"
+                        class="text-base font-medium leading-normal flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">-</button>
+                      <input 
+                        type="number" 
+                        [value]="item.quantity"
+                        (change)="updateQuantity(item, parseInt($any($event.target).value) || 1)"
+                        class="text-base font-medium leading-normal w-6 p-0 text-center bg-transparent focus:outline-none border-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        min="1"/>
+                      <button 
+                        (click)="updateQuantity(item, item.quantity + 1)"
+                        class="text-base font-medium leading-normal flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">+</button>
+                    </div>
+                  </div>
+                  <p class="text-[#333333] dark:text-white font-semibold text-base w-16 text-right">{{ getPriceFormatted(item.subtotal) }}</p>
+                  <button 
+                    (click)="removeItem(item.productId)"
+                    class="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Right Column: Order Summary -->
+      <div class="lg:col-span-1 bg-white dark:bg-background-dark/80 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24">
+        <h2 class="text-lg font-bold text-[#333333] dark:text-white pb-4 border-b border-gray-200 dark:border-gray-700 mb-4">Order Summary</h2>
+        
+        <!-- Discount Code -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="discount-code">Discount Code</label>
+          <div class="flex gap-2">
+            <input 
+              [(ngModel)]="discountCode"
+              class="form-input flex-grow rounded-lg border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-[#333333] dark:text-white focus:ring-primary focus:border-primary" 
+              id="discount-code" 
+              placeholder="Enter coupon" 
+              type="text"/>
+            <button 
+              (click)="applyDiscount()"
+              class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-[#333333] dark:text-white text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-500">Apply</button>
+          </div>
+        </div>
+
+        <!-- Price Details -->
+        <div class="space-y-3 mb-6 text-sm">
+          <div class="flex justify-between text-gray-600 dark:text-gray-300">
+            <span>Subtotal</span>
+            <span>{{ getPriceFormatted(subtotal()) }}</span>
+          </div>
+          <div class="flex justify-between text-gray-600 dark:text-gray-300">
+            <span>Shipping</span>
+            <span>{{ getPriceFormatted(shipping()) }}</span>
+          </div>
+          <div class="flex justify-between text-orange-500">
+            <span>Discount</span>
+            <span>-{{ getPriceFormatted(discount()) }}</span>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="flex justify-between items-center text-[#333333] dark:text-white pt-4 border-t border-gray-200 dark:border-gray-700">
+          <span class="text-lg font-bold">Total</span>
+          <span class="text-xl font-black">{{ getPriceFormatted(total()) }}</span>
+        </div>
+
+        <!-- CTA Button -->
+        <button 
+          (click)="proceedToPayment()"
+          [disabled]="cartItems().length === 0"
+          routerLink="/checkout/envio"
+          class="w-full mt-6 bg-primary text-white font-bold py-3 px-4 rounded-lg text-base hover:bg-green-600 transition-colors duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span>Proceed to Payment</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+

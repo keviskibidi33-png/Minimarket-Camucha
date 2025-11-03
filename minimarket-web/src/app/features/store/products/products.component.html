@@ -1,0 +1,209 @@
+<div class="relative flex min-h-screen w-full flex-col">
+  <!-- Header -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- SideNavBar (Filters) -->
+      <aside class="w-full lg:w-64 xl:w-72 flex-shrink-0">
+        <div class="sticky top-24 flex flex-col gap-6 rounded-lg bg-card-light dark:bg-card-dark p-6 border border-border-light dark:border-border-dark shadow-sm">
+          <div class="flex flex-col gap-6">
+            <div class="flex flex-col border-b border-border-light dark:border-border-dark pb-4">
+              <h1 class="text-text-light dark:text-text-dark text-lg font-bold leading-normal">Filtros</h1>
+              <p class="text-text-light/80 dark:text-text-dark/80 text-sm font-normal leading-normal">Refina tu búsqueda</p>
+            </div>
+            
+            <!-- Price Range Filter -->
+            <div class="flex w-full flex-col items-start gap-3">
+              <p class="text-text-light dark:text-text-dark text-base font-medium leading-normal">Rango de Precio</p>
+              <div class="flex flex-col gap-2 w-full">
+                <div class="flex gap-2">
+                  <input 
+                    type="number" 
+                    [value]="minPrice()"
+                    (input)="minPrice.set(parseFloat($any($event.target).value) || 0)"
+                    class="flex-1 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
+                    placeholder="Min"
+                    min="0">
+                  <input 
+                    type="number" 
+                    [value]="maxPrice()"
+                    (input)="maxPrice.set(parseFloat($any($event.target).value) || 1000)"
+                    class="flex-1 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
+                    placeholder="Max"
+                    min="0">
+                </div>
+              </div>
+            </div>
+
+            <!-- Categories Filter -->
+            <div class="flex flex-col gap-3 pt-4 border-t border-border-light dark:border-border-dark">
+              <p class="text-text-light dark:text-text-dark text-base font-medium leading-normal">Categorías</p>
+              <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-2 cursor-pointer text-sm">
+                  <input 
+                    type="checkbox" 
+                    [checked]="!selectedCategory()"
+                    (change)="onCategoryChange(null)"
+                    class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary/50"/>
+                  Todos
+                </label>
+                @for (category of categories(); track category.id) {
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input 
+                      type="checkbox" 
+                      [checked]="selectedCategory() === category.id"
+                      (change)="onCategoryChange(category.id)"
+                      class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary/50"/>
+                    {{ category.name }}
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2 pt-4 border-t border-border-light dark:border-border-dark">
+            <button 
+              (click)="applyFilters()"
+              class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+              <span class="truncate">Aplicar Filtros</span>
+            </button>
+            <button 
+              (click)="clearFilters()"
+              class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent text-text-light dark:text-text-dark border border-border-light dark:border-border-dark hover:bg-black/5 dark:hover:bg-white/5 text-sm font-bold leading-normal tracking-[0.015em] transition-colors">
+              <span class="truncate">Limpiar Filtros</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Products Section -->
+      <div class="flex-1">
+        <!-- PageHeading -->
+        <div class="flex flex-wrap justify-between gap-3 p-4">
+          <div class="flex min-w-72 flex-col gap-2">
+            <p class="text-text-light dark:text-text-dark text-4xl font-black leading-tight tracking-[-0.033em]">{{ getCategoryName() }}</p>
+            <p class="text-text-light/80 dark:text-text-dark/80 text-base font-normal leading-normal">Mostrando {{ filteredProducts().length }} resultados</p>
+          </div>
+        </div>
+
+        <!-- ToolBar -->
+        <div class="flex justify-between items-center gap-2 px-4 py-3 mt-4 border-y border-border-light dark:border-border-dark">
+          <div class="flex gap-1">
+            <button 
+              (click)="viewMode.set('grid')"
+              [class.bg-primary/20]="viewMode() === 'grid'"
+              [class.dark:bg-primary/30]="viewMode() === 'grid'"
+              class="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5">
+              <span class="material-symbols-outlined">grid_view</span>
+            </button>
+            <button 
+              (click)="viewMode.set('list')"
+              [class.bg-primary/20]="viewMode() === 'list'"
+              [class.dark:bg-primary/30]="viewMode() === 'list'"
+              class="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5">
+              <span class="material-symbols-outlined">view_list</span>
+            </button>
+          </div>
+          <select 
+            [value]="sortBy()"
+            (change)="onSortChange($any($event.target).value)"
+            class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark text-text-light dark:text-text-dark gap-2 text-sm font-medium leading-normal min-w-0 px-4 hover:bg-black/5 dark:hover:bg-white/5">
+            <option value="relevance">Ordenar por: Más Relevantes</option>
+            <option value="price-asc">Precio: Menor a Mayor</option>
+            <option value="price-desc">Precio: Mayor a Menor</option>
+            <option value="name-asc">Nombre: A-Z</option>
+            <option value="name-desc">Nombre: Z-A</option>
+          </select>
+        </div>
+
+        <!-- Product Grid -->
+        @if (isLoading()) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
+            @for (item of [1,2,3,4,5,6]; track $index) {
+              <div class="animate-pulse flex flex-col rounded-lg bg-gray-200 dark:bg-gray-700 h-80"></div>
+            }
+          </div>
+        } @else if (filteredProducts().length === 0) {
+          <div class="text-center py-12 p-4">
+            <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">inventory_2</span>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">No se encontraron productos</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
+            @for (product of filteredProducts(); track product.id) {
+              <app-product-card [product]="product"></app-product-card>
+            }
+          </div>
+        }
+
+        <!-- Pagination -->
+        @if (filteredProducts().length > 0 && totalItems() > pageSize) {
+          <nav class="flex items-center justify-between border-t border-border-light dark:border-border-dark px-4 py-3 sm:px-6 mt-8">
+            <div class="flex flex-1 justify-between sm:hidden">
+              <button 
+                (click)="currentPage.set(currentPage() - 1); loadProducts()"
+                [disabled]="currentPage() === 1"
+                class="relative inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50">
+                Previous
+              </button>
+              <button 
+                (click)="currentPage.set(currentPage() + 1); loadProducts()"
+                [disabled]="currentPage() * pageSize >= totalItems()"
+                class="relative ml-3 inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50">
+                Next
+              </button>
+            </div>
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm text-text-light/80 dark:text-text-dark/80">
+                  Mostrando
+                  <span class="font-medium">{{ (currentPage() - 1) * pageSize + 1 }}</span>
+                  a
+                  <span class="font-medium">{{ Math.min(currentPage() * pageSize, totalItems()) }}</span>
+                  de
+                  <span class="font-medium">{{ totalItems() }}</span>
+                  resultados
+                </p>
+              </div>
+              <div>
+                <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                  <button 
+                    (click)="currentPage.set(currentPage() - 1); loadProducts()"
+                    [disabled]="currentPage() === 1"
+                    class="relative inline-flex items-center rounded-l-md px-2 py-2 text-text-light/80 dark:text-text-dark/80 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-black/5 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0 disabled:opacity-50">
+                    <span class="material-symbols-outlined !text-xl">chevron_left</span>
+                  </button>
+                  @for (page of getPages(); track page) {
+                    @if (page === '...') {
+                      <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-border-light dark:ring-border-dark">...</span>
+                    } @else {
+                      <button 
+                        (click)="currentPage.set(page); loadProducts()"
+                        [class.bg-primary/20]="currentPage() === page"
+                        [class.text-primary]="currentPage() === page"
+                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-text-light dark:text-text-dark ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-black/5 dark:hover:bg-white/5 focus:z-20">
+                        {{ page }}
+                      </button>
+                    }
+                  }
+                  <button 
+                    (click)="currentPage.set(currentPage() + 1); loadProducts()"
+                    [disabled]="currentPage() * pageSize >= totalItems()"
+                    class="relative inline-flex items-center rounded-r-md px-2 py-2 text-text-light/80 dark:text-text-dark/80 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-black/5 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0 disabled:opacity-50">
+                    <span class="material-symbols-outlined !text-xl">chevron_right</span>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </nav>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <app-store-footer></app-store-footer>
+</div>
+

@@ -1,0 +1,692 @@
+================================================================================
+DESARROLLO DE SISTEMA E-COMMERCE PARA MINIMARKET CAMUCHA
+================================================================================
+
+PROYECTO: Sistema de gestión y ventas para minimarket
+ARQUITECTURA: Clean Architecture (ASP.NET Core 9.0 + Angular 18)
+FECHA: 2024-2025
+
+================================================================================
+STACK TECNOLÓGICO
+================================================================================
+
+BACKEND:
+- ASP.NET Core 9.0 Web API
+- C# 12
+- SQL Server 2022
+- Entity Framework Core 9.0
+- Clean Architecture (Domain, Application, Infrastructure, API)
+- Repository Pattern + Unit of Work
+- CQRS con MediatR
+- Specification Pattern
+- JWT Bearer Tokens con ASP.NET Core Identity
+- Swagger/OpenAPI 3.0
+- MailKit (para SMTP email)
+- QuestPDF (para generación de PDFs)
+- Serilog (logging)
+- FluentValidation
+
+FRONTEND:
+- Angular 18+ (standalone components)
+- TypeScript 5.x
+- Angular Material (base UI framework)
+- Tailwind CSS (complementario para fidelidad de diseño)
+- Signals (para state management)
+- HttpClient con Interceptors
+- Reactive Forms
+- Angular Router con guards
+
+INFRAESTRUCTURA:
+- Docker y Docker Compose (opcional)
+- GitHub Actions/Azure DevOps (CI/CD)
+- Redis (caching - opcional)
+- Azure Blob Storage (file storage - opcional)
+
+================================================================================
+ESTRUCTURA DEL PROYECTO
+================================================================================
+
+MinimarketSolution.sln
+├── src/
+│   ├── Minimarket.API/              # Presentation Layer
+│   │   ├── Controllers/
+│   │   │   ├── AuthController.cs
+│   │   │   ├── ProductsController.cs
+│   │   │   ├── CategoriesController.cs
+│   │   │   ├── CustomersController.cs
+│   │   │   ├── SalesController.cs
+│   │   │   ├── DashboardController.cs
+│   │   │   └── FilesController.cs
+│   │   ├── Middleware/
+│   │   │   ├── GlobalExceptionHandlerMiddleware.cs
+│   │   │   └── SecurityHeadersMiddleware.cs
+│   │   ├── Extensions/
+│   │   │   └── WebApplicationExtensions.cs
+│   │   ├── Program.cs
+│   │   ├── appsettings.json
+│   │   └── appsettings.Production.json
+│   │
+│   ├── Minimarket.Application/      # Application Layer
+│   │   ├── Common/
+│   │   │   ├── Models/
+│   │   │   │   ├── Result.cs
+│   │   │   │   └── PagedResult.cs
+│   │   │   ├── Behaviors/
+│   │   │   │   └── ValidationBehavior.cs
+│   │   │   └── Exceptions/
+│   │   │
+│   │   ├── Features/
+│   │   │   ├── Auth/
+│   │   │   │   ├── Commands/
+│   │   │   │   │   ├── LoginCommand.cs
+│   │   │   │   │   ├── LoginCommandHandler.cs
+│   │   │   │   │   └── LoginCommandValidator.cs
+│   │   │   │   └── DTOs/
+│   │   │   │       ├── LoginRequest.cs
+│   │   │   │       └── LoginResponse.cs
+│   │   │   │
+│   │   │   ├── Products/
+│   │   │   │   ├── Commands/
+│   │   │   │   ├── Queries/
+│   │   │   │   └── DTOs/
+│   │   │   │
+│   │   │   ├── Categories/
+│   │   │   │   ├── Commands/
+│   │   │   │   ├── Queries/
+│   │   │   │   └── DTOs/
+│   │   │   │
+│   │   │   ├── Customers/
+│   │   │   │   ├── Commands/
+│   │   │   │   ├── Queries/
+│   │   │   │   └── DTOs/
+│   │   │   │
+│   │   │   ├── Sales/
+│   │   │   │   ├── Commands/
+│   │   │   │   │   ├── CreateSaleCommand.cs
+│   │   │   │   │   ├── CancelSaleCommand.cs
+│   │   │   │   │   └── SendSaleReceiptCommand.cs
+│   │   │   │   ├── Queries/
+│   │   │   │   └── DTOs/
+│   │   │   │
+│   │   │   └── Dashboard/
+│   │   │       ├── Queries/
+│   │   │       │   ├── GetDashboardStatsQuery.cs
+│   │   │       │   └── GetDashboardStatsQueryHandler.cs
+│   │   │       └── DTOs/
+│   │   │           └── DashboardStatsDto.cs
+│   │   │
+│   │   └── DependencyInjection.cs
+│   │
+│   ├── Minimarket.Domain/           # Domain Layer
+│   │   ├── Entities/
+│   │   │   ├── BaseEntity.cs
+│   │   │   ├── Product.cs
+│   │   │   ├── Category.cs
+│   │   │   ├── Customer.cs
+│   │   │   ├── Sale.cs
+│   │   │   └── SaleDetail.cs
+│   │   │
+│   │   ├── Enums/
+│   │   │   ├── DocumentType.cs
+│   │   │   ├── PaymentMethod.cs
+│   │   │   └── SaleStatus.cs
+│   │   │
+│   │   └── Interfaces/
+│   │       ├── IRepository.cs
+│   │       ├── IUnitOfWork.cs
+│   │       ├── IEmailService.cs
+│   │       ├── IPdfService.cs
+│   │       └── IFileStorageService.cs
+│   │
+│   └── Minimarket.Infrastructure/  # Infrastructure Layer
+│       ├── Data/
+│       │   ├── MinimarketDbContext.cs
+│       │   ├── Configurations/
+│       │   │   ├── ProductConfiguration.cs
+│       │   │   ├── CategoryConfiguration.cs
+│       │   │   ├── CustomerConfiguration.cs
+│       │   │   ├── SaleConfiguration.cs
+│       │   │   └── SaleDetailConfiguration.cs
+│       │   ├── Repositories/
+│       │   │   ├── Repository.cs
+│       │   │   └── UnitOfWork.cs
+│       │   └── Seeders/
+│       │       └── DatabaseSeeder.cs
+│       │
+│       ├── Services/
+│       │   ├── EmailService.cs
+│       │   ├── PdfService.cs
+│       │   └── FileStorageService.cs
+│       │
+│       └── DependencyInjection.cs
+│
+└── minimarket-web/                  # Frontend Angular
+    ├── src/
+    │   ├── app/
+    │   │   ├── core/
+    │   │   │   ├── guards/
+    │   │   │   │   ├── auth.guard.ts
+    │   │   │   │   └── role.guard.ts
+    │   │   │   ├── interceptors/
+    │   │   │   │   ├── auth.interceptor.ts
+    │   │   │   │   └── error.interceptor.ts
+    │   │   │   └── services/
+    │   │   │       ├── auth.service.ts
+    │   │   │       ├── permissions.service.ts
+    │   │   │       ├── products.service.ts
+    │   │   │       ├── categories.service.ts
+    │   │   │       ├── customers.service.ts
+    │   │   │       ├── sales.service.ts
+    │   │   │       └── dashboard.service.ts
+    │   │   │
+    │   │   ├── features/
+    │   │   │   ├── auth/
+    │   │   │   │   └── login/
+    │   │   │   │
+    │   │   │   ├── dashboard/
+    │   │   │   │
+    │   │   │   ├── products/
+    │   │   │   │   ├── products.component.ts
+    │   │   │   │   └── product-form/
+    │   │   │   │
+    │   │   │   ├── categories/
+    │   │   │   │   ├── categories.component.ts
+    │   │   │   │   └── category-form/
+    │   │   │   │
+    │   │   │   ├── customers/
+    │   │   │   │   ├── customers.component.ts
+    │   │   │   │   └── customer-form/
+    │   │   │   │
+    │   │   │   ├── sales/
+    │   │   │   │   ├── sales.component.ts
+    │   │   │   │   ├── sale-detail/
+    │   │   │   │   └── cancel-sale/
+    │   │   │   │
+    │   │   │   ├── pos/
+    │   │   │   │   ├── pos.component.ts
+    │   │   │   │   └── pos-header/
+    │   │   │   │
+    │   │   │   ├── store/ (tienda pública)
+    │   │   │   │
+    │   │   │   └── errors/
+    │   │   │       ├── not-found/
+    │   │   │       └── server-error/
+    │   │   │
+    │   │   ├── layout/
+    │   │   │   └── main-layout/
+    │   │   │
+    │   │   ├── shared/
+    │   │   │   ├── components/
+    │   │   │   │   ├── toast/
+    │   │   │   │   ├── loading-spinner/
+    │   │   │   │   ├── confirm-dialog/
+    │   │   │   │   ├── send-receipt-dialog/
+    │   │   │   │   └── image-upload/
+    │   │   │   └── services/
+    │   │   │       └── toast.service.ts
+    │   │   │
+    │   │   ├── app.component.ts
+    │   │   ├── app.routes.ts
+    │   │   └── app.config.ts
+    │   │
+    │   └── environments/
+    │       ├── environment.ts
+    │       └── environment.prod.ts
+    │
+    └── package.json
+
+================================================================================
+ENTIDADES PRINCIPALES
+================================================================================
+
+1. PRODUCT
+   - Id, Code, Name, Description
+   - PurchasePrice, SalePrice
+   - Stock, MinimumStock
+   - CategoryId, Category (navegación)
+   - ImageUrl
+   - IsActive, CreatedAt, UpdatedAt
+
+2. CATEGORY
+   - Id, Name, Description
+   - IsActive, CreatedAt, UpdatedAt
+   - Products (colección)
+
+3. CUSTOMER
+   - Id, DocumentType, DocumentNumber
+   - Name, Email, Phone, Address
+   - IsActive, CreatedAt, UpdatedAt
+
+4. SALE
+   - Id, DocumentNumber, DocumentType
+   - SaleDate, UserId
+   - CustomerId, Customer (navegación)
+   - Subtotal, Tax, Discount, Total
+   - PaymentMethod, AmountPaid, Change
+   - Status, CancellationReason
+   - SaleDetails (colección)
+   - CreatedAt, UpdatedAt
+
+5. SALE_DETAIL
+   - Id, SaleId, ProductId
+   - ProductName, ProductCode
+   - Quantity, UnitPrice, Subtotal
+
+================================================================================
+ENUMS
+================================================================================
+
+- DocumentType: Boleta, Factura
+- PaymentMethod: Efectivo, Tarjeta, YapePlin, Transferencia
+- SaleStatus: Pendiente, Pagado, Anulado
+
+================================================================================
+ROLES Y PERMISOS
+================================================================================
+
+1. ADMINISTRADOR
+   - Acceso completo a todos los módulos
+   - Dashboard
+   - Gestión de productos, categorías, clientes
+   - Ventas y POS
+   - Gestión de usuarios (futuro)
+
+2. CAJERO
+   - Punto de Venta (POS)
+   - Ver ventas
+   - Crear ventas
+   - Anular ventas
+
+3. ALMACENERO
+   - Gestión de productos (CRUD completo)
+   - Gestión de categorías (CRUD completo)
+   - Ver inventario
+
+================================================================================
+FUNCIONALIDADES IMPLEMENTADAS
+================================================================================
+
+FASE 1 - CONFIGURACIÓN INICIAL:
+✅ Estructura Clean Architecture
+✅ Entity Framework Core con SQL Server
+✅ JWT Authentication
+✅ CQRS con MediatR
+✅ FluentValidation
+✅ Repository Pattern + Unit of Work
+✅ Swagger/OpenAPI
+✅ Angular 18 con Standalone Components
+✅ Angular Material + Tailwind CSS
+✅ Layout responsive con sidebar
+✅ Sistema de autenticación frontend
+✅ Guards y Interceptors
+✅ Seeders de datos iniciales
+
+FASE 2 - MÓDULOS CORE:
+✅ CRUD completo de Productos
+✅ CRUD completo de Categorías
+✅ CRUD completo de Clientes
+✅ Punto de Venta (POS) completo
+   - Búsqueda de productos
+   - Carrito de compras
+   - Selección de cliente
+   - Cálculo automático de totales
+   - Procesamiento de ventas
+✅ Gestión de Ventas
+   - Listado de ventas
+   - Detalle de venta
+   - Anulación de ventas
+✅ Dashboard con métricas
+   - Ventas del día/mes
+   - Productos activos
+   - Clientes activos
+   - Stock bajo
+   - Gráfico de ventas últimos 7 días
+   - Top productos vendidos
+
+FASE 3 - FUNCIONALIDADES AVANZADAS:
+✅ Servicio de correo electrónico
+   - SMTP (MailKit)
+   - API externa (Resend/SendGrid)
+   - Fallback automático
+✅ Generación de PDFs
+   - Boletas y Facturas
+   - QuestPDF
+   - Envío por email
+✅ Upload de imágenes
+   - Validación de tipo y tamaño
+   - Almacenamiento local
+   - URL pública
+
+FASE 4 - PRODUCCIÓN Y SEGURIDAD:
+✅ Control de acceso por roles
+   - Backend: [Authorize(Roles = "...")]
+   - Frontend: Role guards y permissions service
+✅ Paginación real en base de datos
+   - Skip/Take en EF Core
+   - PagedResult<T> DTO
+   - Total count real
+✅ Configuración de producción
+   - appsettings.Production.json
+   - Variables de entorno
+   - CORS configurable
+   - Swagger solo en desarrollo
+✅ Páginas de error
+   - 404 (Not Found)
+   - 500 (Server Error)
+✅ Health Checks
+   - /health
+   - /health/ready
+✅ Optimizaciones de seguridad
+   - Security headers middleware
+   - HSTS en producción
+   - Validación de tamaño de request
+✅ Middleware global de errores
+   - Manejo centralizado de excepciones
+   - Respuestas consistentes
+   - Logging detallado
+
+================================================================================
+ENDPOINTS API
+================================================================================
+
+AUTENTICACIÓN:
+POST /api/auth/login
+
+PRODUCTOS:
+GET    /api/products                    [Admin, Almacenero]
+GET    /api/products/{id}               [Admin, Almacenero]
+POST   /api/products                    [Admin, Almacenero]
+PUT    /api/products/{id}               [Admin, Almacenero]
+DELETE /api/products/{id}               [Admin, Almacenero]
+
+CATEGORÍAS:
+GET    /api/categories                  [Admin, Almacenero]
+GET    /api/categories/{id}             [Admin, Almacenero]
+POST   /api/categories                  [Admin, Almacenero]
+PUT    /api/categories/{id}             [Admin, Almacenero]
+DELETE /api/categories/{id}             [Admin, Almacenero]
+
+CLIENTES:
+GET    /api/customers                   [Admin]
+GET    /api/customers/{id}              [Admin]
+POST   /api/customers                   [Admin]
+PUT    /api/customers/{id}              [Admin]
+DELETE /api/customers/{id}              [Admin]
+
+VENTAS:
+GET    /api/sales                       [Admin, Cajero]
+GET    /api/sales/{id}                  [Admin, Cajero]
+POST   /api/sales                       [Admin, Cajero]
+POST   /api/sales/{id}/cancel           [Admin, Cajero]
+POST   /api/sales/{id}/send-receipt     [Admin, Cajero]
+GET    /api/sales/{id}/pdf              [Admin, Cajero]
+
+DASHBOARD:
+GET    /api/dashboard/stats             [Admin]
+
+ARCHIVOS:
+POST   /api/files/upload                [Admin, Almacenero]
+DELETE /api/files/{*filePath}           [Admin, Almacenero]
+
+HEALTH:
+GET    /health
+GET    /health/ready
+
+================================================================================
+CONFIGURACIÓN DE PRODUCCIÓN
+================================================================================
+
+VARIABLES DE ENTORNO REQUERIDAS:
+
+ConnectionStrings:
+  DefaultConnection: Cadena de conexión a SQL Server
+
+JwtSettings:
+  SecretKey: Clave secreta (mínimo 32 caracteres)
+  Issuer: MinimarketAPI
+  Audience: MinimarketWeb
+  ExpirationMinutes: 60
+
+EmailSettings:
+  SmtpServer: smtp.gmail.com (o tu servidor SMTP)
+  SmtpPort: 587
+  SmtpUser: tu-email@gmail.com
+  SmtpPassword: tu-app-password
+  FromEmail: noreply@minimarketcamucha.com
+  FromName: Minimarket Camucha
+  ApiKey: (opcional, para API externa)
+  ApiUrl: https://api.resend.com/emails
+
+Cors:
+  AllowedOrigins: ["https://tu-dominio.com"]
+
+FileStorage:
+  BaseUrl: https://api.tu-dominio.com
+
+Company:
+  Name: Minimarket Camucha
+  Ruc: 20123456789
+  Address: Av. Principal 123, Lima, Perú
+  Phone: +51 999 999 999
+
+================================================================================
+USUARIOS POR DEFECTO
+================================================================================
+
+ADMINISTRADOR:
+  Usuario: admin
+  Contraseña: Admin123!
+  Rol: Administrador
+
+CAJERO:
+  Usuario: cajero
+  Contraseña: Cajero123!
+  Rol: Cajero
+
+ALMACENERO:
+  Usuario: almacenero
+  Contraseña: Almacenero123!
+  Rol: Almacenero
+
+IMPORTANTE: Cambiar contraseñas en producción.
+
+================================================================================
+DATOS INICIALES (SEEDERS)
+================================================================================
+
+Categorías creadas:
+- Lácteos
+- Abarrotes
+- Bebidas
+- Golosinas
+- Conservas
+- Limpieza
+
+Productos: ~50 productos de ejemplo distribuidos en categorías
+
+Clientes: 10 clientes de prueba (DNI y RUC)
+
+================================================================================
+PENDIENTES / MEJORAS FUTURAS
+================================================================================
+
+1. GESTIÓN DE USUARIOS
+   - CRUD de usuarios
+   - Asignación de roles
+   - Cambio de contraseñas
+   - Usuarios inactivos
+
+2. REPORTES AVANZADOS
+   - Reporte de ventas por período
+   - Reporte de productos más vendidos
+   - Reporte de inventario
+   - Reporte de clientes
+   - Exportación a Excel/PDF
+
+3. INVENTARIO
+   - Movimientos de inventario (entradas/salidas)
+   - Ajustes de inventario
+   - Historial de movimientos
+   - Alertas de stock bajo
+
+4. INTEGRACIÓN SUNAT (Perú)
+   - Generación de comprobantes electrónicos
+   - Consulta de RUC/DNI
+   - Validación de documentos
+   - Envío a SUNAT
+
+5. IMPRESIÓN TÉRMICA
+   - Impresora térmica para tickets
+   - Formato de ticket optimizado
+   - Impresión automática
+
+6. BÚSQUEDA CON CÓDIGO DE BARRAS
+   - Escáner de código de barras
+   - Búsqueda rápida en POS
+   - Generación de códigos de barras
+
+7. PEDIDOS ONLINE (E-commerce)
+   - Carrito de compras
+   - Checkout
+   - Gestión de pedidos
+   - Estados de pedido
+
+8. NOTIFICACIONES
+   - Notificaciones en tiempo real
+   - Alertas de stock bajo
+   - Notificaciones de ventas
+   - Sistema de notificaciones push
+
+9. BACKUP Y RESTAURACIÓN
+   - Backup automático de base de datos
+   - Restauración de datos
+   - Exportación de datos
+
+10. AUDITORÍA
+    - Log de acciones de usuarios
+    - Historial de cambios
+    - Trazabilidad completa
+
+11. MULTI-TIENDA
+    - Soporte para múltiples tiendas
+    - Gestión centralizada
+    - Reportes por tienda
+
+12. APP MÓVIL
+    - App móvil nativa o PWA
+    - Sincronización offline
+    - Escáner de código de barras
+
+13. OPTIMIZACIONES
+    - Caché con Redis
+    - Almacenamiento en la nube (Azure Blob)
+    - CDN para archivos estáticos
+    - Compresión de respuestas
+
+14. TESTING
+    - Unit tests (backend)
+    - Integration tests
+    - E2E tests (frontend)
+    - Cobertura de código
+
+15. CI/CD
+    - Pipeline de CI/CD
+    - Deploy automático
+    - Testing automático
+    - Rollback automático
+
+================================================================================
+COMANDOS ÚTILES
+================================================================================
+
+BACKEND:
+# Restaurar dependencias
+dotnet restore
+
+# Crear migración
+dotnet ef migrations add NombreMigracion --project src/Minimarket.Infrastructure --startup-project src/Minimarket.API
+
+# Aplicar migraciones
+dotnet ef database update --project src/Minimarket.Infrastructure --startup-project src/Minimarket.API
+
+# Ejecutar API
+dotnet run --project src/Minimarket.API
+
+# Compilar para producción
+dotnet publish src/Minimarket.API/Minimarket.API.csproj -c Release -o ./publish
+
+FRONTEND:
+# Instalar dependencias
+cd minimarket-web
+npm install
+
+# Ejecutar en desarrollo
+npm start
+# o
+ng serve
+
+# Compilar para producción
+npm run build --configuration production
+
+# Ejecutar tests
+npm test
+
+# Linter
+npm run lint
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+1. DISEÑOS:
+   - Los diseños del frontend replican fielmente los HTML proporcionados
+   - Colores primarios:
+     * Verde (#4CAF50) para tienda pública
+     * Azul (#0d7ff2) para panel admin
+   - Dark mode implementado
+   - Material Symbols para iconos
+
+2. CONVENCIONES:
+   - Código en inglés (clases, métodos, variables)
+   - Nombres de entidades de negocio en español
+   - Comentarios en español
+
+3. SEGURIDAD:
+   - Nunca commitear secretos en el repositorio
+   - Usar variables de entorno en producción
+   - Cambiar contraseñas por defecto
+   - Configurar HTTPS obligatorio
+   - Validar inputs en frontend y backend
+
+4. PERFORMANCE:
+   - Paginación implementada para listas grandes
+   - Queries optimizadas con EF Core
+   - Lazy loading deshabilitado (usar Include explícito)
+
+5. LOGGING:
+   - Serilog configurado
+   - Logs en archivos y consola
+   - Trace IDs para debugging
+
+================================================================================
+DOCUMENTACIÓN DE REFERENCIA
+================================================================================
+
+- DEPLOYMENT.md: Guía detallada de despliegue
+- README.md: Documentación general del proyecto
+- .env.example: Ejemplo de variables de entorno
+- IMPLEMENTATION_STATUS.md: Estado de implementación
+
+================================================================================
+CONTACTO Y SOPORTE
+================================================================================
+
+Este es un proyecto privado y confidencial.
+
+Para actualizaciones o modificaciones, consultar la documentación técnica
+y seguir las convenciones establecidas en este documento.
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+

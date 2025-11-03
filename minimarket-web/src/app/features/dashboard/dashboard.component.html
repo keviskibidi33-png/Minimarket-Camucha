@@ -1,0 +1,125 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">
+      Dashboard
+    </h1>
+
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+      </div>
+    } @else if (stats()) {
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Ventas Hoy -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="total-sales">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Ventas Hoy</h3>
+            <span class="material-symbols-outlined text-green-500">trending_up</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(stats()!.todaySales) }}</p>
+          <p class="text-xs text-gray-500">{{ stats()!.todaySalesCount }} ventas</p>
+        </div>
+
+        <!-- Ventas del Mes -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="total-profit">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Ventas del Mes</h3>
+            <span class="material-symbols-outlined text-blue-500">calendar_month</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(stats()!.monthSales) }}</p>
+          <p class="text-xs text-gray-500">{{ stats()!.monthSalesCount }} ventas</p>
+        </div>
+
+        <!-- Total Productos -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="transactions-count">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Productos</h3>
+            <span class="material-symbols-outlined text-purple-500">inventory_2</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ stats()!.totalProducts }}</p>
+          <p class="text-xs text-gray-500">activos</p>
+        </div>
+
+        <!-- Stock Bajo -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="inventory-value">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Stock Bajo</h3>
+            <span class="material-symbols-outlined text-red-500">warning</span>
+          </div>
+          <p class="text-3xl font-bold text-red-500 mb-1">{{ stats()!.lowStockProducts }}</p>
+          <a routerLink="/productos" class="text-xs text-primary-admin hover:underline">Ver productos</a>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Daily Sales Chart -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="sales-chart">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Ventas de los Últimos 7 Días</h3>
+          <div class="space-y-3">
+            @for (daily of stats()!.dailySales; track daily.date) {
+              <div class="flex items-center gap-4">
+                <div class="w-20 text-xs text-gray-500 dark:text-gray-400">
+                  {{ formatDate(daily.date) }}
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="h-4 bg-primary-admin rounded" [style.width.%]="getPercentage(daily.total)"></div>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(daily.total) }}</span>
+                  </div>
+                  <p class="text-xs text-gray-500">{{ daily.count }} ventas</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6" data-cy="top-products">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Productos Más Vendidos</h3>
+          <div class="space-y-3">
+            @for (product of stats()!.topProducts; track product.productId) {
+              <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div class="flex-1">
+                  <p class="font-medium text-gray-900 dark:text-white">{{ product.productName }}</p>
+                  <p class="text-sm text-gray-500">{{ product.quantitySold }} unidades vendidas</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold text-gray-900 dark:text-white">{{ formatCurrency(product.totalRevenue) }}</p>
+                </div>
+              </div>
+            }
+            @if (stats()!.topProducts.length === 0) {
+              <p class="text-sm text-gray-500 text-center py-4">No hay datos disponibles</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <a routerLink="/pos" class="flex flex-col items-center p-4 bg-primary-admin/10 rounded-lg hover:bg-primary-admin/20 transition-colors">
+            <span class="material-symbols-outlined text-primary-admin text-3xl mb-2">point_of_sale</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">Nueva Venta</span>
+          </a>
+          <a routerLink="/productos/nuevo" class="flex flex-col items-center p-4 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">
+            <span class="material-symbols-outlined text-green-500 text-3xl mb-2">add_shopping_cart</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">Nuevo Producto</span>
+          </a>
+          <a routerLink="/clientes/nuevo" class="flex flex-col items-center p-4 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-colors">
+            <span class="material-symbols-outlined text-blue-500 text-3xl mb-2">person_add</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">Nuevo Cliente</span>
+          </a>
+          <a routerLink="/ventas" class="flex flex-col items-center p-4 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors">
+            <span class="material-symbols-outlined text-purple-500 text-3xl mb-2">receipt_long</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">Ver Ventas</span>
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+

@@ -1,0 +1,21 @@
+{
+  "admin": {
+    "email": "admin@minimarket.com",
+    "password": "Admin@1234",
+    "username": "admin",
+    "role": "Administrador"
+  },
+  "cajero": {
+    "email": "cajero@minimarket.com",
+    "password": "Cajero@1234",
+    "username": "cajero",
+    "role": "Cajero"
+  },
+  "almacenero": {
+    "email": "almacenero@minimarket.com",
+    "password": "Almacenero@1234",
+    "username": "almacenero",
+    "role": "Almacenero"
+  }
+}
+

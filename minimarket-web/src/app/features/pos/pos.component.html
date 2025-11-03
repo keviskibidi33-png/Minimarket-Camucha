@@ -1,0 +1,321 @@
+<div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark" (keydown)="onKeyDown($event)" tabindex="0">
+  <app-pos-header></app-pos-header>
+  <main class="flex-1 grid grid-cols-12 gap-6 p-6 overflow-y-auto">
+    <!-- Left Column: Product Search and Results -->
+    <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+      <!-- SearchBar -->
+      <div class="flex-shrink-0">
+        <label class="flex flex-col min-w-40 h-14 w-full">
+          <div class="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
+            <div class="text-gray-500 dark:text-gray-400 flex border-r-0 bg-white dark:bg-gray-800 items-center justify-center pl-4 rounded-l-xl">
+              <span class="material-symbols-outlined">search</span>
+            </div>
+              <input 
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary-admin border-none bg-white dark:bg-gray-800 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
+              placeholder="Buscar por nombre o escanear código de barras..."
+              [value]="searchTerm()"
+              (input)="searchTerm.set($any($event.target).value); onSearch()"
+              (keyup.enter)="onSearch()"
+              type="text"
+              data-cy="product-search"
+              autofocus>
+          </div>
+        </label>
+      </div>
+
+      <!-- Product List -->
+      <div class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+        @if (isLoading()) {
+          <div class="flex items-center justify-center h-full">
+            <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+          </div>
+        } @else if (filteredProducts().length === 0) {
+          <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+            No se encontraron productos
+          </div>
+        } @else {
+          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            @for (product of filteredProducts(); track product.id) {
+              <div class="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center transition-shadow hover:shadow-md">
+                @if (product.imageUrl) {
+                  <div class="bg-center bg-no-repeat aspect-square bg-contain w-24 h-24 mb-2" 
+                       [style.background-image]="'url(' + product.imageUrl + ')'"></div>
+                } @else {
+                  <div class="bg-gray-200 dark:bg-gray-700 aspect-square w-24 h-24 mb-2 rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-gray-400">inventory_2</span>
+                  </div>
+                }
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 flex-grow">{{ product.name }}</p>
+                <p class="text-base font-bold text-gray-900 dark:text-white mt-1">S/ {{ product.salePrice.toFixed(2) }}</p>
+                @if (product.stock === 0) {
+                  <p class="text-xs text-red-500 mt-1">Sin stock</p>
+                } @else if (product.stock <= product.minimumStock) {
+                  <p class="text-xs text-yellow-500 mt-1">Stock: {{ product.stock }}</p>
+                }
+                <button 
+                  (click)="addToCart(product)"
+                  [disabled]="product.stock === 0"
+                  class="mt-2 w-full flex items-center justify-center rounded-lg h-9 px-3 bg-primary-admin/20 dark:bg-primary-admin/30 text-primary-admin dark:text-blue-300 text-sm font-bold hover:bg-primary-admin/30 dark:hover:bg-primary-admin/40 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span class="material-symbols-outlined mr-1 text-base">add_shopping_cart</span>
+                  Agregar
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right Column: Sales Cart and Actions -->
+    <div class="col-span-12 lg:col-span-5 flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+      <!-- PageHeading -->
+      <div class="flex flex-wrap justify-between gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+        <p class="text-gray-900 dark:text-white text-2xl font-bold tracking-tight">
+          {{ documentType() === 'Boleta' ? 'Boleta' : 'Factura' }} de Venta
+        </p>
+        <div class="flex gap-2">
+          <select
+            [value]="documentType()"
+            (change)="documentType.set($any($event.target).value); onDocumentTypeChange()"
+            data-cy="document-type"
+            class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin">
+            <option value="Boleta">Boleta</option>
+            <option value="Factura">Factura</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Customer Selection (for Factura) -->
+      @if (documentType() === 'Factura') {
+        <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+            @if (selectedCustomer()) {
+            <div class="flex items-center justify-between bg-primary-admin/10 rounded-lg p-3" data-cy="selected-customer">
+              <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedCustomer()?.name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400" data-cy="customer-ruc">{{ selectedCustomer()?.documentType }}: {{ selectedCustomer()?.documentNumber }}</p>
+              </div>
+              <button 
+                (click)="selectedCustomer.set(null)"
+                class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <span class="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+          } @else {
+            <div class="relative">
+              <input
+                type="text"
+                [value]="customerSearchTerm()"
+                (input)="customerSearchTerm.set($any($event.target).value)"
+                (focus)="showCustomerSearch.set(true)"
+                (keydown.escape)="showCustomerSearch.set(false); customerSearchTerm.set('')"
+                data-cy="customer-search"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin"
+                placeholder="Buscar cliente por nombre o documento...">
+              @if (showCustomerSearch()) {
+                <div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto">
+                  @if (getFilteredCustomers().length > 0) {
+                    @for (customer of getFilteredCustomers(); track customer.id) {
+                      <button
+                        (click)="selectCustomer(customer)"
+                        [attr.data-cy]="'customer-option-' + customer.id"
+                        class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                        <p class="font-medium text-gray-900 dark:text-white">{{ customer.name }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ customer.documentType }}: {{ customer.documentNumber }}</p>
+                      </button>
+                    }
+                  } @else {
+                    <p class="px-4 py-2 text-sm text-gray-500 text-center">No se encontraron clientes</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Table -->
+      <div class="flex-1 px-2 py-3 overflow-y-auto">
+        @if (cartItems().length === 0) {
+          <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <div class="text-center">
+              <span class="material-symbols-outlined text-6xl mb-4 opacity-50">shopping_cart</span>
+              <p>El carrito está vacío</p>
+            </div>
+          </div>
+        } @else {
+          <div class="flex overflow-hidden">
+            <table class="flex-1" data-cy="cart-items">
+              <thead>
+                <tr>
+                  <th class="px-4 py-3 text-left text-gray-600 dark:text-gray-400 w-[45%] text-sm font-medium">Producto</th>
+                  <th class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 w-[20%] text-sm font-medium">Cantidad</th>
+                  <th class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 w-[15%] text-sm font-medium">P. Unit</th>
+                  <th class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 w-[15%] text-sm font-medium">Subtotal</th>
+                  <th class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 w-[5%] text-sm font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of cartItems(); track item.productId; let i = $index) {
+                  <tr class="border-t border-gray-200 dark:border-gray-700" [attr.data-cy]="'cart-item-' + (i + 1)">
+                    <td class="h-[72px] px-4 py-2 w-[45%] text-gray-800 dark:text-gray-200 text-sm font-normal">{{ item.productName }}</td>
+                    <td class="h-[72px] px-4 py-2 w-[20%] text-gray-600 dark:text-gray-300 text-sm font-normal">
+                      <div class="flex items-center justify-center gap-2">
+                        <button 
+                          (click)="updateCartItemQuantity(item.productId, item.quantity - 1)"
+                          class="size-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                          <span class="material-symbols-outlined text-sm">remove</span>
+                        </button>
+                        <span class="min-w-[2rem] text-center">{{ item.quantity }}</span>
+                        <button 
+                          (click)="updateCartItemQuantity(item.productId, item.quantity + 1)"
+                          class="size-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                          <span class="material-symbols-outlined text-sm">add</span>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="h-[72px] px-4 py-2 w-[15%] text-gray-600 dark:text-gray-300 text-sm font-normal text-right">S/ {{ item.unitPrice.toFixed(2) }}</td>
+                    <td class="h-[72px] px-4 py-2 w-[15%] text-gray-800 dark:text-gray-200 text-sm font-medium text-right">S/ {{ item.subtotal.toFixed(2) }}</td>
+                    <td class="h-[72px] px-4 py-2 w-[5%] text-center">
+                      <button 
+                        (click)="removeFromCart(item.productId)"
+                        [attr.data-cy]="'remove-item-' + (i + 1)"
+                        class="text-red-500 hover:text-red-700 dark:hover:text-red-400">
+                        <span class="material-symbols-outlined text-xl">delete</span>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- DescriptionList & Actions -->
+      <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between gap-x-6 py-1.5">
+          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">Subtotal</p>
+          <p class="text-gray-800 dark:text-gray-200 text-sm font-medium text-right" data-cy="subtotal">S/ {{ subtotal().toFixed(2) }}</p>
+        </div>
+        <div class="flex justify-between gap-x-6 py-1.5">
+          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">IGV (18%)</p>
+          <p class="text-gray-800 dark:text-gray-200 text-sm font-medium text-right" data-cy="igv">S/ {{ tax().toFixed(2) }}</p>
+        </div>
+        <div class="flex justify-between gap-x-6 py-1.5">
+          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">Descuento</p>
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              [value]="discount()"
+              (input)="discount.set($any($event.target).value || 0)"
+              data-cy="discount-percentage"
+              class="w-24 px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right">
+            <span class="text-gray-800 dark:text-gray-200 text-sm font-medium">S/ {{ discount().toFixed(2) }}</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center gap-x-6 py-4">
+          <p class="text-gray-900 dark:text-white text-lg font-bold">TOTAL</p>
+          <p class="text-gray-900 dark:text-white text-2xl font-black text-right" data-cy="total">S/ {{ total().toFixed(2) }}</p>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="py-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Método de Pago</label>
+          <select
+            [value]="paymentMethod()"
+            (change)="paymentMethod.set($any($event.target).value); onPaymentMethodChange()"
+            data-cy="payment-method-select"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin">
+            <option value="Efectivo" data-cy="payment-Efectivo">Efectivo</option>
+            <option value="Tarjeta" data-cy="payment-Tarjeta">Tarjeta</option>
+            <option value="YapePlin" data-cy="payment-YapePlin">Yape/Plin</option>
+            <option value="Transferencia" data-cy="payment-Transferencia">Transferencia</option>
+          </select>
+        </div>
+
+        <!-- Amount Paid -->
+        <div class="py-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Monto Pagado
+            @if (paymentMethod() === 'Efectivo' && change() > 0) {
+              <span class="text-green-600 dark:text-green-400 font-medium" data-cy="change-amount">(Vuelto: S/ {{ change().toFixed(2) }})</span>
+            }
+            @if (paymentMethod() !== 'Efectivo') {
+              <span class="text-gray-500 dark:text-gray-400 text-xs block mt-1">Para otros métodos, el monto debe ser igual al total</span>
+            }
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            [value]="amountPaid()"
+            (input)="amountPaid.set(parseFloat($any($event.target).value) || 0)"
+            [readonly]="paymentMethod() !== 'Efectivo'"
+            data-cy="amount-paid"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin"
+            [class.border-red-500]="amountPaid() < total()"
+            [class.bg-gray-100]="paymentMethod() !== 'Efectivo'"
+            [class.dark:bg-gray-800]="paymentMethod() !== 'Efectivo'"
+            [attr.readonly]="paymentMethod() !== 'Efectivo' ? '' : null">
+          @if (amountPaid() < total()) {
+            <p class="mt-1 text-sm text-red-500">El monto pagado debe ser mayor o igual al total</p>
+          }
+          @if (paymentMethod() !== 'Efectivo') {
+            <input type="hidden" [value]="total()">
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <button 
+            (click)="clearCart()"
+            data-cy="clear-cart"
+            class="flex w-full items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-red-500/10 text-red-500 text-base font-bold tracking-wide hover:bg-red-500/20">
+            Cancelar
+          </button>
+          <button 
+            (click)="processSale()"
+            [disabled]="cartItems().length === 0 || amountPaid() < total() || isLoading()"
+            data-cy="complete-sale-button"
+            class="flex w-full items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-primary-admin text-white text-base font-bold tracking-wide hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isLoading()) {
+              <span class="material-symbols-outlined animate-spin mr-2">refresh</span>
+            }
+            Cobrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Send Receipt Dialog -->
+  <app-send-receipt-dialog
+    [isOpen]="showSendReceiptDialog()"
+    [saleNumber]="lastSale()?.documentNumber || ''"
+    [documentType]="lastSale()?.documentType || 'Boleta'"
+    [customerEmail]="selectedCustomer()?.email || null"
+    (onClose)="showSendReceiptDialog.set(false)"
+    (onSend)="onSendReceipt($event)">
+  </app-send-receipt-dialog>
+
+  <!-- Success Actions (after sale) -->
+  @if (lastSale() && !showSendReceiptDialog()) {
+    <div class="fixed bottom-4 right-4 flex gap-2">
+      <button
+        (click)="downloadReceipt()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 shadow-lg">
+        <span class="material-symbols-outlined">download</span>
+        Descargar PDF
+      </button>
+      <button
+        (click)="showSendReceiptDialog.set(true)"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-lg">
+        <span class="material-symbols-outlined">email</span>
+        Enviar por Email
+      </button>
+    </div>
+  }
+</div>
+

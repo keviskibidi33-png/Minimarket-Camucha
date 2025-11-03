@@ -1,0 +1,142 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+  <!-- Header -->
+  <header class="flex items-center justify-center whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-white dark:bg-background-dark/50">
+    <div class="flex items-center justify-between px-4 sm:px-10 py-3 w-full max-w-7xl">
+      <div class="flex items-center gap-4">
+        <a routerLink="/" class="flex items-center gap-3">
+          <div class="size-6 text-primary">
+            <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
+            </svg>
+          </div>
+          <h2 class="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">Minimarket Camucha</h2>
+        </a>
+      </div>
+      <div class="hidden md:flex items-center gap-2">
+        <span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">lock</span>
+        <span class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Pago Seguro</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 w-full">
+    <div class="mx-auto max-w-7xl px-4 py-8 lg:py-16">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 xl:gap-12">
+        <!-- Main Content -->
+        <div class="w-full">
+          <!-- Stepper -->
+          <app-checkout-stepper [currentStep]="3"></app-checkout-stepper>
+
+          <!-- PageHeading -->
+          <div class="flex flex-wrap justify-between gap-3 pb-6">
+            <p class="text-3xl lg:text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Revisar y Confirmar</p>
+          </div>
+
+          <div class="space-y-8">
+            <!-- Shipping Information -->
+            @if (shippingData) {
+              <section class="bg-white dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark p-6">
+                <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4 mb-4 border-b border-border-light dark:border-border-dark">Información de Envío</h2>
+                <div class="space-y-2 text-base">
+                  <p><span class="font-medium">Email:</span> {{ shippingData.email }}</p>
+                  <p><span class="font-medium">Nombre:</span> {{ shippingData.firstName }} {{ shippingData.lastName }}</p>
+                  <p><span class="font-medium">Dirección:</span> {{ shippingData.address }}</p>
+                  <p><span class="font-medium">Ciudad:</span> {{ shippingData.city }}, {{ shippingData.region }}</p>
+                  <p><span class="font-medium">Método:</span> {{ shippingData.shippingMethod === 'delivery' ? 'Despacho a Domicilio' : 'Retiro en Tienda' }}</p>
+                </div>
+                <a routerLink="/checkout/envio" class="text-primary text-sm font-medium hover:underline mt-4 inline-block">Editar</a>
+              </section>
+            }
+
+            <!-- Payment Information -->
+            @if (paymentData) {
+              <section class="bg-white dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark p-6">
+                <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4 mb-4 border-b border-border-light dark:border-border-dark">Información de Pago</h2>
+                <div class="space-y-2 text-base">
+                  <p><span class="font-medium">Método:</span> {{ getPaymentMethodName() }}</p>
+                  @if (paymentData.paymentMethod === 'card' && paymentData.cardNumber) {
+                    <p><span class="font-medium">Tarjeta:</span> **** **** **** {{ paymentData.cardNumber.slice(-4) }}</p>
+                    <p><span class="font-medium">Titular:</span> {{ paymentData.cardName }}</p>
+                  }
+                </div>
+                <a routerLink="/checkout/pago" class="text-primary text-sm font-medium hover:underline mt-4 inline-block">Editar</a>
+              </section>
+            }
+
+            <!-- Order Items -->
+            <section class="bg-white dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark p-6">
+              <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4 mb-4 border-b border-border-light dark:border-border-dark">Productos</h2>
+              <div class="space-y-4">
+                @for (item of cartItems(); track item.productId) {
+                  <div class="flex gap-4">
+                    <div 
+                      class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-20 shrink-0" 
+                      [style.background-image]="item.productImageUrl ? 'url(' + item.productImageUrl + ')' : 'none'"
+                      [style.background-color]="!item.productImageUrl ? '#f3f4f6' : 'transparent'">
+                      @if (!item.productImageUrl) {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <span class="material-symbols-outlined text-gray-400">inventory_2</span>
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-medium text-text-primary-light dark:text-text-primary-dark">{{ item.productName }}</p>
+                      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Cantidad: {{ item.quantity }} × {{ getPriceFormatted(item.unitPrice) }}</p>
+                      <p class="font-bold text-text-primary-light dark:text-text-primary-dark mt-1">{{ getPriceFormatted(item.subtotal) }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-6 border-t border-border-light dark:border-border-dark">
+              <a routerLink="/checkout/pago" class="flex items-center gap-1 text-primary text-sm font-bold hover:underline">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Volver
+              </a>
+              <button 
+                (click)="confirmOrder()"
+                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
+                <span class="truncate">Confirmar Pedido</span>
+                <span class="material-symbols-outlined ml-2">check_circle</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-24 bg-white dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark pb-4 border-b border-border-light dark:border-border-dark mb-4">Resumen del Pedido</h2>
+            
+            <!-- Price Summary -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                <span>Subtotal</span>
+                <span>{{ getPriceFormatted(subtotal()) }}</span>
+              </div>
+              <div class="flex justify-between text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                <span>Envío</span>
+                <span>{{ getPriceFormatted(shippingCost()) }}</span>
+              </div>
+              <div class="flex justify-between items-center pt-4 border-t border-border-light dark:border-border-dark">
+                <span class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">Total</span>
+                <span class="text-xl font-black text-text-primary-light dark:text-text-primary-dark">{{ getPriceFormatted(total()) }}</span>
+              </div>
+            </div>
+
+            @if (orderNumber()) {
+              <div class="mt-6 p-4 bg-primary/10 rounded-lg">
+                <p class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">Número de Orden:</p>
+                <p class="text-lg font-bold text-primary">{{ orderNumber() }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+

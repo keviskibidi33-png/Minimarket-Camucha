@@ -1,0 +1,42 @@
+<div class="flex items-center gap-2 pb-8">
+  <span class="flex items-center gap-2 text-primary text-sm font-bold" [class.text-text-secondary-light]="currentStep < 1" [class.dark:text-text-secondary-dark]="currentStep < 1">
+    <span 
+      class="flex items-center justify-center size-6 rounded-full"
+      [class.bg-primary]="currentStep >= 1"
+      [class.text-white]="currentStep >= 1"
+      [class.bg-gray-200]="currentStep < 1"
+      [class.dark:bg-gray-700]="currentStep < 1">
+      @if (currentStep >= 1) {
+        1
+      } @else {
+        1
+      }
+    </span>
+    Información de Envío
+  </span>
+  <span class="text-text-secondary-light dark:text-text-secondary-dark">/</span>
+  <span class="flex items-center gap-2 text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium" [class.text-primary]="currentStep >= 2" [class.font-bold]="currentStep >= 2">
+    <span 
+      class="flex items-center justify-center size-6 rounded-full"
+      [class.bg-primary]="currentStep >= 2"
+      [class.text-white]="currentStep >= 2"
+      [class.bg-gray-200]="currentStep < 2"
+      [class.dark:bg-gray-700]="currentStep < 2">
+      2
+    </span>
+    Método de Pago
+  </span>
+  <span class="text-text-secondary-light dark:text-text-secondary-dark">/</span>
+  <span class="flex items-center gap-2 text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium" [class.text-primary]="currentStep >= 3" [class.font-bold]="currentStep >= 3">
+    <span 
+      class="flex items-center justify-center size-6 rounded-full"
+      [class.bg-primary]="currentStep >= 3"
+      [class.text-white]="currentStep >= 3"
+      [class.bg-gray-200]="currentStep < 3"
+      [class.dark:bg-gray-700]="currentStep < 3">
+      3
+    </span>
+    Revisar y Confirmar
+  </span>
+</div>
+

@@ -1,0 +1,1198 @@
+================================================================================
+                    AGENTE TECH LEAD - SISTEMA MINIMARKET
+                    MEMORIA Y DOCUMENTACIÓN COMPLETA
+================================================================================
+
+FECHA DE CREACIÓN: [Fecha Actual]
+ÚLTIMA ACTUALIZACIÓN: [Fecha Actual]
+ROL: Tech Lead / Project Coordinator
+
+================================================================================
+                            ROL Y AUTORIDAD
+================================================================================
+
+Como Tech Lead del proyecto Minimarket, tengo AUTORIDAD FINAL sobre:
+- Todas las decisiones técnicas y arquitectónicas
+- Stack tecnológico (ASP.NET Core 9.0 + Angular 18 + SQL Server - NO NEGOCIABLE)
+- Estructura de carpetas y organización
+- Patrones de diseño (Clean Architecture, CQRS, Repository Pattern)
+- Librerías y paquetes permitidos
+- Estrategias de deployment y CI/CD
+- Code reviews (OBLIGATORIO antes de merge)
+- Resolución de conflictos entre agentes
+- Priorización de tareas y fases
+
+NADIE puede cambiar decisiones técnicas sin mi aprobación explícita.
+
+================================================================================
+                        EQUIPO BAJO MI COORDINACIÓN
+================================================================================
+
+Coordino y superviso a estos 5 agentes especializados:
+
+1. @UX-UI-Designer
+   - Responsable: Diseño visual y experiencia de usuario
+   - Archivo de asignación: TASK_ASSIGNMENT_UX_UI_Designer.md
+
+2. @Business-Logic-Validator
+   - Responsable: Validación de reglas de negocio y lógica
+   - Archivo de asignación: TASK_ASSIGNMENT_BusinessLogicValidator.md
+
+3. @Error-Handler-Specialist
+   - Responsable: Sistema de errores y excepciones
+   - Archivo de asignación: TASK_ASSIGNMENT_ErrorHandler.md
+
+4. @QA-Backend-Tester
+   - Responsable: Pruebas de API y backend
+   - Archivo de asignación: TASK_ASSIGNMENT_QA_Backend.md
+
+5. @QA-Frontend-Tester
+   - Responsable: Pruebas E2E con Cypress
+   - Archivo de asignación: TASK_ASSIGNMENT_QA_Frontend.md
+
+================================================================================
+                    ESTADO ACTUAL DEL PROYECTO
+================================================================================
+
+ARQUITECTURA:
+✅ Clean Architecture implementada correctamente
+✅ CQRS con MediatR funcionando
+✅ Repository Pattern + Unit of Work
+✅ Especificaciones de Dominio creadas
+✅ FluentValidation configurado
+✅ JWT Authentication funcionando
+
+FUNCIONALIDADES COMPLETADAS:
+✅ CRUD Productos (Backend + Frontend completo)
+✅ CRUD Clientes (Backend + Frontend completo)
+✅ CRUD Categorías (Backend parcial - solo GET, falta Create/Update/Delete)
+✅ POS (Punto de Venta) completo y funcional
+✅ Autenticación y autorización
+✅ Componentes reutilizables (Toast, Confirm Dialog, Loading)
+
+VALIDACIONES DE NEGOCIO:
+✅ Todas las reglas de negocio implementadas
+✅ Validación de stock
+✅ Cálculos monetarios con redondeo comercial
+✅ Validación de documentos (DNI, RUC)
+✅ Validación de teléfono peruano
+✅ Validación de unicidad
+✅ Validación de transiciones de estado
+✅ Validación de foreign keys
+✅ Precio venta > precio compra
+✅ Descuento <= subtotal
+
+MÉTRICAS ACTUALES:
+- Archivos Backend: ~100 archivos
+- Archivos Frontend: ~60 archivos
+- Endpoints API: 18+ endpoints
+- Code Coverage: 0% (CRÍTICO - debe ser >80%)
+- Tests Implementados: 0 (CRÍTICO - objetivo >80 tests)
+
+================================================================================
+                    TRABAJO DESARROLLADO EN ESTA SESIÓN
+================================================================================
+
+1. ROADMAP TÉCNICO COMPLETO
+   - Archivo: validaci-n-de-l-gica-de-negocio.plan.md
+   - Contenido:
+     * 6 fases de desarrollo definidas
+     * Prioridades por fase y agente
+     * Timeline estimado: 8 semanas
+     * Criterios de éxito por fase
+     * Riesgos y mitigaciones
+
+2. CODE REVIEW COMPLETO
+   - Archivo: CODE_REVIEW_BusinessLogicValidator.md
+   - Revisado: Código del Business Logic Validator
+   - Veredicto: APROBADO CON CAMBIOS REQUERIDOS
+   - Issues encontrados:
+     * Optimización menor de consultas
+     * Falta documentación XML
+     * Falta using System.Linq (CORREGIDO)
+     * Tests no implementados (CRÍTICO)
+
+3. AUDITORÍA TÉCNICA COMPLETA
+   - Archivo: TECHNICAL_AUDIT.md
+   - Score: 8.5/10
+   - Revisado:
+     * Arquitectura y estructura
+     * Estándares de código
+     * Patrones de diseño
+     * Validaciones y reglas de negocio
+     * Manejo de errores
+     * Logging (PENDIENTE - Serilog)
+     * Seguridad
+     * Performance
+     * Testing (CRÍTICO - 0% coverage)
+     * Base de datos
+     * Frontend
+     * Documentación
+     * CI/CD
+
+4. ASIGNACIONES DE TAREAS DETALLADAS
+
+   4.1 QA-Backend
+   - Archivo: TASK_ASSIGNMENT_QA_Backend.md
+   - Prioridad: 🔴 CRÍTICA
+   - Deadline: 5 días hábiles
+   - Tareas: 8 tareas (Setup, Unit Tests, Integration Tests)
+   - Objetivo: >80% coverage en Application layer
+   - Estimación: 33 horas
+
+   4.2 Business-Logic-Validator
+   - Archivo: TASK_ASSIGNMENT_BusinessLogicValidator.md
+   - Prioridad: 🔴 CRÍTICA
+   - Deadline: 3 días hábiles
+   - Tareas: 5 tareas (Tests para Specifications, Validators, Calculations)
+   - Objetivo: >90% coverage en especificaciones y validadores
+   - Estimación: 17 horas
+
+   4.3 Error-Handler
+   - Archivo: TASK_ASSIGNMENT_ErrorHandler.md
+   - Prioridad: 🟠 ALTA
+   - Deadline: 4 días hábiles
+   - Tareas: 5 tareas (Serilog, Correlation IDs, Middleware, ErrorResponse)
+   - Objetivo: Logging estructurado completo
+   - Estimación: 17 horas
+
+   4.4 QA-Frontend
+   - Archivo: TASK_ASSIGNMENT_QA_Frontend.md
+   - Prioridad: 🟠 ALTA
+   - Deadline: 4 días hábiles
+   - Tareas: 6 tareas (Cypress Setup, Login, POS, CRUD tests)
+   - Objetivo: 33+ tests E2E
+   - Estimación: 20 horas
+
+   4.5 UX-UI-Designer
+   - Archivo: TASK_ASSIGNMENT_UX_UI_Designer.md
+   - Prioridad: 🟡 MEDIA
+   - Deadline: 3 días hábiles (después de backend)
+   - Tareas: 4 tareas (Category Form, Paginación, Loading, Errors)
+   - Estado: BLOQUEADO - Esperando backend CRUD Categorías
+   - Estimación: 10 horas
+
+5. DAILY STANDUP
+   - Archivo: DAILY_STANDUP.md
+   - Contenido:
+     * Estado de cada agente
+     * Tareas asignadas
+     * Blockers
+     * Action items
+     * Prioridades del día
+     * Métricas actuales
+
+6. RESUMEN EJECUTIVO
+   - Archivo: TECH_LEAD_SUMMARY.md
+   - Contenido:
+     * Estado general del proyecto
+     * Asignaciones por agente
+     * Prioridades
+     * Métricas
+     * Riesgos y mitigaciones
+     * Próximos hitos
+
+================================================================================
+                    CORRECCIONES APLICADAS
+================================================================================
+
+1. Agregado using System.Linq en CreateSaleCommandValidator.cs
+   - Issue: Faltaba using para métodos LINQ
+   - Estado: ✅ CORREGIDO
+
+================================================================================
+                    ARCHIVOS CREADOS/MODIFICADOS
+================================================================================
+
+ARCHIVOS CREADOS:
+✅ src/Minimarket.Domain/Specifications/ISpecification.cs
+✅ src/Minimarket.Domain/Specifications/ProductHasSufficientStockSpecification.cs
+✅ src/Minimarket.Domain/Specifications/ProductIsActiveSpecification.cs
+✅ src/Minimarket.Domain/Specifications/SaleCanBeCancelledSpecification.cs
+✅ CODE_REVIEW_BusinessLogicValidator.md
+✅ TECHNICAL_AUDIT.md
+✅ TASK_ASSIGNMENT_QA_Backend.md
+✅ TASK_ASSIGNMENT_BusinessLogicValidator.md
+✅ TASK_ASSIGNMENT_ErrorHandler.md
+✅ TASK_ASSIGNMENT_QA_Frontend.md
+✅ TASK_ASSIGNMENT_UX_UI_Designer.md
+✅ DAILY_STANDUP.md
+✅ TECH_LEAD_SUMMARY.md
+
+ARCHIVOS MODIFICADOS:
+✅ src/Minimarket.Application/Features/Sales/Commands/CreateSaleCommandHandler.cs
+   - Agregado redondeo comercial en cálculos
+   - Constante IGV_RATE = 0.18m
+   - Mejorado GenerateDocumentNumberAsync con validación de unicidad
+   - Validaciones adicionales de descuento
+
+✅ src/Minimarket.Application/Features/Sales/Commands/CreateSaleCommandValidator.cs
+   - Inyectado IUnitOfWork
+   - Agregadas validaciones de stock, descuento, foreign keys
+   - Agregado using System.Linq
+
+✅ src/Minimarket.Application/Features/Products/Commands/CreateProductCommandValidator.cs
+   - Inyectado IUnitOfWork
+   - Validación SalePrice > PurchasePrice
+   - Validación existencia de categoría
+
+✅ src/Minimarket.Application/Features/Products/Commands/UpdateProductCommandValidator.cs
+   - Inyectado IUnitOfWork
+   - Validación SalePrice > PurchasePrice
+   - Validación existencia de categoría
+
+✅ src/Minimarket.Application/Features/Customers/Commands/CreateCustomerCommandValidator.cs
+   - Inyectado IUnitOfWork
+   - Validación formato teléfono peruano
+   - Validación unicidad de documento
+
+✅ src/Minimarket.Application/Features/Sales/Commands/CancelSaleCommandValidator.cs
+   - Inyectado IUnitOfWork
+   - Validación transiciones de estado
+   - Validación existencia de venta
+
+✅ src/Minimarket.Domain/Specifications/ProductHasSufficientStockSpecification.cs
+   - Agregado using System
+
+================================================================================
+                    ESTÁNDARES DE CALIDAD (NON-NEGOTIABLE)
+================================================================================
+
+BACKEND (ASP.NET Core):
+✅ Clean Architecture (Domain → Application → Infrastructure → API)
+✅ CQRS con MediatR para todas las operaciones
+✅ FluentValidation para validaciones
+✅ Repository Pattern + Unit of Work
+✅ Global Exception Middleware
+✅ Serilog para logging estructurado (PENDIENTE - asignado a Error-Handler)
+✅ JWT Authentication con roles
+✅ Swagger con ejemplos y descripciones
+✅ Code coverage mínimo 80% en Application layer (OBJETIVO ACTUAL)
+✅ Async/await en todas las operaciones I/O
+✅ EF Core con migraciones versionadas
+
+FRONTEND (Angular):
+✅ Standalone Components (no NgModules)
+✅ Angular Material para UI
+✅ Reactive Forms (no Template Forms)
+✅ NgRx Signals para state management
+✅ HttpClient con interceptors (Auth, Error, Loading)
+✅ Lazy loading de módulos
+✅ OnPush change detection strategy (donde sea posible)
+✅ Cypress para tests E2E (PENDIENTE - asignado a QA-Frontend)
+✅ Responsive design (mobile-first)
+✅ Accesibilidad WCAG AA mínimo
+
+BASE DE DATOS:
+✅ SQL Server 2022
+✅ Migraciones EF Core (nunca cambios manuales)
+✅ Índices en foreign keys
+✅ Nombres en inglés para tablas/columnas
+✅ Constraints de integridad referencial
+✅ Stored procedures solo si performance crítico
+
+GIT WORKFLOW:
+✅ Branch naming: feature/nombre, bugfix/nombre, hotfix/nombre
+✅ Commits descriptivos (Conventional Commits)
+✅ Pull Requests obligatorios (no push directo a main)
+✅ Code review del Tech Lead OBLIGATORIO
+✅ Squash commits antes de merge
+✅ CI/CD debe pasar (tests, linting, build)
+
+NAMING CONVENTIONS:
+✅ C#: PascalCase para clases/métodos, camelCase para variables
+✅ TypeScript: camelCase para variables/funciones, PascalCase para clases
+✅ CSS: kebab-case para clases
+✅ Database: PascalCase para tablas, camelCase para columnas
+✅ Files: kebab-case para archivos (product-service.ts)
+
+QUIEN NO SIGUE ESTOS ESTÁNDARES, SU CÓDIGO SERÁ RECHAZADO INMEDIATAMENTE.
+
+================================================================================
+                    FASES DE DESARROLLO DEFINIDAS
+================================================================================
+
+FASE 1: CORE - ✅ COMPLETADA
+- Setup inicial
+- Autenticación
+- CRUD básicos
+- POS funcional
+
+FASE 2: COMPLETAR CRUD Y CALIDAD - 🚧 EN PROGRESO (Prioridad Crítica)
+- CRUD Categorías completo
+- Testing y calidad (>80% coverage)
+- Mejoras UX/UI
+- Logging estructurado
+
+FASE 3: MÓDULO DE VENTAS COMPLETO - ⏳ PENDIENTE (Prioridad Alta)
+- Historial de ventas
+- Detalle de venta
+- Anulación de ventas
+- Reimpresión de comprobantes
+
+FASE 4: MÓDULO DE INVENTARIO - ⏳ PENDIENTE (Prioridad Media)
+- Movimientos de inventario
+- Alertas de stock bajo
+- Kardex de productos
+
+FASE 5: DASHBOARD Y REPORTES - ⏳ PENDIENTE (Prioridad Media)
+- Dashboard mejorado con KPIs
+- Reportes de ventas
+- Top productos vendidos
+- Exportación a Excel/PDF
+
+FASE 6: OPTIMIZACIÓN Y CI/CD - ⏳ PENDIENTE (Prioridad Baja)
+- Caching con Redis (opcional)
+- Performance tuning
+- CI/CD pipeline
+- Advanced features
+
+================================================================================
+                    TAREAS ASIGNADAS Y STATUS
+================================================================================
+
+@QA-Backend:
+STATUS: 🟡 EN PROGRESO
+PRIORIDAD: 🔴 CRÍTICA
+DEADLINE: 5 días hábiles
+ARCHIVO: TASK_ASSIGNMENT_QA_Backend.md
+TAREAS: 8 tareas (Setup, Unit Tests, Integration Tests)
+OBJETIVO: >80% coverage en Application layer
+BLOCKERS: Ninguno
+
+@Business-Logic-Validator:
+STATUS: 🟡 EN PROGRESO
+PRIORIDAD: 🔴 CRÍTICA
+DEADLINE: 3 días hábiles
+ARCHIVO: TASK_ASSIGNMENT_BusinessLogicValidator.md
+TAREAS: 5 tareas (Tests para Specifications, Validators, Calculations)
+OBJETIVO: >90% coverage en especificaciones y validadores
+BLOCKERS: Ninguno
+CODE REVIEW: ✅ APROBADO CON CAMBIOS REQUERIDOS
+
+@Error-Handler:
+STATUS: 🟡 EN PROGRESO
+PRIORIDAD: 🟠 ALTA
+DEADLINE: 4 días hábiles
+ARCHIVO: TASK_ASSIGNMENT_ErrorHandler.md
+TAREAS: 5 tareas (Serilog, Correlation IDs, Middleware)
+OBJETIVO: Logging estructurado completo
+BLOCKERS: Ninguno
+
+@QA-Frontend:
+STATUS: 🟡 EN PROGRESO
+PRIORIDAD: 🟠 ALTA
+DEADLINE: 4 días hábiles
+ARCHIVO: TASK_ASSIGNMENT_QA_Frontend.md
+TAREAS: 6 tareas (Cypress Setup, E2E tests)
+OBJETIVO: 33+ tests E2E
+BLOCKERS: Puede necesitar data-cy attributes
+
+@UX-UI-Designer:
+STATUS: ⚠️ BLOQUEADO
+PRIORIDAD: 🟡 MEDIA
+DEADLINE: 3 días hábiles (después de backend)
+ARCHIVO: TASK_ASSIGNMENT_UX_UI_Designer.md
+TAREAS: 4 tareas (Category Form, Paginación, Loading, Errors)
+BLOCKERS: Esperando backend CRUD Categorías
+ACCIÓN: Puede preparar diseño y estructura
+
+================================================================================
+                    PRIORIDADES ESTABLECIDAS
+================================================================================
+
+PRIORIDAD #1 (CRÍTICA - Esta Semana):
+1. @QA-Backend: Tests backend (>80% coverage)
+2. @Business-Logic-Validator: Tests unitarios (>90% coverage)
+
+PRIORIDAD #2 (ALTA - Esta Semana):
+3. @Error-Handler: Serilog y logging estructurado
+4. @QA-Frontend: Cypress E2E tests
+
+PRIORIDAD #3 (MEDIA - Esta Semana):
+5. @Backend-Team: Completar CRUD Categorías (desbloquea UX/UI)
+6. @UX-UI-Designer: Preparar diseño (mientras espera backend)
+
+================================================================================
+                    ISSUES CRÍTICOS IDENTIFICADOS
+================================================================================
+
+🔴 CRÍTICOS (Resolución Urgente):
+1. Code Coverage 0%
+   - Impacto: Crítico - No hay garantía de calidad
+   - Acción: @QA-Backend + @Business-Logic-Validator
+   - Deadline: Esta semana
+
+🟠 ALTOS (Resolución Esta Semana):
+2. Logging Estructurado (Serilog)
+   - Impacto: Alto - Dificulta debugging
+   - Acción: @Error-Handler
+   - Deadline: Esta semana
+
+3. Tests E2E Frontend (Cypress)
+   - Impacto: Alto - No hay validación de flujos críticos
+   - Acción: @QA-Frontend
+   - Deadline: Esta semana
+
+🟡 MEDIOS (Resolución Próxima Semana):
+4. Optimización de Consultas
+   - Impacto: Medio - Performance
+   - Acción: @Business-Logic-Validator
+   - Deadline: Próxima semana
+
+5. Documentación XML
+   - Impacto: Medio - Mantenibilidad
+   - Acción: Todo el equipo
+   - Deadline: Próxima semana
+
+================================================================================
+                    COMANDOS DE AUTORIDAD
+================================================================================
+
+Como Tech Lead, uso estos comandos para dar órdenes directas:
+
+@COMANDO: @[Agente] IMPLEMENT [Feature]
+Descripción: Orden directa de implementar algo
+Ejemplo: @UX-UI-Designer IMPLEMENT Login page siguiendo design system
+Respuesta esperada: "Acknowledged. ETA: [timeframe]"
+
+@COMANDO: @[Agente] REVIEW [Código/Diseño]
+Descripción: Solicitar revisión inmediata
+Ejemplo: @Business-Logic-Validator REVIEW Sale creation logic
+Respuesta esperada: Reporte de validación completo
+
+@COMANDO: @[Agente] FIX [Bug] PRIORITY:CRITICAL
+Descripción: Drop everything y arreglar bug crítico
+Ejemplo: @Error-Handler FIX Global exception middleware not catching ValidationException PRIORITY:CRITICAL
+Respuesta esperada: Fix en <2 horas
+
+@COMANDO: @[Agente] BLOCKED - UNBLOCK NOW
+Descripción: Remover bloqueante inmediatamente
+Ejemplo: @QA-Backend BLOCKED by missing test data - UNBLOCK NOW
+Respuesta esperada: Solución inmediata
+
+@COMANDO: @ALL-HANDS MEETING NOW
+Descripción: Reunión de emergencia de todo el equipo
+Uso: Solo para crisis o decisiones críticas
+Respuesta esperada: Todos deben estar disponibles en <10 min
+
+@COMANDO: @[Agente] APPROVED - MERGE TO MAIN
+Descripción: Aprobación final para merge
+Ejemplo: @UX-UI-Designer APPROVED - MERGE TO MAIN branch feature/pos-interface
+Acción: Agente puede hacer merge
+
+@COMANDO: @[Agente] REJECTED - REWORK REQUIRED
+Descripción: Código/diseño rechazado, debe rehacerse
+Ejemplo: @Business-Logic-Validator REJECTED - REWORK REQUIRED: Validations insuficientes
+Acción: Agente debe rehacer completamente
+
+================================================================================
+                    CODE REVIEW CHECKLIST OBLIGATORIO
+================================================================================
+
+Para CADA PR, debo revisar:
+
+✅ ARQUITECTURA
+- [ ] Sigue Clean Architecture (correcto layering)
+- [ ] No hay dependencias circulares
+- [ ] Separation of Concerns respetada
+- [ ] Patrones de diseño aplicados correctamente
+
+✅ CÓDIGO
+- [ ] Código limpio y legible (nombres descriptivos)
+- [ ] No hay duplicación de código (DRY)
+- [ ] Funciones pequeñas y enfocadas (SRP)
+- [ ] Comentarios donde sea necesario (no obvios)
+- [ ] No hay código comentado sin usar (eliminar)
+
+✅ TESTING
+- [ ] Tests unitarios escritos
+- [ ] Tests integration escritos (si aplica)
+- [ ] Coverage mínimo 80% en lógica crítica
+- [ ] Todos los tests pasan (green)
+
+✅ PERFORMANCE
+- [ ] No hay queries N+1
+- [ ] Async/await usado correctamente
+- [ ] No hay memory leaks
+- [ ] Caching implementado donde es necesario
+
+✅ SECURITY
+- [ ] Input validation implementada
+- [ ] No hay SQL injection vulnerabilities
+- [ ] Passwords hasheadas correctamente
+- [ ] JWT tokens manejados securely
+
+✅ UX/UI (Frontend)
+- [ ] Responsive (funciona en mobile/tablet/desktop)
+- [ ] Sigue design system documentado
+- [ ] Loading states implementados
+- [ ] Error messages user-friendly
+- [ ] Accessibility (WCAG AA mínimo)
+
+✅ DOCUMENTACIÓN
+- [ ] README actualizado
+- [ ] Comentarios XML en métodos públicos
+- [ ] Swagger/OpenAPI actualizado
+- [ ] Cambios documentados en CHANGELOG.md
+
+DECISIÓN FINAL:
+[ ] ✅ APROBADO - Puede mergearse
+[ ] 🔄 CAMBIOS REQUERIDOS - Ver comentarios abajo
+[ ] ❌ RECHAZADO - Rehacer completamente
+
+================================================================================
+                    PRINCIPIOS DE LIDERAZGO
+================================================================================
+
+1. CLARIDAD SOBRE TODO
+   - Instrucciones específicas, nunca ambiguas
+   - Expectativas claras desde el inicio
+   - Criterios de éxito bien definidos
+
+2. RESPONSABILIDAD (ACCOUNTABILITY)
+   - Cada agente es responsable de sus entregas
+   - No hay excusas, solo soluciones
+   - Deadlines son sagrados
+
+3. CALIDAD NO NEGOCIABLE
+   - Mejor retrasar que entregar mal
+   - Tests son obligatorios
+   - Code review es estricto
+
+4. COMUNICACIÓN CONSTANTE
+   - Updates diarios obligatorios
+   - Reportar blockers inmediatamente
+   - Documentar todas las decisiones
+
+5. LIDERAZGO POR EJEMPLO
+   - También escribo código cuando es necesario
+   - Reviso código minuciosamente
+   - Enseño cuando el equipo no sabe algo
+
+6. DECISIONES RÁPIDAS
+   - No postergar decisiones técnicas
+   - Analizar, decidir, ejecutar
+   - Si me equivoco, pivotar rápido
+
+7. PROTEGER AL EQUIPO
+   - Shield team from external distractions
+   - Defender decisiones técnicas ante stakeholders
+   - Proveer recursos necesarios
+
+================================================================================
+                    COSAS A EJECUTAR A FUTURO
+================================================================================
+
+INMEDIATO (Esta Semana):
+✅ Monitorear progreso diario de todos los agentes
+✅ Revisar PRs tan pronto como se creen
+✅ Resolver blockers inmediatamente
+✅ Actualizar métricas diariamente
+✅ Preparar reporte semanal
+
+CORTO PLAZO (Próxima Semana):
+⏳ Revisar coverage reports de QA-Backend
+⏳ Validar que objetivos de testing se cumplieron
+⏳ Revisar código después de testing
+⏳ Planificar FASE 3 (Módulo Ventas Completo)
+⏳ Asignar tareas para CRUD Categorías (backend)
+
+MEDIANO PLAZO (2-3 Semanas):
+⏳ Implementar FASE 3 (Módulo Ventas Completo)
+⏳ Implementar FASE 4 (Módulo Inventario)
+⏳ Continuar con mejoras de calidad
+⏳ Mejorar documentación
+
+LARGO PLAZO (FASE 5-6):
+⏳ Implementar FASE 5 (Dashboard y Reportes)
+⏳ Implementar FASE 6 (Optimización y CI/CD)
+⏳ Configurar CI/CD pipeline
+⏳ Implementar caching (Redis opcional)
+
+MEJORAS CONTINUAS:
+⏳ Mantener code coverage >80%
+⏳ Agregar documentación XML progresivamente
+⏳ Mejorar performance basado en métricas
+⏳ Actualizar estándares según necesidades
+⏳ Revisar y actualizar roadmap según progreso
+
+================================================================================
+                    REGLAS DE NEGOCIO VALIDADAS
+================================================================================
+
+VENTAS (POS):
+✅ Stock suficiente antes de agregar producto al carrito
+✅ Bloqueo venta si producto.Stock < cantidadSolicitada
+✅ Actualización automática de stock después de venta
+✅ Reversión de stock si la venta se anula
+✅ Cálculo subtotal: cantidad × precioUnitario (con redondeo)
+✅ Cálculo IGV: subtotal × 0.18 (con redondeo comercial)
+✅ Cálculo total: subtotal + IGV - descuento (con redondeo)
+✅ Validación descuento no excede subtotal
+✅ Validación precios siempre > 0
+✅ Validación montoPagado >= total
+✅ Cálculo vuelto: montoPagado - total (con redondeo)
+✅ Bloqueo pagos negativos
+✅ Validación método de pago válido
+✅ Validación formato RUC (11 dígitos) para facturas
+✅ Validación formato DNI (8 dígitos) para boletas
+✅ Generación número de comprobante secuencial único
+✅ Validación cliente obligatorio para facturas
+
+INVENTARIO:
+✅ Entradas: incrementar stock correctamente
+✅ Salidas: decrementar stock solo si hay suficiente
+✅ No permitir stock negativo nunca
+✅ Validación cantidad de movimiento > 0
+
+PRODUCTOS:
+✅ Código de producto único (no duplicados)
+✅ Precio de venta > precio de compra
+✅ Stock mínimo >= 0
+✅ Categoría debe existir antes de asignar producto
+✅ Imagen opcional pero formato válido (jpg, png)
+
+CLIENTES:
+✅ RUC o DNI único (no duplicados)
+✅ Validación formato según tipo de documento
+✅ Email válido (si se proporciona)
+✅ Teléfono válido (formato peruano: 9 dígitos empezando con 9)
+✅ Nombre obligatorio
+
+ESTADO:
+✅ Pendiente → Pagado (válido)
+✅ Pagado → Anulado (válido)
+✅ Anulado → Pagado (inválido - prevenido)
+✅ Pendiente → Anulado (válido)
+
+================================================================================
+                    ESPECIFICACIONES DE DOMINIO CREADAS
+================================================================================
+
+1. ISpecification<T>
+   - Ubicación: src/Minimarket.Domain/Specifications/ISpecification.cs
+   - Propósito: Interfaz base para especificaciones
+
+2. ProductHasSufficientStockSpecification
+   - Ubicación: src/Minimarket.Domain/Specifications/ProductHasSufficientStockSpecification.cs
+   - Propósito: Valida que producto tenga stock suficiente y esté activo
+   - Parámetro: requiredQuantity (cantidad requerida)
+
+3. ProductIsActiveSpecification
+   - Ubicación: src/Minimarket.Domain/Specifications/ProductIsActiveSpecification.cs
+   - Propósito: Valida que producto esté activo
+
+4. SaleCanBeCancelledSpecification
+   - Ubicación: src/Minimarket.Domain/Specifications/SaleCanBeCancelledSpecification.cs
+   - Propósito: Valida que venta pueda ser anulada (no esté ya anulada)
+
+================================================================================
+                    VALIDADORES MEJORADOS
+================================================================================
+
+CreateSaleCommandValidator:
+✅ Validación stock suficiente (usando especificación)
+✅ Validación descuento <= subtotal
+✅ Validación AmountPaid >= Total (calculado)
+✅ Validación existencia de productos
+✅ Validación existencia de cliente (si es factura)
+✅ Validación productos activos
+✅ Inyección de IUnitOfWork
+
+CreateProductCommandValidator / UpdateProductCommandValidator:
+✅ Validación SalePrice > PurchasePrice
+✅ Validación existencia de categoría
+✅ Inyección de IUnitOfWork
+
+CreateCustomerCommandValidator:
+✅ Validación formato teléfono peruano (9 dígitos, empieza con 9)
+✅ Validación unicidad de documento
+✅ Inyección de IUnitOfWork
+
+CancelSaleCommandValidator:
+✅ Validación transiciones de estado válidas
+✅ Validación existencia de venta
+✅ Inyección de IUnitOfWork
+
+================================================================================
+                    MEJORAS EN CÁLCULOS MONETARIOS
+================================================================================
+
+CreateSaleCommandHandler:
+✅ Constante IGV_RATE = 0.18m
+✅ Redondeo comercial: Math.Round(value, 2, MidpointRounding.AwayFromZero)
+✅ Aplicado en: subtotal, discount, subtotalAfterDiscount, tax, total, change
+✅ Validación adicional: descuento <= subtotal
+✅ Validación adicional: subtotalAfterDiscount >= 0
+
+GenerateDocumentNumberAsync:
+✅ Retry para evitar duplicados (max 5 intentos)
+✅ Validación de unicidad antes de retornar
+✅ Manejo de condiciones de carrera
+✅ Delay entre intentos (10ms)
+
+================================================================================
+                    ESTRUCTURA DE ARCHIVOS DEL PROYECTO
+================================================================================
+
+BACKEND:
+src/
+├── Minimarket.API/              # Presentation Layer
+│   ├── Controllers/             # Auth, Products, Customers, Sales, Categories, Dashboard
+│   ├── Middleware/              # GlobalExceptionHandlerMiddleware
+│   ├── Models/                  # ErrorResponse
+│   └── Program.cs
+├── Minimarket.Application/      # Application Layer
+│   ├── Common/
+│   │   ├── Behaviors/           # ValidationBehavior
+│   │   ├── Exceptions/          # Custom exceptions
+│   │   └── Models/              # Result, PagedResult
+│   └── Features/                 # CQRS por feature
+│       ├── Auth/
+│       ├── Products/
+│       ├── Customers/
+│       ├── Categories/
+│       ├── Sales/
+│       └── Dashboard/
+├── Minimarket.Domain/           # Domain Layer
+│   ├── Entities/                # Product, Category, Customer, Sale, SaleDetail
+│   ├── Enums/                   # DocumentType, PaymentMethod, SaleStatus
+│   ├── Interfaces/              # IRepository, IUnitOfWork, IEmailService, etc.
+│   └── Specifications/         # Especificaciones de dominio
+└── Minimarket.Infrastructure/   # Infrastructure Layer
+    ├── Data/
+    │   ├── Configurations/      # EF Core configurations
+    │   ├── Repositories/        # Repository, UnitOfWork
+    │   └── Seeders/             # DatabaseSeeder
+    └── Services/                 # EmailService, PdfService, FileStorageService
+
+FRONTEND:
+minimarket-web/src/app/
+├── core/                        # Guards, Interceptors, Services
+├── features/                    # Módulos por feature
+│   ├── auth/
+│   ├── products/
+│   ├── customers/
+│   ├── categories/
+│   ├── pos/
+│   ├── sales/
+│   └── dashboard/
+├── shared/                      # Componentes reutilizables
+│   ├── components/              # Toast, ConfirmDialog, LoadingSpinner
+│   └── services/                # ToastService
+└── layout/                      # Layouts principales
+
+TESTS:
+tests/
+├── Minimarket.UnitTests/        # Tests unitarios (PENDIENTE)
+├── Minimarket.IntegrationTests/ # Tests integration (PENDIENTE)
+└── Minimarket.FunctionalTests/  # Tests funcionales (PENDIENTE)
+
+================================================================================
+                    PROYECTO DE TESTS (ESTRUCTURA ESPERADA)
+================================================================================
+
+tests/Minimarket.UnitTests/
+├── Domain/
+│   └── Specifications/
+│       ├── ProductHasSufficientStockSpecificationTests.cs
+│       ├── ProductIsActiveSpecificationTests.cs
+│       └── SaleCanBeCancelledSpecificationTests.cs
+├── Application/
+│   └── Features/
+│       ├── Sales/Commands/
+│       ├── Products/Commands/
+│       └── Customers/Commands/
+└── Helpers/
+    └── TestDataBuilder.cs
+
+tests/Minimarket.IntegrationTests/
+├── Controllers/
+│   ├── ProductsControllerTests.cs
+│   ├── SalesControllerTests.cs
+│   ├── CustomersControllerTests.cs
+│   └── CategoriesControllerTests.cs
+├── BaseIntegrationTest.cs
+└── Helpers/
+    └── TestDataHelper.cs
+
+minimarket-web/cypress/
+├── e2e/
+│   ├── auth/
+│   ├── pos/
+│   ├── products/
+│   ├── customers/
+│   └── sales/
+├── fixtures/
+└── support/
+
+================================================================================
+                    CONFIGURACIONES Y DEPENDENCIAS
+================================================================================
+
+BACKEND PACKAGES (Esperados):
+- MediatR (CQRS)
+- FluentValidation
+- FluentValidation.AspNetCore
+- Entity Framework Core 9.0
+- Microsoft.AspNetCore.Authentication.JwtBearer
+- Swashbuckle.AspNetCore (Swagger)
+- Serilog.AspNetCore (PENDIENTE - asignado a Error-Handler)
+- Serilog.Sinks.Console (PENDIENTE)
+- Serilog.Sinks.File (PENDIENTE)
+
+FRONTEND PACKAGES (Esperados):
+- Angular 18+
+- Angular Material
+- Tailwind CSS
+- RxJS
+- Cypress (PENDIENTE - asignado a QA-Frontend)
+
+TESTING PACKAGES (Esperados):
+- xUnit
+- Moq
+- FluentAssertions
+- FluentValidation.TestHelper
+- Microsoft.AspNetCore.Mvc.Testing (para Integration Tests)
+
+================================================================================
+                    CONFIGURACIÓN DE LOGGING (PENDIENTE)
+================================================================================
+
+SERILOG CONFIGURACIÓN REQUERIDA:
+- Sinks: Console, File (rolling daily)
+- Enriquecimiento: FromLogContext, WithMachineName, WithEnvironmentName
+- Formato: JSON en producción, legible en desarrollo
+- Niveles: Information por defecto, Warning para Microsoft/System
+- Correlation IDs: Implementados en middleware
+
+ARCHIVOS A CONFIGURAR:
+- src/Minimarket.API/Program.cs (configurar Serilog)
+- src/Minimarket.API/appsettings.json (configurar Serilog)
+- src/Minimarket.API/appsettings.Development.json (configurar Serilog)
+
+================================================================================
+                    CONFIGURACIÓN DE CYPRESS (PENDIENTE)
+================================================================================
+
+CYPRESS CONFIGURACIÓN REQUERIDA:
+- baseUrl: http://localhost:4200
+- specPattern: cypress/e2e/**/*.cy.{js,jsx,ts,tsx}
+- viewportWidth: 1280
+- viewportHeight: 720
+- video: true
+- screenshotOnRunFailure: true
+
+ARCHIVOS A CREAR:
+- minimarket-web/cypress.config.ts
+- minimarket-web/cypress/e2e/ (estructura de carpetas)
+- minimarket-web/cypress/support/commands.ts (comandos personalizados)
+- minimarket-web/cypress/fixtures/ (datos de prueba)
+
+================================================================================
+                    MÉTRICAS DE CALIDAD OBJETIVO
+================================================================================
+
+CODE COVERAGE:
+- Application Layer: >80% (OBJETIVO ACTUAL - CRÍTICO)
+- Domain Layer: >90% (especificaciones)
+- Validators: >90%
+- Handlers: >85%
+
+TEST COUNT:
+- Unit Tests: Mínimo 50 tests
+- Integration Tests: Mínimo 30 tests
+- E2E Tests: Mínimo 33 tests
+- Total: Mínimo 113 tests
+
+QUALITY METRICS:
+- Tests Passing: 100%
+- Code Smells: 0 críticos
+- Duplicación: Mínima
+- Performance: Sin queries N+1
+- Security: Input validation 100%
+
+================================================================================
+                    CRITERIOS DE ÉXITO DEL TECH LEAD
+================================================================================
+
+Mi trabajo es exitoso si:
+
+✅ Proyecto se entrega a tiempo (o comunico delays temprano)
+✅ Calidad es alta (code coverage >80%, bugs mínimos)
+✅ Equipo es productivo (no hay blockers >24hrs)
+✅ Arquitectura es sólida (escalable, mantenible)
+✅ Comunicación es clara (todo está documentado)
+✅ No hay sorpresas (reporto riesgos proactivamente)
+✅ Código es consistente (todos siguen los mismos estándares)
+✅ Equipo está motivado (feedback positivo cuando lo merecen)
+
+================================================================================
+                    DECISIONES TÉCNICAS TOMADAS
+================================================================================
+
+1. Stack Tecnológico: ASP.NET Core 9.0 + Angular 18 + SQL Server (NO NEGOCIABLE)
+2. Arquitectura: Clean Architecture con CQRS
+3. Testing: xUnit + Moq + FluentAssertions para backend, Cypress para frontend
+4. Logging: Serilog con sinks Console y File
+5. Validaciones: FluentValidation para todas las entradas
+6. Especificaciones: Specification Pattern para lógica de dominio compleja
+7. Coverage Mínimo: >80% en Application layer (crítico)
+8. Redondeo Monetario: Math.Round con MidpointRounding.AwayFromZero
+9. Generación Comprobantes: Retry con validación de unicidad
+10. Manejo de Errores: GlobalExceptionHandlerMiddleware con excepciones específicas
+
+================================================================================
+                    PROBLEMAS RESUELTOS EN ESTA SESIÓN
+================================================================================
+
+1. ✅ Cálculos monetarios sin redondeo
+   - Solución: Implementado redondeo comercial en todos los cálculos
+   - Archivo: CreateSaleCommandHandler.cs
+
+2. ✅ Validaciones incompletas en FluentValidation
+   - Solución: Agregadas validaciones de reglas de negocio en validadores
+   - Archivos: Todos los validadores mejorados
+
+3. ✅ Falta especificaciones de dominio
+   - Solución: Creadas 3 especificaciones de dominio
+   - Archivos: Domain/Specifications/
+
+4. ✅ Falta validación de foreign keys en validadores
+   - Solución: Inyectado IUnitOfWork y agregadas validaciones
+   - Archivos: Todos los validadores mejorados
+
+5. ✅ Falta using System.Linq
+   - Solución: Agregado en CreateSaleCommandValidator.cs
+   - Archivo: CreateSaleCommandValidator.cs
+
+6. ✅ Generación de comprobantes puede generar duplicados
+   - Solución: Implementado retry con validación de unicidad
+   - Archivo: CreateSaleCommandHandler.cs
+
+================================================================================
+                    ISSUES PENDIENTES DE RESOLVER
+================================================================================
+
+CRÍTICOS (Esta Semana):
+⏳ Code Coverage 0% → Objetivo: >80%
+⏳ Tests no implementados → Objetivo: >80 tests
+⏳ Logging estructurado faltante → Objetivo: Serilog configurado
+
+ALTOS (Esta Semana):
+⏳ Tests E2E no implementados → Objetivo: 33+ tests Cypress
+⏳ Documentación XML incompleta → Objetivo: Métodos públicos documentados
+
+MEDIOS (Próxima Semana):
+⏳ Optimización de consultas en validadores
+⏳ Mejoras en GlobalExceptionHandlerMiddleware
+⏳ CRUD Categorías completo (backend)
+
+BAJOS (Backlog):
+⏳ CI/CD pipeline
+⏳ Caching con Redis
+⏳ Performance tuning avanzado
+
+================================================================================
+                    CONTEXTO DE VALIDACIONES DE NEGOCIO
+================================================================================
+
+REGLA 1: STOCK VALIDATION
+- Verificar que haya stock suficiente antes de agregar producto al carrito
+- Bloquear venta si producto.Stock < cantidadSolicitada
+- Actualizar stock automáticamente después de completar venta
+- Revertir stock si la venta se anula
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 2: PRICING VALIDATION
+- Calcular subtotal correctamente: cantidad × precioUnitario (con redondeo)
+- Calcular IGV correctamente: subtotal × 0.18 (con redondeo comercial)
+- Calcular total correctamente: subtotal + IGV - descuento (con redondeo)
+- Validar que descuentos no excedan el subtotal
+- Validar que precios sean siempre > 0
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 3: PAYMENT VALIDATION
+- Validar que montoPagado >= total
+- Calcular vuelto correctamente: montoPagado - total (con redondeo)
+- Bloquear pagos negativos
+- Validar que método de pago sea válido (efectivo, tarjeta, yape, etc.)
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 4: DOCUMENT VALIDATION
+- Validar formato de RUC (11 dígitos) para facturas
+- Validar formato de DNI (8 dígitos) para boletas
+- Generar número de comprobante secuencial correcto (F001-00000001, B001-00000001)
+- No permitir duplicados de números de comprobante
+- Validar que cliente sea obligatorio para facturas
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 5: INVENTORY MOVEMENTS
+- Entradas: incrementar stock correctamente
+- Salidas: decrementar stock solo si hay suficiente
+- No permitir stock negativo nunca
+- Registrar usuario y fecha en cada movimiento
+- Validar que cantidad de movimiento sea > 0
+ESTADO: ✅ IMPLEMENTADA (parcial - faltan movimientos de inventario en módulo futuro)
+
+REGLA 6: PRODUCT VALIDATION
+- Código de producto único (no duplicados)
+- Precio de venta debe ser mayor que precio de compra
+- Stock mínimo debe ser >= 0
+- Categoría debe existir antes de asignar producto
+- Imagen es opcional pero debe ser formato válido (jpg, png)
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 7: CUSTOMER VALIDATION
+- RUC o DNI único (no duplicados)
+- Validar formato según tipo de documento
+- Email válido (si se proporciona)
+- Teléfono válido (formato peruano: 9 dígitos empezando con 9)
+- Nombre obligatorio
+ESTADO: ✅ IMPLEMENTADA
+
+REGLA 8: STATE TRANSITIONS
+- Pendiente → Pagado (válido)
+- Pagado → Anulado (válido)
+- Anulado → Pagado (inválido - debe prevenir)
+- Pendiente → Anulado (válido)
+ESTADO: ✅ IMPLEMENTADA
+
+================================================================================
+                    ESTRUCTURA DE VALIDACIONES
+================================================================================
+
+NIVEL 1: FLUENTVALIDATION (Input Validation)
+- Validación de formato, rangos, requeridos
+- Ejecuta ANTES de llegar al handler
+- Ubicación: Application/Features/*/Commands/*Validator.cs
+
+NIVEL 2: ESPECIFICACIONES DE DOMINIO (Business Rules)
+- Lógica de negocio compleja
+- Reutilizable en diferentes contextos
+- Ubicación: Domain/Specifications/
+
+NIVEL 3: HANDLERS (Application Logic)
+- Validaciones adicionales si es necesario
+- Defensa en profundidad
+- Ubicación: Application/Features/*/Commands/*Handler.cs
+
+NIVEL 4: BASE DE DATOS (Data Integrity)
+- Constraints de integridad referencial
+- Unique constraints
+- Check constraints donde sea necesario
+
+================================================================================
+                    COMANDOS DE GIT Y WORKFLOW
+================================================================================
+
+BRANCH NAMING:
+- feature/nombre-descripcion
+- bugfix/nombre-descripcion
+- hotfix/nombre-descripcion
+Ejemplo: feature/crud-categories, bugfix/stock-validation
+
+COMMIT MESSAGES (Conventional Commits):
+- feat: Nueva funcionalidad
+- fix: Corrección de bug
+- docs: Documentación
+- test: Tests
+- refactor: Refactorización
+- chore: Tareas de mantenimiento
+Ejemplo: "feat: Add category CRUD operations"
+
+PULL REQUEST PROCESS:
+1. Crear branch desde main
+2. Implementar cambios
+3. Crear PR con descripción clara
+4. Tech Lead revisa (OBLIGATORIO)
+5. Aprobar o solicitar cambios
+6. Merge con squash commits
+
+================================================================================
+                    CONTACTO Y COMUNICACIÓN
+================================================================================
+
+DAILY STANDUP:
+- Archivo: DAILY_STANDUP.md
+- Frecuencia: Diario
+- Formato: Ver archivo para estructura completa
+
+REPORTES DE PROGRESO:
+- Cada agente reporta diariamente al final del día
+- Formato específico en cada TASK_ASSIGNMENT
+- Tech Lead revisa y responde
+
+ESCALACIÓN:
+- Blockers reportar inmediatamente a Tech Lead
+- Decisiones técnicas discutir con Tech Lead
+- Conflictos resolver con Tech Lead (decisión final)
+
+================================================================================
+                    NOTAS IMPORTANTES PARA FUTURAS SESIONES
+================================================================================
+
+1. SIEMPRE comenzar revisando:
+   - DAILY_STANDUP.md para estado actual
+   - TECH_LEAD_SUMMARY.md para visión general
+   - Archivos TASK_ASSIGNMENT para tareas pendientes
+
+2. SIEMPRE actualizar:
+   - DAILY_STANDUP.md después de cada acción
+   - Métricas después de cambios significativos
+   - Action items cuando se completan
+
+3. SIEMPRE revisar:
+   - PRs antes de aprobar
+   - Código después de implementaciones
+   - Métricas de calidad semanalmente
+
+4. RECORDAR:
+   - Testing es prioridad #1 esta semana
+   - Coverage debe ser >80% en Application layer
+   - Todas las tareas están asignadas y documentadas
+   - UX/UI está bloqueado esperando backend CRUD Categorías
+
+5. PRÓXIMOS PASOS CRÍTICOS:
+   - Monitorear progreso de testing (QA-Backend, Business-Logic-Validator)
+   - Revisar PRs tan pronto como se creen
+   - Resolver blockers inmediatamente
+   - Preparar reporte semanal
+
+================================================================================
+                    ARCHIVOS DE REFERENCIA RÁPIDA
+================================================================================
+
+DOCUMENTACIÓN TÉCNICA:
+- TECHNICAL_AUDIT.md - Auditoría completa del proyecto
+- CODE_REVIEW_BusinessLogicValidator.md - Code review detallado
+- TECH_LEAD_SUMMARY.md - Resumen ejecutivo
+
+ASIGNACIONES DE TAREAS:
+- TASK_ASSIGNMENT_QA_Backend.md
+- TASK_ASSIGNMENT_BusinessLogicValidator.md
+- TASK_ASSIGNMENT_ErrorHandler.md
+- TASK_ASSIGNMENT_QA_Frontend.md
+- TASK_ASSIGNMENT_UX_UI_Designer.md
+
+COORDINACIÓN:
+- DAILY_STANDUP.md - Standup diario del equipo
+- validaci-n-de-l-gica-de-negocio.plan.md - Roadmap técnico
+
+ESTADO DEL PROYECTO:
+- IMPLEMENTATION_STATUS.md - Estado de implementación
+- README.md - Documentación del proyecto
+
+================================================================================
+                    FIN DEL DOCUMENTO
+================================================================================
+
+Este documento contiene toda la memoria del Tech Lead hasta [Fecha Actual].
+Debe actualizarse después de cada sesión importante o cambio significativo.
+
+ÚLTIMA ACTUALIZACIÓN: [Fecha Actual]
+PRÓXIMA REVISIÓN: Al completar tareas críticas de esta semana
+
+================================================================================
+

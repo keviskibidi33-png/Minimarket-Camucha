@@ -1,0 +1,126 @@
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+  <div class="layout-container flex h-full grow flex-col">
+    <!-- Header -->
+    <app-store-header></app-store-header>
+
+    <!-- Main Content -->
+    <main class="flex flex-1 justify-center py-5 sm:py-8 md:py-10 px-4 sm:px-6 lg:px-8">
+      <div class="layout-content-container flex flex-col w-full max-w-7xl gap-8 md:gap-12">
+        <!-- Hero Section / Carousel -->
+        <section class="relative w-full h-96 rounded-xl overflow-hidden shadow-lg">
+          <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_oZYC5CocHKGYtVXfYtxEePo7EDEykSPB60TIEuaR7odvwcCuVUg_rL-7aYLmGdJWc-XyyyvYLJAwyXiPRbkPE_LVZCncRuVnT3cNFATUXmJhGZ7MxhrMdHMlmLYSJDT-10RVmiS_21s9DKkrEyzv9xaeo8xg9XqcOQ4vVVvB5F-PLxDq5qwYv48vk6DD7gRNRRfjwk1bVw-P2zHTlkAXTGwdiBvjURfPBm1Q5gspfHyGDC_9PU4OXZh9mVBDnfjQhlGPE3ss3kIa');"></div>
+          <div class="absolute inset-0 bg-black/40"></div>
+          <div class="relative h-full flex flex-col items-center justify-center text-center text-white p-6">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">Weekly Deals on Fresh Produce!</h1>
+            <p class="text-lg md:text-xl max-w-2xl mb-6 drop-shadow-sm">Get the best prices on fruits and vegetables, delivered fresh to your door.</p>
+            <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
+              <span class="truncate">Shop Now</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Featured Products Section -->
+        <section>
+          <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 pb-4 pt-5">Featured Products</h2>
+          @if (isLoading()) {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4">
+              @for (item of [1,2,3,4,5]; track $index) {
+                <div class="animate-pulse flex flex-col rounded-lg bg-gray-200 dark:bg-gray-700 h-64"></div>
+              }
+            </div>
+          } @else if (featuredProducts().length === 0) {
+            <div class="text-center py-8 px-4">
+              <p class="text-gray-500 dark:text-gray-400">No hay productos destacados disponibles</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              @for (product of featuredProducts(); track product.id) {
+                <app-product-card [product]="product"></app-product-card>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Popular Categories Section -->
+        <section>
+          <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 pb-4 pt-5">Popular Categories</h2>
+          @if (categories().length === 0) {
+            <div class="text-center py-8 px-4">
+              <p class="text-gray-500 dark:text-gray-400">No hay categorías disponibles</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              @for (category of categories().slice(0, 4); track category.id) {
+                <a [routerLink]="['/tienda/productos']" [queryParams]="{category: category.id}" 
+                   class="group relative flex flex-col items-center justify-center text-center p-6 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 aspect-square">
+                  <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
+                  <div class="relative z-10 flex flex-col items-center">
+                    <div class="mb-3 text-primary text-5xl">
+                      <span class="material-symbols-outlined">{{ getCategoryIcon(category.name) }}</span>
+                    </div>
+                    <p class="font-bold text-lg text-text-light dark:text-text-dark">{{ category.name }}</p>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Special Offers Carousel -->
+        <section>
+          <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 pb-4 pt-5">Special Offers</h2>
+          <div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-4 -mx-4">
+            <div class="flex items-stretch px-4 gap-4">
+              <!-- Offer 1 -->
+              <div class="flex h-full flex-col gap-4 rounded-lg bg-white dark:bg-gray-800 shadow-md min-w-64">
+                <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg" 
+                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBiQAiONT8Zjg8G6y1v_u3ewsTDNfLRjBNG7f1ijNhYP51Iu4BPQC6uDQPk7ClUvuc4c74bezlHaJVTzsKe6d2K2QA6A9WLLWYFzv3r2SlDftOX4MW4Zhlg3vT3VLH1FwXxlVXNA5b825tRDDRaJSxmP6qMUpuuK5vhiQkYv9Vepxsg1e_CRqfGsY3cbqVW5kRk46_YaSdIs46Jn9D0bcAJC38QvK8QNdY-BGXcEHPUz-zBbfGHL8Vi0TyyvM6hD74f-vxU6_SlA5jm');"></div>
+                <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                  <div>
+                    <p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Save on Fresh Produce!</p>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">Up to 20% off on fruits and vegetables.</p>
+                  </div>
+                  <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                    <span class="truncate">View Offer</span>
+                  </a>
+                </div>
+              </div>
+              <!-- Offer 2 -->
+              <div class="flex h-full flex-col gap-4 rounded-lg bg-white dark:bg-gray-800 shadow-md min-w-64">
+                <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg" 
+                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuChcctw7O2E64eZ-pJ9LoAwH-dFMnOHieRoX4XNY1sK8I6Pa2ZkOdIS9in0eJ9MsVESsBIWl7Hxu4oB1heI2yU8xIotclEeOXqlY9ZUBmmBNi7OubLM65sAnMf3RxJur8t0ORTuwETr4CBOTJRGHL1w7O2sX6L10Iy32n7lTwgupJN0WqO-fr8wkcIB5wxvWGZTd-Gv4r9Abtsf9PWnfYJv3_jb_WqDAtOMn_EQufKei13TtfWODExJujz3DJDdx6OnouZatepw4Lyl');"></div>
+                <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                  <div>
+                    <p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">New Snacks Just Arrived!</p>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">Discover your new favorite treat.</p>
+                  </div>
+                  <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                    <span class="truncate">Shop Now</span>
+                  </a>
+                </div>
+              </div>
+              <!-- Offer 3 -->
+              <div class="flex h-full flex-col gap-4 rounded-lg bg-white dark:bg-gray-800 shadow-md min-w-64">
+                <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg" 
+                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDu4k3wCgTZCJKEH7gxtzmoHvmGVhHsxSdYAoqYgmLNTM_3gzvP1VIL-HTGoG4Eiq7e7aBDKS9w4RV7k1UzbJ5JV6_SA90DHq0IH-VGaBdyKK79S99Q6lijkm13ImzPpb1vY-1s0c7CJ-n_FXUPGdMsVhJHmM0jL6zzMVbxaWtnCxmBLvDtcf8jLNj2Zg6r2UcM8cyeO8Q9khw8Qr0PxaDV_rQP6gs48aNXYxTJt6Nwo3iqPWAMOopOnGwQCEjjFlSsDr2JRC63ofv_');"></div>
+                <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                  <div>
+                    <p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Thirsty? Save on Drinks!</p>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">Special offers on juices and sodas.</p>
+                  </div>
+                  <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                    <span class="truncate">View Deals</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <app-store-footer></app-store-footer>
+  </div>
+</div>
+

@@ -1,0 +1,166 @@
+import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+
+export const routes: Routes = [
+  // Rutas públicas de la TIENDA
+  {
+    path: '',
+    loadComponent: () => import('./features/store/home/home.component').then(m => m.HomeComponent)
+  },
+  {
+    path: 'tienda/productos',
+    loadComponent: () => import('./features/store/products/products.component').then(m => m.StoreProductsComponent)
+  },
+  {
+    path: 'tienda/producto/:id',
+    loadComponent: () => import('./features/store/product-detail/product-detail.component').then(m => m.ProductDetailComponent)
+  },
+  {
+    path: 'carrito',
+    loadComponent: () => import('./features/store/cart/cart.component').then(m => m.CartComponent)
+  },
+  {
+    path: 'checkout/envio',
+    loadComponent: () => import('./features/store/checkout/shipping/shipping.component').then(m => m.ShippingComponent)
+  },
+  {
+    path: 'checkout/pago',
+    loadComponent: () => import('./features/store/checkout/payment/payment.component').then(m => m.PaymentComponent)
+  },
+  {
+    path: 'checkout/confirmacion',
+    loadComponent: () => import('./features/store/checkout/confirmation/confirmation.component').then(m => m.ConfirmationComponent)
+  },
+  // Rutas de ADMIN (protegidas)
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'pos',
+    canActivate: [authGuard, roleGuard(['Administrador', 'Cajero'])],
+    loadComponent: () => import('./features/pos/pos.component').then(m => m.PosComponent)
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard],
+    loadComponent: () => import('./layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'productos',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/products/products.component').then(m => m.ProductsComponent)
+      },
+      {
+        path: 'productos/nuevo',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/products/product-form/product-form.component').then(m => m.ProductFormComponent)
+      },
+      {
+        path: 'productos/editar/:id',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/products/product-form/product-form.component').then(m => m.ProductFormComponent)
+      },
+      {
+        path: 'clientes',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/customers/customers.component').then(m => m.CustomersComponent)
+      },
+      {
+        path: 'clientes/nuevo',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/customers/customer-form/customer-form.component').then(m => m.CustomerFormComponent)
+      },
+      {
+        path: 'clientes/editar/:id',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/customers/customer-form/customer-form.component').then(m => m.CustomerFormComponent)
+      },
+      {
+        path: 'ventas',
+        canActivate: [roleGuard(['Administrador', 'Cajero'])],
+        loadComponent: () => import('./features/sales/sales.component').then(m => m.SalesComponent)
+      },
+      {
+        path: 'ventas/:id',
+        canActivate: [roleGuard(['Administrador', 'Cajero'])],
+        loadComponent: () => import('./features/sales/sale-detail/sale-detail.component').then(m => m.SaleDetailComponent)
+      },
+      {
+        path: 'ventas/:id/anular',
+        canActivate: [roleGuard(['Administrador', 'Cajero'])],
+        loadComponent: () => import('./features/sales/cancel-sale/cancel-sale.component').then(m => m.CancelSaleComponent)
+      },
+      {
+        path: 'categorias',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/categories/categories.component').then(m => m.CategoriesComponent)
+      },
+      {
+        path: 'categorias/nuevo',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/categories/category-form/category-form.component').then(m => m.CategoryFormComponent)
+      },
+      {
+        path: 'categorias/editar/:id',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/categories/category-form/category-form.component').then(m => m.CategoryFormComponent)
+      },
+      {
+        path: 'usuarios',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/users/users.component').then(m => m.UsersComponent)
+      }
+    ]
+  },
+  // Redirección legacy para rutas admin sin /admin
+  {
+    path: 'dashboard',
+    redirectTo: '/admin/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'productos',
+    redirectTo: '/admin/productos',
+    pathMatch: 'prefix'
+  },
+  {
+    path: 'clientes',
+    redirectTo: '/admin/clientes',
+    pathMatch: 'prefix'
+  },
+  {
+    path: 'ventas',
+    redirectTo: '/admin/ventas',
+    pathMatch: 'prefix'
+  },
+  {
+    path: 'categorias',
+    redirectTo: '/admin/categorias',
+    pathMatch: 'prefix'
+  },
+  {
+    path: '404',
+    loadComponent: () => import('./features/errors/not-found/not-found.component').then(m => m.NotFoundComponent)
+  },
+  {
+    path: '500',
+    loadComponent: () => import('./features/errors/server-error/server-error.component').then(m => m.ServerErrorComponent)
+  },
+  {
+    path: '**',
+    redirectTo: '/404'
+  }
+];
+

@@ -55,12 +55,18 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
             .Where(sd => recentSales.Any(s => s.Id == sd.SaleId))
             .ToList();
 
+        // Obtener productos para mapear nombres
+        var productIds = saleDetails.Select(sd => sd.ProductId).Distinct().ToList();
+        var products = (await _unitOfWork.Products.GetAllAsync(cancellationToken))
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionary(p => p.Id, p => p.Name);
+
         var topProducts = saleDetails
-            .GroupBy(sd => new { sd.ProductId, sd.ProductName })
+            .GroupBy(sd => sd.ProductId)
             .Select(g => new TopProductDto
             {
-                ProductId = g.Key.ProductId,
-                ProductName = g.Key.ProductName,
+                ProductId = g.Key,
+                ProductName = products.TryGetValue(g.Key, out var productName) ? productName : "Producto eliminado",
                 QuantitySold = g.Sum(sd => sd.Quantity),
                 TotalRevenue = g.Sum(sd => sd.Subtotal)
             })

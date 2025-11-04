@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Minimarket.Domain.Interfaces;
 using MimeKit;
+using System.Net.Http.Json;
 
 namespace Minimarket.Infrastructure.Services;
 

@@ -1,29 +1,31 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Customers.Queries;
 using Minimarket.Application.Features.Customers.DTOs;
-using Minimarket.Infrastructure.Data;
+using Minimarket.Domain.Interfaces;
 
 namespace Minimarket.Application.Features.Customers.Queries;
 
 public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery, Result<PagedResult<CustomerDto>>>
 {
-    private readonly MinimarketDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public GetAllCustomersQueryHandler(MinimarketDbContext context)
+    public GetAllCustomersQueryHandler(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<CustomerDto>>> Handle(GetAllCustomersQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Customers.AsQueryable();
+        var allCustomers = await _unitOfWork.Customers.GetAllAsync(cancellationToken);
+        
+        // Aplicar filtros en memoria
+        var filteredCustomers = allCustomers.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
             var searchLower = request.SearchTerm.ToLower();
-            query = query.Where(c =>
+            filteredCustomers = filteredCustomers.Where(c =>
                 c.Name.ToLower().Contains(searchLower) ||
                 c.DocumentNumber.Contains(searchLower) ||
                 (c.Email != null && c.Email.ToLower().Contains(searchLower)) ||
@@ -32,18 +34,21 @@ public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery,
 
         if (!string.IsNullOrWhiteSpace(request.DocumentType))
         {
-            query = query.Where(c => c.DocumentType == request.DocumentType);
+            filteredCustomers = filteredCustomers.Where(c => c.DocumentType == request.DocumentType);
         }
 
         if (request.IsActive.HasValue)
         {
-            query = query.Where(c => c.IsActive == request.IsActive.Value);
+            filteredCustomers = filteredCustomers.Where(c => c.IsActive == request.IsActive.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        // Ordenar
+        var sortedCustomers = filteredCustomers.OrderBy(c => c.Name).ToList();
 
-        var customers = await query
-            .OrderBy(c => c.Name)
+        var totalCount = sortedCustomers.Count;
+
+        // Aplicar paginación
+        var customers = sortedCustomers
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(c => new CustomerDto
@@ -58,7 +63,7 @@ public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery,
                 IsActive = c.IsActive,
                 CreatedAt = c.CreatedAt
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var pagedResult = PagedResult<CustomerDto>.Create(customers, totalCount, request.Page, request.PageSize);
 

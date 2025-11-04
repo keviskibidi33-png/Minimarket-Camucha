@@ -1,10 +1,15 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { PermissionsService } from '../services/permissions.service';
 
+/**
+ * Factory function para crear un guard de roles
+ * @param allowedRoles Lista de roles permitidos
+ * @returns CanActivateFn que verifica si el usuario tiene alguno de los roles permitidos
+ */
 export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
-  return (route, state) => {
+  return (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
     const authService = inject(AuthService);
     const permissionsService = inject(PermissionsService);
     const router = inject(Router);
@@ -25,4 +30,3 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
     return true;
   };
 };
-

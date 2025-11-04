@@ -19,8 +19,20 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(c => c.Description)
             .HasMaxLength(500);
 
+        builder.Property(c => c.ImageUrl)
+            .HasMaxLength(500);
+
+        builder.Property(c => c.IconoUrl)
+            .HasMaxLength(500);
+
+        builder.Property(c => c.Orden)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.HasIndex(c => c.Name)
             .IsUnique();
+
+        builder.HasIndex(c => c.Orden);
     }
 }
 

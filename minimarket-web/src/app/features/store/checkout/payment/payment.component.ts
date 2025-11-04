@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
+import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 
 @Component({
   selector: 'app-payment',
@@ -12,7 +13,8 @@ import { CheckoutStepperComponent } from '../../../../shared/components/checkout
     CommonModule, 
     RouterModule, 
     FormsModule,
-    CheckoutStepperComponent
+    CheckoutStepperComponent,
+    StoreHeaderComponent
   ],
   templateUrl: './payment.component.html',
   styleUrl: './payment.component.css'
@@ -26,16 +28,19 @@ export class PaymentComponent implements OnInit {
   expiryDate = signal('');
   cvv = signal('');
   
-  cartItems = this.cartService.getCartItems();
+  cartItems!: ReturnType<typeof CartService.prototype.getCartItems>;
   shippingData: any = null;
-  subtotal = computed(() => this.cartItems().reduce((sum, item) => sum + item.subtotal, 0));
+  subtotal = computed(() => this.cartItems().reduce((sum: number, item: any) => sum + item.subtotal, 0));
   shippingCost = signal(0);
   total = computed(() => this.subtotal() + this.shippingCost());
 
   constructor(
     private cartService: CartService,
     private router: Router
-  ) {}
+  ) {
+    // Inicializar cartItems después del constructor
+    this.cartItems = this.cartService.getCartItems();
+  }
 
   ngOnInit() {
     // Cargar datos de envío
@@ -50,6 +55,7 @@ export class PaymentComponent implements OnInit {
       this.router.navigate(['/carrito']);
     }
   }
+
 
   continueToConfirmation() {
     // Guardar datos de pago

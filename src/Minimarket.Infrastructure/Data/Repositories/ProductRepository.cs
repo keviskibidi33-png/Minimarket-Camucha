@@ -65,7 +65,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
             ?? throw new KeyNotFoundException($"Product with ID {productId} not found");
 
         product.Stock += quantity;
-        Update(product);
+        await UpdateAsync(product, cancellationToken);
     }
 }
 

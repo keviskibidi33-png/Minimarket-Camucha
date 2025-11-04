@@ -20,6 +20,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous] // Permitir acceso público para la tienda
     public async Task<IActionResult> GetAll([FromQuery] GetAllProductsQuery query)
     {
         var result = await _mediator.Send(query);
@@ -33,6 +34,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous] // Permitir acceso público para la tienda
     public async Task<IActionResult> GetById(Guid id)
     {
         var query = new GetProductByIdQuery { Id = id };

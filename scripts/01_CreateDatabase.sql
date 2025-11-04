@@ -12,12 +12,12 @@ BEGIN
 END
 GO
 
--- Crear base de datos
+-- Crear base de datos (usando ruta predeterminada de SQL Server)
 CREATE DATABASE MinimarketDB
 ON PRIMARY
 (
     NAME = N'MinimarketDB_Data',
-    FILENAME = N'C:\SQLData\MinimarketDB.mdf',
+    FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\MinimarketDB.mdf',
     SIZE = 100MB,
     MAXSIZE = UNLIMITED,
     FILEGROWTH = 10MB
@@ -25,7 +25,7 @@ ON PRIMARY
 LOG ON
 (
     NAME = N'MinimarketDB_Log',
-    FILENAME = N'C:\SQLData\MinimarketDB_log.ldf',
+    FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\MinimarketDB_log.ldf',
     SIZE = 50MB,
     MAXSIZE = 1GB,
     FILEGROWTH = 10MB

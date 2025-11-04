@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../../../core/services/cart.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
+import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 
 @Component({
   selector: 'app-confirmation',
@@ -10,16 +11,17 @@ import { CheckoutStepperComponent } from '../../../../shared/components/checkout
   imports: [
     CommonModule, 
     RouterModule,
-    CheckoutStepperComponent
+    CheckoutStepperComponent,
+    StoreHeaderComponent
   ],
   templateUrl: './confirmation.component.html',
   styleUrl: './confirmation.component.css'
 })
 export class ConfirmationComponent implements OnInit {
-  cartItems = this.cartService.getCartItems();
+  cartItems!: ReturnType<typeof CartService.prototype.getCartItems>;
   shippingData: any = null;
   paymentData: any = null;
-  subtotal = computed(() => this.cartItems().reduce((sum, item) => sum + item.subtotal, 0));
+  subtotal = computed(() => this.cartItems().reduce((sum: number, item: any) => sum + item.subtotal, 0));
   shippingCost = signal(0);
   total = computed(() => this.subtotal() + this.shippingCost());
   orderNumber = signal('');
@@ -27,7 +29,10 @@ export class ConfirmationComponent implements OnInit {
   constructor(
     private cartService: CartService,
     private router: Router
-  ) {}
+  ) {
+    // Inicializar cartItems después del constructor
+    this.cartItems = this.cartService.getCartItems();
+  }
 
   ngOnInit() {
     // Cargar datos de envío y pago

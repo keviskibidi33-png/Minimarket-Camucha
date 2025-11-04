@@ -60,9 +60,9 @@ export class SalesComponent implements OnInit {
     }
 
     this.salesService.getAll(params).subscribe({
-      next: (sales) => {
-        this.sales.set(sales);
-        this.totalSales.set(sales.length);
+      next: (pagedResult) => {
+        this.sales.set(pagedResult.items);
+        this.totalSales.set(pagedResult.totalCount);
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -115,5 +115,7 @@ export class SalesComponent implements OnInit {
       minute: '2-digit'
     });
   }
+
+  Math = Math;
 }
 

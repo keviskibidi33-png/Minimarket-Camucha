@@ -13,6 +13,9 @@ public class ProductDto
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
+    public List<string> Imagenes { get; set; } = new();
+    public Dictionary<string, object> Paginas { get; set; } = new();
+    public List<Guid> SedesDisponibles { get; set; } = new();
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
 }

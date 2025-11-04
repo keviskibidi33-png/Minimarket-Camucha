@@ -52,7 +52,7 @@
               <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ sale()?.documentType === 'Factura' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' }}">
                 {{ sale()?.documentType }}
               </span>
-              <p class="mt-2 text-lg font-bold text-gray-900 dark:text-white">S/ {{ sale()?.total.toFixed(2) }}</p>
+              <p class="mt-2 text-lg font-bold text-gray-900 dark:text-white">S/ {{ sale()?.total?.toFixed(2) || '0.00' }}</p>
             </div>
           </div>
         </div>
@@ -101,21 +101,21 @@
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
           <div class="flex justify-between text-gray-600 dark:text-gray-400">
             <span>Subtotal</span>
-            <span>S/ {{ sale()?.subtotal.toFixed(2) }}</span>
+            <span>S/ {{ sale()?.subtotal?.toFixed(2) || '0.00' }}</span>
           </div>
           @if ((sale()?.discount || 0) > 0) {
             <div class="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Descuento</span>
-              <span>S/ {{ sale()?.discount.toFixed(2) }}</span>
+              <span>S/ {{ sale()?.discount?.toFixed(2) || '0.00' }}</span>
             </div>
           }
           <div class="flex justify-between text-gray-600 dark:text-gray-400">
             <span>IGV (18%)</span>
-            <span>S/ {{ sale()?.tax.toFixed(2) }}</span>
+            <span>S/ {{ sale()?.tax?.toFixed(2) || '0.00' }}</span>
           </div>
           <div class="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
             <span>TOTAL</span>
-            <span>S/ {{ sale()?.total.toFixed(2) }}</span>
+            <span>S/ {{ sale()?.total?.toFixed(2) || '0.00' }}</span>
           </div>
         </div>
 
@@ -128,12 +128,12 @@
             </div>
             <div>
               <p class="text-sm text-gray-600 dark:text-gray-400">Monto Pagado</p>
-              <p class="font-medium text-gray-900 dark:text-white">S/ {{ sale()?.amountPaid.toFixed(2) }}</p>
+              <p class="font-medium text-gray-900 dark:text-white">S/ {{ sale()?.amountPaid?.toFixed(2) || '0.00' }}</p>
             </div>
             @if (sale()?.change && sale()!.change > 0) {
               <div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Vuelto</p>
-                <p class="font-medium text-green-600 dark:text-green-400">S/ {{ sale()?.change.toFixed(2) }}</p>
+                <p class="font-medium text-green-600 dark:text-green-400">S/ {{ sale()?.change?.toFixed(2) || '0.00' }}</p>
               </div>
             }
             <div>

@@ -14,6 +14,10 @@ public static class DatabaseSeeder
         await SeedCategoriesAsync(context);
         await SeedCustomersAsync(context);
         await SeedProductsAsync(context);
+        await SeedSystemSettingsAsync(context);
+        await SeedShippingRatesAsync(context);
+        await SeedModulesAsync(context);
+        await SeedBrandSettingsAsync(context);
     }
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager)
@@ -168,6 +172,256 @@ public static class DatabaseSeeder
         };
 
         await context.Products.AddRangeAsync(products);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedSystemSettingsAsync(MinimarketDbContext context)
+    {
+        if (await context.SystemSettings.AnyAsync())
+            return;
+
+        var settings = new[]
+        {
+            new SystemSettings
+            {
+                Key = "apply_igv_to_cart",
+                Value = "false",
+                Description = "Aplicar IGV (18%) al carrito de compras. Si está activado, el IGV se mostrará y aplicará en el carrito.",
+                Category = "cart",
+                IsActive = true
+            }
+        };
+
+        await context.SystemSettings.AddRangeAsync(settings);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedShippingRatesAsync(MinimarketDbContext context)
+    {
+        if (await context.ShippingRates.AnyAsync())
+            return;
+
+        // Tarifas de envío basadas en datos reales de Lima, Perú
+        // Considerando: combustible, distancia, peso, y costos operativos
+        var shippingRates = new[]
+        {
+            // Lima Centro - Zona más cercana, tarifas más económicas
+            new ShippingRate
+            {
+                ZoneName = "Lima Centro",
+                BasePrice = 3.50m,        // Costo base de envío
+                PricePerKm = 0.50m,       // Precio adicional por kilómetro
+                PricePerKg = 1.00m,       // Precio adicional por kilogramo
+                MinDistance = 0m,
+                MaxDistance = 10m,        // Hasta 10 km
+                MinWeight = 0m,
+                MaxWeight = 0m,          // Sin límite de peso
+                FreeShippingThreshold = 100.00m, // Envío gratis si compra >= S/ 100
+                IsActive = true
+            },
+            // Lima Norte - Distancias mayores, tarifa media
+            new ShippingRate
+            {
+                ZoneName = "Lima Norte",
+                BasePrice = 4.00m,
+                PricePerKm = 0.60m,
+                PricePerKg = 1.20m,
+                MinDistance = 0m,
+                MaxDistance = 20m,        // Hasta 20 km
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 100.00m,
+                IsActive = true
+            },
+            // Lima Sur - Similar a Lima Norte
+            new ShippingRate
+            {
+                ZoneName = "Lima Sur",
+                BasePrice = 4.00m,
+                PricePerKm = 0.60m,
+                PricePerKg = 1.20m,
+                MinDistance = 0m,
+                MaxDistance = 20m,
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 100.00m,
+                IsActive = true
+            },
+            // Callao - Zona cercana pero con peaje adicional
+            new ShippingRate
+            {
+                ZoneName = "Callao",
+                BasePrice = 4.50m,
+                PricePerKm = 0.70m,
+                PricePerKg = 1.30m,
+                MinDistance = 0m,
+                MaxDistance = 15m,
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 100.00m,
+                IsActive = true
+            },
+            // Lima Este - Zona más alejada, tarifa más alta
+            new ShippingRate
+            {
+                ZoneName = "Lima Este",
+                BasePrice = 5.00m,
+                PricePerKm = 0.80m,
+                PricePerKg = 1.50m,
+                MinDistance = 0m,
+                MaxDistance = 25m,
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 100.00m,
+                IsActive = true
+            },
+            // Lima Oeste - Zona costera, tarifa media-alta
+            new ShippingRate
+            {
+                ZoneName = "Lima Oeste",
+                BasePrice = 4.50m,
+                PricePerKm = 0.65m,
+                PricePerKg = 1.25m,
+                MinDistance = 0m,
+                MaxDistance = 18m,
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 100.00m,
+                IsActive = true
+            },
+            // Zona General - Para distancias mayores o zonas no especificadas
+            new ShippingRate
+            {
+                ZoneName = "Zona General",
+                BasePrice = 5.50m,
+                PricePerKm = 1.00m,
+                PricePerKg = 2.00m,
+                MinDistance = 0m,
+                MaxDistance = 0m,        // Sin límite de distancia
+                MinWeight = 0m,
+                MaxWeight = 0m,
+                FreeShippingThreshold = 150.00m, // Envío gratis si compra >= S/ 150
+                IsActive = true
+            }
+        };
+
+        await context.ShippingRates.AddRangeAsync(shippingRates);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedModulesAsync(MinimarketDbContext context)
+    {
+        if (await context.Modules.AnyAsync())
+            return;
+
+        var modules = new[]
+        {
+            new Domain.Entities.Module
+            {
+                Nombre = "Configuración - Edición",
+                Descripcion = "Gestionar configuración de marca (logo, colores, datos de contacto)",
+                Slug = "configuracion_edicion",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Configuración - Permisos",
+                Descripcion = "Gestionar roles y permisos granulares",
+                Slug = "configuracion_permisos",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Sedes",
+                Descripcion = "Gestionar sedes y ubicaciones",
+                Slug = "sedes",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Productos",
+                Descripcion = "Gestionar productos y catálogo",
+                Slug = "productos",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Categorías",
+                Descripcion = "Gestionar categorías de productos",
+                Slug = "categorias",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Ofertas",
+                Descripcion = "Gestionar ofertas y descuentos",
+                Slug = "ofertas",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Page Builder",
+                Descripcion = "Constructor de páginas modular",
+                Slug = "page_builder",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Analytics",
+                Descripcion = "Ver estadísticas y reportes",
+                Slug = "analytics",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Ventas",
+                Descripcion = "Gestionar ventas y transacciones",
+                Slug = "ventas",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Clientes",
+                Descripcion = "Gestionar clientes",
+                Slug = "clientes",
+                IsActive = true
+            },
+            new Domain.Entities.Module
+            {
+                Nombre = "Usuarios",
+                Descripcion = "Gestionar usuarios del sistema",
+                Slug = "usuarios",
+                IsActive = true
+            }
+        };
+
+        await context.Modules.AddRangeAsync(modules);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedBrandSettingsAsync(MinimarketDbContext context)
+    {
+        if (await context.BrandSettings.AnyAsync())
+            return;
+
+        var brandSettings = new Domain.Entities.BrandSettings
+        {
+            LogoUrl = "https://via.placeholder.com/200x60?text=Minimarket+Camucha",
+            StoreName = "Minimarket Camucha",
+            PrimaryColor = "#4CAF50",
+            SecondaryColor = "#0d7ff2",
+            ButtonColor = "#4CAF50",
+            TextColor = "#333333",
+            HoverColor = "#45a049",
+            Description = "Tu minimarket de confianza",
+            Slogan = "Calidad y servicio siempre",
+            Phone = "+51 999 999 999",
+            Email = "contacto@minimarketcamucha.com",
+            Address = "Av. Principal 123, Lima, Perú",
+            UpdatedBy = Guid.Empty // Se actualizará cuando un usuario real lo modifique
+        };
+
+        await context.BrandSettings.AddAsync(brandSettings);
         await context.SaveChangesAsync();
     }
 }

@@ -1,4 +1,5 @@
 using MediatR;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Customers.Queries;
 using Minimarket.Application.Features.Customers.DTOs;
@@ -21,7 +22,7 @@ public class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByIdQuery,
 
         if (customer == null)
         {
-            return Result<CustomerDto>.Failure("Cliente no encontrado");
+            throw new NotFoundException("Customer", request.Id);
         }
 
         var result = new CustomerDto

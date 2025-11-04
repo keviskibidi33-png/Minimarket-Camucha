@@ -121,6 +121,41 @@ export const routes: Routes = [
         path: 'usuarios',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'configuraciones',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'configuraciones/marca',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/brand-settings/brand-settings.component').then(m => m.BrandSettingsComponent)
+      },
+      {
+        path: 'configuraciones/permisos',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/permissions/permissions.component').then(m => m.PermissionsComponent)
+      },
+      {
+        path: 'sedes',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/sedes/sedes.component').then(m => m.SedesComponent)
+      },
+      {
+        path: 'ofertas',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/ofertas/ofertas.component').then(m => m.OfertasComponent)
+      },
+      {
+        path: 'page-builder',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/page-builder/page-builder.component').then(m => m.PageBuilderComponent)
+      },
+      {
+        path: 'analytics',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent)
       }
     ]
   },

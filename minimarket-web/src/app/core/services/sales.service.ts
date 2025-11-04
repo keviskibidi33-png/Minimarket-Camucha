@@ -18,6 +18,7 @@ export interface Sale {
   amountPaid: number;
   change: number;
   status: 'Pendiente' | 'Pagado' | 'Anulado';
+  cancellationReason?: string;
   saleDetails: SaleDetail[];
 }
 

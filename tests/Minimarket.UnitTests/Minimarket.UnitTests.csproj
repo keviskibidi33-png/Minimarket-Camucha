@@ -24,7 +24,23 @@
     
     <!-- Fake Data Generation -->
     <PackageReference Include="Bogus" Version="35.4.0" />
+    
+    <!-- Code Coverage -->
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+  
+  <PropertyGroup>
+    <!-- Code Coverage Configuration -->
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <CoverletOutput>./TestResults/</CoverletOutput>
+    <Threshold>80</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Minimarket.Domain\Minimarket.Domain.csproj" />

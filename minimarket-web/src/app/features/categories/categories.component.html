@@ -85,11 +85,11 @@
 <!-- Confirm Dialog -->
 @if (showConfirmDialog()) {
   <app-confirm-dialog
-    [isOpen]="showConfirmDialog()"
+    [isOpen]="true"
     title="Eliminar Categoría"
     message="¿Está seguro de eliminar esta categoría? Si tiene productos asociados, la categoría se desactivará."
-    (onConfirm)="onDeleteConfirmed()"
-    (onCancel)="onDeleteCanceled()">
+    (confirmed)="onDeleteConfirmed()"
+    (cancelled)="onDeleteCanceled()">
   </app-confirm-dialog>
 }
 

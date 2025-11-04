@@ -58,6 +58,8 @@ export class ProductsComponent implements OnInit {
       error: (error) => {
         console.error('Error loading products:', error);
         this.isLoading.set(false);
+        // El error se maneja con toast desde el interceptor si existe
+        // Aquí podríamos agregar un signal de error si es necesario
       }
     });
   }
@@ -125,5 +127,7 @@ export class ProductsComponent implements OnInit {
     if (stock <= minimumStock) return 'text-yellow-500';
     return '';
   }
+
+  Math = Math;
 }
 

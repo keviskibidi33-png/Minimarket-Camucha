@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, afterNextRender, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductsService, Product } from '../../core/services/products.service';
@@ -64,6 +64,9 @@ export class PosComponent implements OnInit {
     return change > 0 ? change : 0;
   });
 
+  private readonly destroyRef = inject(DestroyRef);
+  private paymentEffectCleanup?: ReturnType<typeof effect>;
+
   constructor(
     private productsService: ProductsService,
     private customersService: CustomersService,
@@ -73,27 +76,43 @@ export class PosComponent implements OnInit {
     private router: Router
   ) {}
 
+  // Helper methods for template
+  parseFloat = parseFloat;
+
   ngOnInit(): void {
     this.loadProducts();
     this.loadCustomers();
     
     // Observar cambios en total para actualizar amountPaid automáticamente
-    // Para métodos que no son efectivo, siempre debe ser igual al total
-    this.total.subscribe(total => {
-      if (this.paymentMethod() !== 'Efectivo') {
-        this.amountPaid.set(total);
-      } else if (this.amountPaid() < total) {
-        this.amountPaid.set(total);
-      }
+    // Se ejecuta después del siguiente renderizado para asegurar que todo esté inicializado
+    afterNextRender(() => {
+      // Observar cambios en total para actualizar amountPaid automáticamente
+      // Para métodos que no son efectivo, siempre debe ser igual al total
+      this.paymentEffectCleanup = effect(() => {
+        const total = this.total();
+        const method = this.paymentMethod();
+        
+        if (method !== 'Efectivo') {
+          this.amountPaid.set(total);
+        } else if (this.amountPaid() < total) {
+          this.amountPaid.set(total);
+        }
+      }, { allowSignalWrites: true });
+    });
+
+    // Limpiar el effect cuando el componente se destruya
+    this.destroyRef.onDestroy(() => {
+      this.paymentEffectCleanup?.destroy();
     });
   }
 
   loadProducts(): void {
     this.isLoading.set(true);
     this.productsService.getAll({ isActive: true }).subscribe({
-      next: (products) => {
-        this.products.set(products);
-        this.filteredProducts.set(products);
+      next: (result) => {
+        const products = result.items || result;
+        this.products.set(Array.isArray(products) ? products : []);
+        this.filteredProducts.set(Array.isArray(products) ? products : []);
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -106,8 +125,9 @@ export class PosComponent implements OnInit {
 
   loadCustomers(): void {
     this.customersService.getAll().subscribe({
-      next: (customers) => {
-        this.customers.set(customers);
+      next: (result) => {
+        const customers = result.items || result;
+        this.customers.set(Array.isArray(customers) ? customers : []);
       },
       error: (error) => {
         console.error('Error loading customers:', error);

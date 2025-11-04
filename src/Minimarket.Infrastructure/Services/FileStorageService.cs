@@ -77,7 +77,7 @@ public class FileStorageService : IFileStorageService
             var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath);
             if (File.Exists(fullPath))
             {
-                File.Delete(fullPath);
+                await Task.Run(() => File.Delete(fullPath));
                 _logger.LogInformation("Archivo eliminado: {FilePath}", fullPath);
                 return true;
             }

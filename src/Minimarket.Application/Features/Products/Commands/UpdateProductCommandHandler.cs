@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Products.Commands;
 using Minimarket.Application.Features.Products.DTOs;
@@ -9,19 +11,24 @@ namespace Minimarket.Application.Features.Products.Commands;
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result<ProductDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<UpdateProductCommandHandler> _logger;
 
-    public UpdateProductCommandHandler(IUnitOfWork unitOfWork)
+    public UpdateProductCommandHandler(IUnitOfWork unitOfWork, ILogger<UpdateProductCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<ProductDto>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Updating product {ProductId}", request.Product.Id);
+
         var product = await _unitOfWork.Products.GetByIdAsync(request.Product.Id, cancellationToken);
 
         if (product == null)
         {
-            return Result<ProductDto>.Failure("Producto no encontrado");
+            _logger.LogWarning("Product not found. ProductId: {ProductId}", request.Product.Id);
+            throw new NotFoundException("Product", request.Product.Id);
         }
 
         // Verificar si el código ya existe en otro producto
@@ -30,14 +37,17 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
 
         if (existingProduct != null)
         {
-            return Result<ProductDto>.Failure("Ya existe otro producto con este código");
+            _logger.LogWarning("Attempted to update product with duplicate code {ProductCode}. Existing ProductId: {ExistingProductId}", 
+                request.Product.Code, existingProduct.Id);
+            throw new BusinessRuleViolationException("Ya existe otro producto con este código");
         }
 
         // Verificar que la categoría existe
         var category = await _unitOfWork.Categories.GetByIdAsync(request.Product.CategoryId, cancellationToken);
         if (category == null)
         {
-            return Result<ProductDto>.Failure("La categoría especificada no existe");
+            _logger.LogWarning("Category not found. CategoryId: {CategoryId}", request.Product.CategoryId);
+            throw new NotFoundException("Category", request.Product.CategoryId);
         }
 
         product.Code = request.Product.Code;
@@ -54,6 +64,9 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
 
         await _unitOfWork.Products.UpdateAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Product updated successfully. ProductId: {ProductId}, Code: {ProductCode}", 
+            product.Id, product.Code);
 
         var result = new ProductDto
         {

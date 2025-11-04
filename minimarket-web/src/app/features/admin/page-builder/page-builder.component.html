@@ -1,0 +1,232 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Heading -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Page Builder</h1>
+      <button
+        (click)="openForm()"
+        class="px-4 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+        <span class="material-symbols-outlined inline-block mr-2">add</span>
+        Nueva Página
+      </button>
+    </div>
+
+    <!-- Pages List -->
+    @if (isLoading()) {
+      <div class="text-center py-12 text-gray-500">Cargando páginas...</div>
+    } @else if (pages().length === 0) {
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-12 text-center">
+        <p class="text-gray-500 dark:text-gray-400">No hay páginas creadas</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (page of pages(); track page.id) {
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            <div class="flex items-start justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ page.titulo }}</h3>
+              @if (page.activa) {
+                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activa</span>
+              } @else {
+                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">Inactiva</span>
+              }
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Slug: <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{{ page.slug }}</code></p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ page.sections.length }} secciones</p>
+            <div class="flex gap-2">
+              <button
+                (click)="openForm(page)"
+                class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                Editar
+              </button>
+              <button
+                (click)="deletePage(page)"
+                class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Form Modal -->
+    @if (showForm()) {
+      <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="closeForm()">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              {{ editingPage() ? 'Editar Página' : 'Nueva Página' }}
+            </h2>
+
+            <form (ngSubmit)="savePage()">
+              <!-- Título y Slug -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Título <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="titulo"
+                    name="titulo"
+                    (blur)="generateSlug()"
+                    required
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Slug <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="slug"
+                    name="slug"
+                    required
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+              </div>
+
+              <!-- Tipo de Plantilla -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Plantilla</label>
+                <select
+                  [(ngModel)]="tipoPlantilla"
+                  name="tipoPlantilla"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <option [value]="0">Home</option>
+                  <option [value]="1">Producto Detalle</option>
+                  <option [value]="2">Genérica</option>
+                </select>
+              </div>
+
+              <!-- SEO -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meta Description</label>
+                <textarea
+                  [(ngModel)]="metaDescription"
+                  name="metaDescription"
+                  rows="2"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
+              </div>
+
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Keywords</label>
+                <input
+                  type="text"
+                  [(ngModel)]="keywords"
+                  name="keywords"
+                  placeholder="palabra1, palabra2, palabra3"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+
+              <!-- Secciones -->
+              <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Secciones</label>
+                  <button
+                    type="button"
+                    (click)="addSection()"
+                    class="px-3 py-1 rounded-lg bg-primary-admin text-white text-sm font-semibold hover:bg-primary-admin/90">
+                    Agregar Sección
+                  </button>
+                </div>
+
+                <div class="space-y-4">
+                  @for (section of sections(); track $index) {
+                    <div class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <select
+                          [(ngModel)]="section.seccionTipo"
+                          name="seccionTipo{{$index}}"
+                          class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                          @for (tipo of seccionTipos; track tipo.value) {
+                            <option [value]="tipo.value">{{ tipo.label }}</option>
+                          }
+                        </select>
+                        <div class="flex gap-2 ml-2">
+                          <button
+                            type="button"
+                            (click)="moveSection($index, 'up')"
+                            [disabled]="$index === 0"
+                            class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50">
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            (click)="moveSection($index, 'down')"
+                            [disabled]="$index === sections().length - 1"
+                            class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50">
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            (click)="removeSection($index)"
+                            class="px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100">
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                      <!-- Configuración básica de datos según tipo de sección -->
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Título (opcional)"
+                          [value]="section.datos['titulo'] || ''"
+                          (input)="updateSectionData($index, 'titulo', $any($event.target).value)"
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        <textarea
+                          placeholder="Contenido (opcional)"
+                          [value]="section.datos['contenido'] || ''"
+                          (input)="updateSectionData($index, 'contenido', $any($event.target).value)"
+                          rows="3"
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Orden y Estado -->
+              <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="orden"
+                    name="orden"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 mt-6">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="activa"
+                      name="activa"
+                      class="w-4 h-4 text-primary-admin">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Activa</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex justify-end gap-4">
+                <button
+                  type="button"
+                  (click)="closeForm()"
+                  class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold">
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="px-6 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+

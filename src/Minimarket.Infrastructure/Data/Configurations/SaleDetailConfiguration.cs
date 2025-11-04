@@ -23,10 +23,20 @@ public class SaleDetailConfiguration : IEntityTypeConfiguration<SaleDetail>
             .HasPrecision(18, 2)
             .IsRequired();
 
+        // Relaciones
+        builder.HasOne(sd => sd.Sale)
+            .WithMany(s => s.SaleDetails)
+            .HasForeignKey(sd => sd.SaleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasOne(sd => sd.Product)
             .WithMany(p => p.SaleDetails)
             .HasForeignKey(sd => sd.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Índices
+        builder.HasIndex(sd => sd.SaleId);
+        builder.HasIndex(sd => sd.ProductId);
     }
 }
 

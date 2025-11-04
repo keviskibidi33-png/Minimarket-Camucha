@@ -21,11 +21,16 @@ public class GetAllCategoriesQueryHandler : IRequestHandler<GetAllCategoriesQuer
 
         var result = categories
             .Where(c => c.IsActive)
+            .OrderBy(c => c.Orden)
+            .ThenBy(c => c.Name)
             .Select(c => new CategoryDto
             {
                 Id = c.Id,
                 Name = c.Name,
                 Description = c.Description,
+                ImageUrl = c.ImageUrl,
+                IconoUrl = c.IconoUrl,
+                Orden = c.Orden,
                 IsActive = c.IsActive
             })
             .ToList();

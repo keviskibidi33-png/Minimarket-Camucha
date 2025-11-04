@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Customers.Commands;
 using Minimarket.Application.Features.Customers.DTOs;
@@ -9,19 +11,24 @@ namespace Minimarket.Application.Features.Customers.Commands;
 public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerCommand, Result<CustomerDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<UpdateCustomerCommandHandler> _logger;
 
-    public UpdateCustomerCommandHandler(IUnitOfWork unitOfWork)
+    public UpdateCustomerCommandHandler(IUnitOfWork unitOfWork, ILogger<UpdateCustomerCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<CustomerDto>> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Updating customer {CustomerId}", request.Customer.Id);
+
         var customer = await _unitOfWork.Customers.GetByIdAsync(request.Customer.Id, cancellationToken);
 
         if (customer == null)
         {
-            return Result<CustomerDto>.Failure("Cliente no encontrado");
+            _logger.LogWarning("Customer not found. CustomerId: {CustomerId}", request.Customer.Id);
+            throw new NotFoundException("Customer", request.Customer.Id);
         }
 
         // Verificar si el documento ya existe en otro cliente
@@ -33,7 +40,9 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
 
         if (existingCustomer != null)
         {
-            return Result<CustomerDto>.Failure("Ya existe otro cliente con este documento");
+            _logger.LogWarning("Attempted to update customer with duplicate document {DocumentType} - {DocumentNumber}. Existing CustomerId: {ExistingCustomerId}", 
+                request.Customer.DocumentType, request.Customer.DocumentNumber, existingCustomer.Id);
+            throw new BusinessRuleViolationException("Ya existe otro cliente con este documento");
         }
 
         customer.DocumentType = request.Customer.DocumentType;
@@ -47,6 +56,8 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
 
         await _unitOfWork.Customers.UpdateAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Customer updated successfully. CustomerId: {CustomerId}", customer.Id);
 
         var result = new CustomerDto
         {

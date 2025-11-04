@@ -17,12 +17,12 @@ export default defineConfig({
     env: {
       apiUrl: 'http://localhost:5000/api',
       testUser: {
-        email: 'admin@minimarket.com',
-        password: 'Admin@1234'
+        email: 'admin', // Usuario admin (según DatabaseSeeder.cs)
+        password: 'Admin123!' // Contraseña admin (según DatabaseSeeder.cs)
       },
       testCajero: {
-        email: 'cajero@minimarket.com',
-        password: 'Cajero@1234'
+        email: 'cajero', // Usuario cajero (según DatabaseSeeder.cs)
+        password: 'Cajero123!' // Contraseña cajero (según DatabaseSeeder.cs)
       }
     },
     setupNodeEvents(on, config) {

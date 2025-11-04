@@ -1,0 +1,249 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Page Heading -->
+    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuración de Marca</h1>
+
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      <form (ngSubmit)="saveSettings()">
+        <!-- Logo -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Logo de la Tienda
+          </label>
+          <div class="flex gap-4 items-start">
+            <div class="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onLogoUpload($event)"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+              <p class="mt-1 text-xs text-gray-500">Formatos: PNG, JPG, SVG. Tamaño recomendado: 200x60px</p>
+            </div>
+            @if (previewLogoUrl()) {
+              <div class="w-32 h-20 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <img [src]="previewLogoUrl()" alt="Logo preview" class="w-full h-full object-contain">
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Favicon -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Favicon
+          </label>
+          <div class="flex gap-4 items-start">
+            <div class="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onFaviconUpload($event)"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+              <p class="mt-1 text-xs text-gray-500">Tamaño requerido: 16x16 o 32x32 píxeles</p>
+            </div>
+            @if (previewFaviconUrl()) {
+              <div class="w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <img [src]="previewFaviconUrl()" alt="Favicon preview" class="w-full h-full object-contain">
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Nombre de la Tienda -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Nombre de la Tienda <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="storeName"
+            name="storeName"
+            required
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+        </div>
+
+        <!-- Colores -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Colores de la Marca</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color Primario</label>
+              <div class="flex gap-2">
+                <input
+                  type="color"
+                  [(ngModel)]="primaryColor"
+                  name="primaryColor"
+                  (change)="updatePreview()"
+                  class="w-16 h-10 rounded border border-gray-300 dark:border-gray-700">
+                <input
+                  type="text"
+                  [(ngModel)]="primaryColor"
+                  name="primaryColorText"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color Secundario</label>
+              <div class="flex gap-2">
+                <input
+                  type="color"
+                  [(ngModel)]="secondaryColor"
+                  name="secondaryColor"
+                  (change)="updatePreview()"
+                  class="w-16 h-10 rounded border border-gray-300 dark:border-gray-700">
+                <input
+                  type="text"
+                  [(ngModel)]="secondaryColor"
+                  name="secondaryColorText"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color de Botón</label>
+              <div class="flex gap-2">
+                <input
+                  type="color"
+                  [(ngModel)]="buttonColor"
+                  name="buttonColor"
+                  (change)="updatePreview()"
+                  class="w-16 h-10 rounded border border-gray-300 dark:border-gray-700">
+                <input
+                  type="text"
+                  [(ngModel)]="buttonColor"
+                  name="buttonColorText"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color de Texto</label>
+              <div class="flex gap-2">
+                <input
+                  type="color"
+                  [(ngModel)]="textColor"
+                  name="textColor"
+                  (change)="updatePreview()"
+                  class="w-16 h-10 rounded border border-gray-300 dark:border-gray-700">
+                <input
+                  type="text"
+                  [(ngModel)]="textColor"
+                  name="textColorText"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color Hover</label>
+              <div class="flex gap-2">
+                <input
+                  type="color"
+                  [(ngModel)]="hoverColor"
+                  name="hoverColor"
+                  (change)="updatePreview()"
+                  class="w-16 h-10 rounded border border-gray-300 dark:border-gray-700">
+                <input
+                  type="text"
+                  [(ngModel)]="hoverColor"
+                  name="hoverColorText"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de Contacto -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Contacto</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
+              <textarea
+                [(ngModel)]="description"
+                name="description"
+                rows="3"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slogan</label>
+              <input
+                type="text"
+                [(ngModel)]="slogan"
+                name="slogan"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Teléfono</label>
+                <input
+                  type="tel"
+                  [(ngModel)]="phone"
+                  name="phone"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  [(ngModel)]="email"
+                  name="email"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dirección</label>
+              <input
+                type="text"
+                [(ngModel)]="address"
+                name="address"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista Previa -->
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vista Previa</h3>
+          <div class="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-4 mb-4">
+              @if (previewLogoUrl()) {
+                <img [src]="previewLogoUrl()" [alt]="storeName()" class="h-12">
+              }
+              <div>
+                <h4 [style.color]="textColor()" class="text-xl font-bold">{{ storeName() || 'Nombre de la Tienda' }}</h4>
+                @if (slogan()) {
+                  <p [style.color]="textColor()" class="text-sm opacity-75">{{ slogan() }}</p>
+                }
+              </div>
+            </div>
+            <button
+              type="button"
+              [style.backgroundColor]="buttonColor()"
+              [style.color]="textColor()"
+              class="px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+              Botón de Acción
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4">
+          <button
+            type="button"
+            (click)="loadSettings()"
+            class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSaving() || !storeName().trim()"
+            class="px-6 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isSaving()) {
+              Guardando...
+            } @else {
+              Guardar Configuración
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

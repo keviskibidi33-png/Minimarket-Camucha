@@ -40,6 +40,21 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.ImageUrl)
             .HasMaxLength(500);
 
+        builder.Property(p => p.ImagenesJson)
+            .IsRequired()
+            .HasMaxLength(2000)
+            .HasDefaultValue("[]");
+
+        builder.Property(p => p.PaginasJson)
+            .IsRequired()
+            .HasMaxLength(500)
+            .HasDefaultValue("{}");
+
+        builder.Property(p => p.SedesDisponiblesJson)
+            .IsRequired()
+            .HasMaxLength(1000)
+            .HasDefaultValue("[]");
+
         builder.HasIndex(p => p.Code)
             .IsUnique();
 

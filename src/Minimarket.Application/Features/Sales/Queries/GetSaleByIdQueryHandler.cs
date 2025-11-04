@@ -1,4 +1,5 @@
 using MediatR;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Sales.Queries;
 using Minimarket.Application.Features.Sales.DTOs;
@@ -21,7 +22,7 @@ public class GetSaleByIdQueryHandler : IRequestHandler<GetSaleByIdQuery, Result<
 
         if (sale == null)
         {
-            return Result<SaleDto>.Failure("Venta no encontrada");
+            throw new NotFoundException("Sale", request.Id);
         }
 
         var customer = sale.CustomerId.HasValue

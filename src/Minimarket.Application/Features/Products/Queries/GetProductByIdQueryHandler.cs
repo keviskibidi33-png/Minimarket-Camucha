@@ -1,4 +1,5 @@
 using MediatR;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Products.Queries;
 using Minimarket.Application.Features.Products.DTOs;
@@ -21,7 +22,7 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
 
         if (product == null)
         {
-            return Result<ProductDto>.Failure("Producto no encontrado");
+            throw new NotFoundException("Product", request.Id);
         }
 
         var category = await _unitOfWork.Categories.GetByIdAsync(product.CategoryId, cancellationToken);
@@ -39,11 +40,53 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
             CategoryId = product.CategoryId,
             CategoryName = category?.Name ?? "Sin categoría",
             ImageUrl = product.ImageUrl,
+            Imagenes = ParseJsonArray(product.ImagenesJson),
+            Paginas = ParseJsonObject(product.PaginasJson),
+            SedesDisponibles = ParseJsonGuidArray(product.SedesDisponiblesJson),
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt
         };
 
         return Result<ProductDto>.Success(result);
+    }
+
+    private static List<string> ParseJsonArray(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<string>();
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
+    private static Dictionary<string, object> ParseJsonObject(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new Dictionary<string, object>();
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+        }
+        catch
+        {
+            return new Dictionary<string, object>();
+        }
+    }
+
+    private static List<Guid> ParseJsonGuidArray(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<Guid>();
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(json) ?? new List<Guid>();
+        }
+        catch
+        {
+            return new List<Guid>();
+        }
     }
 }
 

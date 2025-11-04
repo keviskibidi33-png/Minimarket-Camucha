@@ -33,7 +33,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         if (failures.Any())
         {
-            throw new ValidationException(failures);
+            throw new Minimarket.Application.Common.Exceptions.ValidationException(failures);
         }
 
         return await next();

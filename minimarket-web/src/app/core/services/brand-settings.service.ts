@@ -1,0 +1,94 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+
+export interface BrandSettings {
+  id: string;
+  logoUrl: string;
+  storeName: string;
+  faviconUrl?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  buttonColor: string;
+  textColor: string;
+  hoverColor: string;
+  description?: string;
+  slogan?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UpdateBrandSettings {
+  logoUrl: string;
+  storeName: string;
+  faviconUrl?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  buttonColor: string;
+  textColor: string;
+  hoverColor: string;
+  description?: string;
+  slogan?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BrandSettingsService {
+  private readonly apiUrl = `${environment.apiUrl}/brandsettings`;
+  private settingsSubject = new BehaviorSubject<BrandSettings | null>(null);
+  public settings$ = this.settingsSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    // Cargar settings al inicializar el servicio
+    this.loadSettings();
+  }
+
+  get(): Observable<BrandSettings | null> {
+    return this.http.get<BrandSettings | null>(this.apiUrl).pipe(
+      tap(settings => {
+        this.settingsSubject.next(settings);
+        // Aplicar estilos globales si hay settings
+        if (settings) {
+          this.applyStyles(settings);
+        }
+      })
+    );
+  }
+
+  update(settings: UpdateBrandSettings): Observable<BrandSettings> {
+    return this.http.put<BrandSettings>(this.apiUrl, settings).pipe(
+      tap(updatedSettings => {
+        this.settingsSubject.next(updatedSettings);
+        this.applyStyles(updatedSettings);
+      })
+    );
+  }
+
+  getCurrentSettings(): BrandSettings | null {
+    return this.settingsSubject.value;
+  }
+
+  private loadSettings(): void {
+    this.get().subscribe();
+  }
+
+  private applyStyles(settings: BrandSettings | UpdateBrandSettings): void {
+    // Aplicar variables CSS dinámicas
+    const root = document.documentElement;
+    root.style.setProperty('--primary-color', settings.primaryColor);
+    root.style.setProperty('--secondary-color', settings.secondaryColor);
+    root.style.setProperty('--button-color', settings.buttonColor);
+    root.style.setProperty('--text-color', settings.textColor);
+    root.style.setProperty('--hover-color', settings.hoverColor);
+  }
+}
+

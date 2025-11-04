@@ -1,17 +1,31 @@
-import { Injectable, computed, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, EffectRef, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService, User } from './auth.service';
 
+/**
+ * Servicio para gestión de permisos y roles de usuario
+ * Sincroniza automáticamente con el estado de autenticación
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionsService {
   private readonly currentUser = signal<User | null>(null);
+  private effectCleanup?: EffectRef;
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(private authService: AuthService) {
     // Sincronizar con el signal del AuthService usando effect
-    effect(() => {
+    // El effect se ejecuta en el constructor cuando tenemos el contexto de inyección válido
+    // Usamos allowSignalWrites para permitir actualizar el signal dentro del effect
+    this.effectCleanup = effect(() => {
       const user = this.authService.currentUser();
       this.currentUser.set(user);
+    }, { allowSignalWrites: true });
+
+    // Limpiar el effect cuando el servicio se destruya (aunque es singleton, es buena práctica)
+    this.destroyRef.onDestroy(() => {
+      this.effectCleanup?.destroy();
     });
   }
 

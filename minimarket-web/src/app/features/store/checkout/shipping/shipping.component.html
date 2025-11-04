@@ -1,23 +1,6 @@
 <div class="relative flex h-auto min-h-screen w-full flex-col">
   <!-- Header -->
-  <header class="flex items-center justify-center whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-white dark:bg-background-dark/50">
-    <div class="flex items-center justify-between px-4 sm:px-10 py-3 w-full max-w-7xl">
-      <div class="flex items-center gap-4">
-        <a routerLink="/" class="flex items-center gap-3">
-          <div class="size-6 text-primary">
-            <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
-            </svg>
-          </div>
-          <h2 class="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">Minimarket Camucha</h2>
-        </a>
-      </div>
-      <div class="hidden md:flex items-center gap-2">
-        <span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">lock</span>
-        <span class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Pago Seguro</span>
-      </div>
-    </div>
-  </header>
+  <app-store-header></app-store-header>
 
   <!-- Main Content -->
   <main class="flex-1 w-full">
@@ -80,6 +63,7 @@
                   <input 
                     type="text"
                     [(ngModel)]="address"
+                    (ngModelChange)="onAddressChange()"
                     name="address"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -90,10 +74,11 @@
                   <input 
                     type="text"
                     [(ngModel)]="city"
+                    (ngModelChange)="onAddressChange()"
                     name="city"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Springfield"/>
+                    placeholder="Lima"/>
                 </label>
                 <label class="flex flex-col min-w-40 flex-1">
                   <p class="text-base font-medium leading-normal pb-2">Región</p>
@@ -112,24 +97,39 @@
             <section>
               <h2 class="text-text-primary-light dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Método de Envío</h2>
               <div class="space-y-4">
-                <label class="flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10">
+                <label [class]="shippingMethod() === 'delivery' 
+                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
+                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
                   <input 
                     type="radio"
                     name="shipping"
                     [value]="'delivery'"
-                    [(ngModel)]="shippingMethod"
+                    [checked]="shippingMethod() === 'delivery'"
+                    (change)="onShippingMethodChange('delivery')"
                     class="form-radio text-primary focus:ring-primary"/>
-                  <div class="ml-4 flex-1 flex justify-between items-center">
-                    <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Despacho a Domicilio</span>
-                    <span class="font-bold text-text-primary-light dark:text-text-primary-dark">{{ getPriceFormatted(shippingCost()) }}</span>
+                  <div class="ml-4 flex-1">
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Despacho a Domicilio</span>
+                      @if (isCalculatingShipping()) {
+                        <span class="text-sm text-gray-500">Calculando...</span>
+                      } @else {
+                        <span class="font-bold text-text-primary-light dark:text-text-primary-dark">{{ getPriceFormatted(shippingCost()) }}</span>
+                      }
+                    </div>
+                    @if (shippingCalculationDetails() && shippingMethod() === 'delivery') {
+                      <p class="text-xs text-gray-500 mt-1">{{ shippingCalculationDetails() }}</p>
+                    }
                   </div>
                 </label>
-                <label class="flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50">
+                <label [class]="shippingMethod() === 'pickup' 
+                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
+                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
                   <input 
                     type="radio"
                     name="shipping"
                     [value]="'pickup'"
-                    [(ngModel)]="shippingMethod"
+                    [checked]="shippingMethod() === 'pickup'"
+                    (change)="onShippingMethodChange('pickup')"
                     class="form-radio text-primary focus:ring-primary"/>
                   <div class="ml-4 flex-1 flex justify-between items-center">
                     <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Retiro en Tienda</span>

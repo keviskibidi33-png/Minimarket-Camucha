@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Minimarket.Domain.Interfaces;
 
 namespace Minimarket.API.Controllers;
 

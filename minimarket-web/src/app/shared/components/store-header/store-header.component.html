@@ -8,10 +8,10 @@
         <h2 class="text-xl font-bold tracking-tight">Minimarket Camucha</h2>
       </a>
       <nav class="hidden lg:flex items-center gap-6">
-        <a routerLink="/" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Home</a>
-        <a routerLink="/tienda/productos" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Categories</a>
-        <a href="#" class="text-sm font-medium hover:text-primary">Offers</a>
-        <a href="#" class="text-sm font-medium hover:text-primary">Contact</a>
+        <a routerLink="/" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+        <a routerLink="/tienda/productos" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Productos</a>
+        <a href="#" class="text-sm font-medium hover:text-primary">Ofertas</a>
+        <a href="#" class="text-sm font-medium hover:text-primary">Contacto</a>
       </nav>
     </div>
     <div class="flex flex-1 justify-end items-center gap-4">
@@ -23,7 +23,7 @@
             </div>
             <input 
               class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-gray-100 dark:bg-gray-800 h-full placeholder:text-gray-500 px-4 rounded-l-none border-l-0 pl-2 text-sm" 
-              placeholder="Search for products..." 
+              placeholder="Buscar productos..." 
               [value]="searchTerm()"
               (input)="searchTerm.set($any($event.target).value)"
               (keyup.enter)="onSearch()"
@@ -34,10 +34,10 @@
       <div class="flex gap-2">
         <button 
           routerLink="/carrito"
-          class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-transparent text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800 gap-2 text-sm font-bold min-w-0 px-2.5 transition-colors">
+          class="relative flex cursor-pointer items-center justify-center overflow-visible rounded-lg h-10 bg-transparent text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800 gap-2 text-sm font-bold min-w-0 px-2.5 transition-colors">
           <span class="material-symbols-outlined">shopping_cart</span>
           @if (cartItemsCount() > 0) {
-            <div class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-white text-xs font-bold">
+            <div class="absolute -top-1.5 -right-1.5 flex h-5 w-5 min-w-[20px] items-center justify-center rounded-full bg-secondary text-white text-[10px] font-bold shadow-lg shadow-secondary/50 ring-2 ring-white dark:ring-gray-900 z-10">
               {{ cartItemsCount() }}
             </div>
           }

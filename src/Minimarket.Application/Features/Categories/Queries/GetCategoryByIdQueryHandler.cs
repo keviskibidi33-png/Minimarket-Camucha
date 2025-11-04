@@ -1,4 +1,5 @@
 using MediatR;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Categories.Queries;
 using Minimarket.Application.Features.Categories.DTOs;
@@ -21,7 +22,7 @@ public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery,
 
         if (category == null)
         {
-            return Result<CategoryDto>.Failure("Categoría no encontrada");
+            throw new NotFoundException("Category", request.Id);
         }
 
         var categoryDto = new CategoryDto
@@ -29,6 +30,9 @@ public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery,
             Id = category.Id,
             Name = category.Name,
             Description = category.Description,
+            ImageUrl = category.ImageUrl,
+            IconoUrl = category.IconoUrl,
+            Orden = category.Orden,
             IsActive = category.IsActive
         };
 

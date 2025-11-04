@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Minimarket.Application.Common.Models;
+using Minimarket.Domain.Common;
 
 namespace Minimarket.Domain.Interfaces;
 

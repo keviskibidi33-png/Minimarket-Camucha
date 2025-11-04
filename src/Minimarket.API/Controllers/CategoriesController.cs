@@ -19,6 +19,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous] // Permitir acceso público para la tienda
     public async Task<IActionResult> GetAll()
     {
         var query = new GetAllCategoriesQuery();

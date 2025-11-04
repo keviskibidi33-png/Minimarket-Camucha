@@ -1,0 +1,173 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Heading -->
+    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuraciones del Sistema</h1>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <nav class="-mb-px flex space-x-8">
+        <a
+          routerLink="/admin/configuraciones/marca"
+          routerLinkActive="border-primary-admin text-primary-admin"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Marca
+        </a>
+        <a
+          routerLink="/admin/configuraciones/permisos"
+          routerLinkActive="border-primary-admin text-primary-admin"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Permisos
+        </a>
+        <button
+          (click)="setTab('cart')"
+          [class.border-primary-admin]="activeTab() === 'cart'"
+          [class.text-primary-admin]="activeTab() === 'cart'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Carrito
+        </button>
+        <button
+          (click)="setTab('shipping')"
+          [class.border-primary-admin]="activeTab() === 'shipping'"
+          [class.text-primary-admin]="activeTab() === 'shipping'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Envíos
+        </button>
+        <button
+          (click)="setTab('banners')"
+          [class.border-primary-admin]="activeTab() === 'banners'"
+          [class.text-primary-admin]="activeTab() === 'banners'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Banners
+        </button>
+        <button
+          (click)="setTab('categories')"
+          [class.border-primary-admin]="activeTab() === 'categories'"
+          [class.text-primary-admin]="activeTab() === 'categories'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Categorías
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      @if (activeTab() === 'cart') {
+        <!-- Carrito Config -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración del Carrito</h2>
+          
+          <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div>
+              <h3 class="font-medium text-gray-900 dark:text-white">Aplicar IGV al Carrito</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Si está activado, el IGV (18%) se mostrará y aplicará al carrito de compras
+              </p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                [checked]="applyIgvToCart()"
+                (change)="applyIgvToCart.set($any($event.target).checked)"
+                class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+            </label>
+          </div>
+
+          <button
+            (click)="saveCartSetting()"
+            class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+            Guardar Configuración
+          </button>
+        </div>
+      }
+
+      @if (activeTab() === 'shipping') {
+        <!-- Shipping Config -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración de Envíos</h2>
+          <p class="text-gray-600 dark:text-gray-400">
+            Las tarifas de envío se calculan automáticamente usando fórmulas basadas en distancia, peso y zona.
+            Las configuraciones avanzadas se gestionan desde el backend.
+          </p>
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Fórmula de cálculo:</strong> Base + (Distancia × Precio/km) + (Peso × Precio/kg)
+            </p>
+            <p class="text-sm text-blue-700 dark:text-blue-400 mt-2">
+              El cálculo se realiza automáticamente cuando el cliente ingresa su dirección en el checkout.
+            </p>
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'banners') {
+        <!-- Banners Config -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Banners</h2>
+          <p class="text-gray-600 dark:text-gray-400">
+            La gestión avanzada de banners estará disponible próximamente.
+          </p>
+        </div>
+      }
+
+      @if (activeTab() === 'categories') {
+        <!-- Categories Images Config -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Imágenes de Categorías</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Seleccionar Categoría
+              </label>
+              <select
+                [value]="selectedCategory() || ''"
+                (change)="onCategorySelected($any($event.target).value)"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <option value="">Selecciona una categoría</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+
+            @if (selectedCategory()) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  URL de la Imagen
+                </label>
+                <input
+                  type="text"
+                  [value]="categoryImageUrl()"
+                  (input)="categoryImageUrl.set($any($event.target).value)"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Ingresa la URL completa de la imagen para la categoría
+                </p>
+              </div>
+
+              @if (categoryImageUrl()) {
+                <div class="mt-4">
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista Previa:</p>
+                  <img
+                    [src]="categoryImageUrl()"
+                    [alt]="selectedCategoryName()"
+                    class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                    onerror="this.src='https://via.placeholder.com/200?text=Imagen+no+encontrada'">
+                </div>
+              }
+
+              <button
+                (click)="saveCategoryImage()"
+                class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+                Guardar Imagen
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

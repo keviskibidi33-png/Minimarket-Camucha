@@ -1,8 +1,11 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { ProductsService, Product } from '../../../core/services/products.service';
 import { CategoriesService, CategoryDto } from '../../../core/services/categories.service';
+import { CartService } from '../../../core/services/cart.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -18,14 +21,22 @@ import { ProductCardComponent } from '../../../shared/components/product-card/pr
     ProductCardComponent
   ],
   templateUrl: './products.component.html',
-  styleUrl: './products.component.css'
+  styleUrl: './products.component.css',
+  animations: [
+    trigger('viewTransition', [
+      transition('grid <=> list', [
+        style({ opacity: 0, transform: 'scale(0.95)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
+      ])
+    ])
+  ]
 })
 export class StoreProductsComponent implements OnInit {
   products = signal<Product[]>([]);
   filteredProducts = signal<Product[]>([]);
   categories = signal<CategoryDto[]>([]);
   isLoading = signal(true);
-  
+
   // Filters
   selectedCategory = signal<string | null>(null);
   minPrice = signal(0);
@@ -44,6 +55,8 @@ export class StoreProductsComponent implements OnInit {
   constructor(
     private productsService: ProductsService,
     private categoriesService: CategoriesService,
+    private cartService: CartService,
+    private toastService: ToastService,
     private route: ActivatedRoute
   ) {}
 
@@ -68,7 +81,8 @@ export class StoreProductsComponent implements OnInit {
       page: this.currentPage(),
       pageSize: this.pageSize
     }).subscribe({
-      next: (products) => {
+      next: (result) => {
+        const products = result.items || (Array.isArray(result) ? result : []);
         let filtered = [...products];
         
         // Filtrar por precio
@@ -181,7 +195,43 @@ export class StoreProductsComponent implements OnInit {
     return pages;
   }
 
-  // Exponer Math para el template
-  Math = Math;
+  // Exponer Math y parseFloat para el template
+  readonly Math = Math;
+  readonly parseFloat = parseFloat;
+
+  // Helper para verificar si es número
+  isNumber(value: number | string): value is number {
+    return typeof value === 'number';
+  }
+
+  // Formatear precio
+  getPriceFormatted(price: number): string {
+    return `S/ ${price.toFixed(2)}`;
+  }
+
+  // Agregar al carrito
+  addToCart(product: Product) {
+    if (product.stock === 0) {
+      return;
+    }
+    
+    // Pasar el GUID directamente, el CartService lo convertirá de forma consistente
+    this.cartService.addToCart({
+      id: product.id, // Pasar el GUID string directamente
+      name: product.name,
+      imageUrl: product.imageUrl || '',
+      salePrice: product.salePrice,
+      stock: product.stock
+    }, 1);
+    
+    // Obtener cantidad total de productos en el carrito
+    const totalItems = this.cartService.getTotalItems();
+    const message = totalItems === 1 
+      ? `"${product.name}" agregado al carrito`
+      : `"${product.name}" agregado al carrito (Total: ${totalItems} productos)`;
+    
+    // Mostrar notificación de éxito
+    this.toastService.success(message, 3000);
+  }
 }
 

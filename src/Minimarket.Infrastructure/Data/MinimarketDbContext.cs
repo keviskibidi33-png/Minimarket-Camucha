@@ -18,6 +18,19 @@ public class MinimarketDbContext : IdentityDbContext<IdentityUser<Guid>, Identit
     public DbSet<Sale> Sales { get; set; }
     public DbSet<SaleDetail> SaleDetails { get; set; }
     public DbSet<InventoryMovement> InventoryMovements { get; set; }
+    public DbSet<SystemSettings> SystemSettings { get; set; }
+    public DbSet<ShippingRate> ShippingRates { get; set; }
+    public DbSet<Banner> Banners { get; set; }
+    public DbSet<BrandSettings> BrandSettings { get; set; }
+    public DbSet<Domain.Entities.Module> Modules { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<Sede> Sedes { get; set; }
+    public DbSet<Oferta> Ofertas { get; set; }
+    public DbSet<Page> Pages { get; set; }
+    public DbSet<PageSection> PageSections { get; set; }
+    public DbSet<Translation> Translations { get; set; }
+    public DbSet<PageView> PageViews { get; set; }
+    public DbSet<ProductView> ProductViews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

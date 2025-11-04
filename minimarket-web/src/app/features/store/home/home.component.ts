@@ -41,7 +41,8 @@ export class HomeComponent implements OnInit {
       isActive: true, 
       pageSize: 5 
     }).subscribe({
-      next: (products) => {
+      next: (result) => {
+        const products = result.items || (Array.isArray(result) ? result : []);
         this.featuredProducts.set(products);
         this.isLoading.set(false);
       },

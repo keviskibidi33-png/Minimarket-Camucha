@@ -7,11 +7,13 @@
         <div class="flex justify-end gap-3">
           <button
             (click)="cancel()"
+            data-cy="confirm-cancel"
             class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
             {{ cancelText() }}
           </button>
           <button
             (click)="confirm()"
+            data-cy="confirm-delete"
             class="px-4 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90">
             {{ confirmText() }}
           </button>

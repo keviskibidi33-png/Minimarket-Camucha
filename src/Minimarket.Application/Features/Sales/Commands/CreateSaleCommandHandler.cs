@@ -1,6 +1,5 @@
 using System;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;

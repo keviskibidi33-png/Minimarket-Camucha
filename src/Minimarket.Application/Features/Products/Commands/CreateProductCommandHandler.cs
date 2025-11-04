@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Products.Commands;
 using Minimarket.Application.Features.Products.DTOs;
@@ -10,28 +12,34 @@ namespace Minimarket.Application.Features.Products.Commands;
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<ProductDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CreateProductCommandHandler> _logger;
 
-    public CreateProductCommandHandler(IUnitOfWork unitOfWork)
+    public CreateProductCommandHandler(IUnitOfWork unitOfWork, ILogger<CreateProductCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<ProductDto>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Creating product with code {ProductCode}", request.Product.Code);
+
         // Verificar si el código ya existe
         var existingProduct = (await _unitOfWork.Products.FindAsync(p => p.Code == request.Product.Code, cancellationToken))
             .FirstOrDefault();
 
         if (existingProduct != null)
         {
-            return Result<ProductDto>.Failure("Ya existe un producto con este código");
+            _logger.LogWarning("Attempted to create duplicate product with code {ProductCode}", request.Product.Code);
+            throw new BusinessRuleViolationException("Ya existe un producto con este código");
         }
 
         // Verificar que la categoría existe
         var category = await _unitOfWork.Categories.GetByIdAsync(request.Product.CategoryId, cancellationToken);
         if (category == null)
         {
-            return Result<ProductDto>.Failure("La categoría especificada no existe");
+            _logger.LogWarning("Category not found. CategoryId: {CategoryId}", request.Product.CategoryId);
+            throw new NotFoundException("Category", request.Product.CategoryId);
         }
 
         var product = new Product
@@ -50,6 +58,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         await _unitOfWork.Products.AddAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Product created successfully. ProductId: {ProductId}, Code: {ProductCode}", 
+            product.Id, product.Code);
 
         var result = new ProductDto
         {

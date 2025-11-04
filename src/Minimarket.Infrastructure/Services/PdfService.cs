@@ -38,6 +38,17 @@ public class PdfService : IPdfService
                 ? await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value) 
                 : null;
 
+            // Obtener productos para mapear nombres y códigos
+            var productIds = saleDetails.Select(sd => sd.ProductId).Distinct().ToList();
+            var products = (await _unitOfWork.Products.GetAllAsync())
+                .Where(p => productIds.Contains(p.Id))
+                .ToDictionary(p => p.Id, p => new { p.Name, p.Code });
+
+            static IContainer CellStyle(IContainer container)
+            {
+                return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
+            }
+
             var companyName = _configuration["Company:Name"] ?? "Minimarket Camucha";
             var companyRuc = _configuration["Company:Ruc"] ?? "20123456789";
             var companyAddress = _configuration["Company:Address"] ?? "Av. Principal 123, Lima, Perú";
@@ -113,17 +124,19 @@ public class PdfService : IPdfService
                                     header.Cell().Element(CellStyle).AlignCenter().Text("Cantidad").FontSize(9).Bold();
                                     header.Cell().Element(CellStyle).AlignRight().Text("P. Unit").FontSize(9).Bold();
                                     header.Cell().Element(CellStyle).AlignRight().Text("Subtotal").FontSize(9).Bold();
-
-                                    static IContainer CellStyle(IContainer container)
-                                    {
-                                        return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
-                                    }
                                 });
 
                                 // Items
                                 foreach (var detail in saleDetails)
                                 {
-                                    table.Cell().Element(CellStyle).Text($"{detail.ProductName} ({detail.ProductCode})").FontSize(9);
+                                    var productName = products.TryGetValue(detail.ProductId, out var product) 
+                                        ? product.Name 
+                                        : "Producto eliminado";
+                                    var productCode = products.TryGetValue(detail.ProductId, out var productInfo) 
+                                        ? productInfo.Code 
+                                        : "";
+
+                                    table.Cell().Element(CellStyle).Text($"{productName} ({productCode})").FontSize(9);
                                     table.Cell().Element(CellStyle).AlignCenter().Text(detail.Quantity.ToString()).FontSize(9);
                                     table.Cell().Element(CellStyle).AlignRight().Text($"S/ {detail.UnitPrice:F2}").FontSize(9);
                                     table.Cell().Element(CellStyle).AlignRight().Text($"S/ {detail.Subtotal:F2}").FontSize(9);
@@ -181,8 +194,8 @@ public class PdfService : IPdfService
                         .AlignCenter()
                         .Text(x =>
                         {
-                            x.Span("Gracias por su compra");
-                        }).FontSize(8).FontColor(Colors.Grey.Medium);
+                            x.Span("Gracias por su compra").FontSize(8).FontColor(Colors.Grey.Medium);
+                        });
                 });
             });
 

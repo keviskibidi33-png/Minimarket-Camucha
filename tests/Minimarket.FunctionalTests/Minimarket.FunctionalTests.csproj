@@ -28,7 +28,20 @@
     
     <!-- HTTP Client Testing -->
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.0" />
+    
+    <!-- Code Coverage -->
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+  
+  <PropertyGroup>
+    <!-- Code Coverage Configuration -->
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <CoverletOutput>./TestResults/</CoverletOutput>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Minimarket.API\Minimarket.API.csproj" />

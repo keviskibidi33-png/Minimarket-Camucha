@@ -92,6 +92,14 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
+    // Validar que la categoría existe
+    const categoryId = this.productForm.get('categoryId')?.value;
+    const categoryExists = this.categories().some(c => c.id === categoryId);
+    if (!categoryExists) {
+      this.errorMessage.set('La categoría seleccionada no existe');
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
 

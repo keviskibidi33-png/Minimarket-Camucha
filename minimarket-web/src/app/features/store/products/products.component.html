@@ -18,20 +18,20 @@
             <div class="flex w-full flex-col items-start gap-3">
               <p class="text-text-light dark:text-text-dark text-base font-medium leading-normal">Rango de Precio</p>
               <div class="flex flex-col gap-2 w-full">
-                <div class="flex gap-2">
+                <div class="flex gap-2 w-full min-w-0">
                   <input 
                     type="number" 
                     [value]="minPrice()"
                     (input)="minPrice.set(parseFloat($any($event.target).value) || 0)"
-                    class="flex-1 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
-                    placeholder="Min"
+                    class="flex-1 min-w-0 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
+                    placeholder="Mín"
                     min="0">
                   <input 
                     type="number" 
                     [value]="maxPrice()"
                     (input)="maxPrice.set(parseFloat($any($event.target).value) || 1000)"
-                    class="flex-1 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
-                    placeholder="Max"
+                    class="flex-1 min-w-0 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
+                    placeholder="Máx"
                     min="0">
                 </div>
               </div>
@@ -92,17 +92,19 @@
         <div class="flex justify-between items-center gap-2 px-4 py-3 mt-4 border-y border-border-light dark:border-border-dark">
           <div class="flex gap-1">
             <button 
+              type="button"
               (click)="viewMode.set('grid')"
-              [class.bg-primary/20]="viewMode() === 'grid'"
-              [class.dark:bg-primary/30]="viewMode() === 'grid'"
-              class="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5">
+              [class]="viewMode() === 'grid' 
+                ? 'p-2 rounded-lg text-text-light dark:text-text-dark bg-primary/20 dark:bg-primary/30 hover:bg-primary/30 dark:hover:bg-primary/40 transition-colors' 
+                : 'p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors'">
               <span class="material-symbols-outlined">grid_view</span>
             </button>
             <button 
+              type="button"
               (click)="viewMode.set('list')"
-              [class.bg-primary/20]="viewMode() === 'list'"
-              [class.dark:bg-primary/30]="viewMode() === 'list'"
-              class="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5">
+              [class]="viewMode() === 'list' 
+                ? 'p-2 rounded-lg text-text-light dark:text-text-dark bg-primary/20 dark:bg-primary/30 hover:bg-primary/30 dark:hover:bg-primary/40 transition-colors' 
+                : 'p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors'">
               <span class="material-symbols-outlined">view_list</span>
             </button>
           </div>
@@ -118,22 +120,81 @@
           </select>
         </div>
 
-        <!-- Product Grid -->
+        <!-- Product Grid/List View -->
         @if (isLoading()) {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
-            @for (item of [1,2,3,4,5,6]; track $index) {
-              <div class="animate-pulse flex flex-col rounded-lg bg-gray-200 dark:bg-gray-700 h-80"></div>
-            }
-          </div>
+          @if (viewMode() === 'grid') {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
+              @for (item of [1,2,3,4,5,6]; track $index) {
+                <div class="animate-pulse flex flex-col rounded-lg bg-gray-200 dark:bg-gray-700 h-80"></div>
+              }
+            </div>
+          } @else {
+            <div class="flex flex-col gap-4 p-4">
+              @for (item of [1,2,3,4,5,6]; track $index) {
+                <div class="animate-pulse flex flex-row gap-4 rounded-lg bg-gray-200 dark:bg-gray-700 h-32"></div>
+              }
+            </div>
+          }
         } @else if (filteredProducts().length === 0) {
           <div class="text-center py-12 p-4">
             <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">inventory_2</span>
             <p class="text-gray-500 dark:text-gray-400 text-lg">No se encontraron productos</p>
           </div>
         } @else {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
-            @for (product of filteredProducts(); track product.id) {
-              <app-product-card [product]="product"></app-product-card>
+          <div [@viewTransition]="viewMode()" class="view-container">
+            @if (viewMode() === 'grid') {
+              <!-- Grid View -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
+                @for (product of filteredProducts(); track product.id) {
+                  <app-product-card [product]="product"></app-product-card>
+                }
+              </div>
+            } @else {
+              <!-- List View -->
+              <div class="flex flex-col gap-4 p-4">
+                @for (product of filteredProducts(); track product.id) {
+                  <div class="flex flex-col sm:flex-row gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300">
+                    <!-- Product Image -->
+                    <a [routerLink]="['/tienda/producto', product.id]" class="flex-shrink-0">
+                      <div 
+                        class="w-full sm:w-32 h-32 bg-center bg-no-repeat bg-cover rounded-lg"
+                        [style.background-image]="product.imageUrl ? 'url(' + product.imageUrl + ')' : 'none'"
+                        [style.background-color]="!product.imageUrl ? '#f3f4f6' : 'transparent'">
+                        @if (!product.imageUrl) {
+                          <div class="w-full h-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-gray-400 text-4xl">inventory_2</span>
+                          </div>
+                        }
+                      </div>
+                    </a>
+                    <!-- Product Info -->
+                    <div class="flex flex-col flex-1 justify-between">
+                      <div>
+                        <a [routerLink]="['/tienda/producto', product.id]" class="cursor-pointer">
+                          <h3 class="text-lg font-semibold text-text-light dark:text-text-dark mb-2 hover:text-primary">{{ product.name }}</h3>
+                        </a>
+                        @if (product.description) {
+                          <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{{ product.description }}</p>
+                        }
+                        <p class="text-xl font-bold text-primary mb-2">{{ getPriceFormatted(product.salePrice) }}</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button 
+                          (click)="addToCart(product)"
+                          [disabled]="product.stock === 0"
+                          class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-light dark:hover:bg-primary/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          @if (product.stock === 0) {
+                            Sin Stock
+                          } @else {
+                            <span class="material-symbols-outlined text-base">shopping_cart</span>
+                            Agregar al Carrito
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
             }
           </div>
         }
@@ -146,13 +207,13 @@
                 (click)="currentPage.set(currentPage() - 1); loadProducts()"
                 [disabled]="currentPage() === 1"
                 class="relative inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50">
-                Previous
+                Anterior
               </button>
               <button 
                 (click)="currentPage.set(currentPage() + 1); loadProducts()"
                 [disabled]="currentPage() * pageSize >= totalItems()"
                 class="relative ml-3 inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50">
-                Next
+                Siguiente
               </button>
             </div>
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
@@ -175,13 +236,15 @@
                     class="relative inline-flex items-center rounded-l-md px-2 py-2 text-text-light/80 dark:text-text-dark/80 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-black/5 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0 disabled:opacity-50">
                     <span class="material-symbols-outlined !text-xl">chevron_left</span>
                   </button>
-                  @for (page of getPages(); track page) {
+                  @for (page of getPages(); track $index) {
                     @if (page === '...') {
                       <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-border-light dark:ring-border-dark">...</span>
-                    } @else {
+                    } @else if (isNumber(page)) {
                       <button 
+                        type="button"
                         (click)="currentPage.set(page); loadProducts()"
-                        [class.bg-primary/20]="currentPage() === page"
+                        [class.bg-primary]="currentPage() === page"
+                        [class.opacity-20]="currentPage() === page"
                         [class.text-primary]="currentPage() === page"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-text-light dark:text-text-dark ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-black/5 dark:hover:bg-white/5 focus:z-20">
                         {{ page }}

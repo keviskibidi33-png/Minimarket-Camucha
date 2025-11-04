@@ -1,3 +1,5 @@
+@import 'ngx-toastr/toastr';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,7 +42,4 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400 dark:bg-gray-500;
 }
-
-/* Toastr Styles */
-@import 'ngx-toastr/toastr';
 

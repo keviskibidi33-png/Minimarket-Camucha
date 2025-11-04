@@ -13,27 +13,17 @@ export class ConfirmDialogComponent {
   message = input<string>('¿Está seguro de realizar esta acción?');
   confirmText = input<string>('Confirmar');
   cancelText = input<string>('Cancelar');
-  isOpen = signal(false);
+  isOpen = input<boolean>(false);
 
   confirmed = output<void>();
   cancelled = output<void>();
 
-  open(): void {
-    this.isOpen.set(true);
-  }
-
-  close(): void {
-    this.isOpen.set(false);
-  }
-
   confirm(): void {
     this.confirmed.emit();
-    this.close();
   }
 
   cancel(): void {
     this.cancelled.emit();
-    this.close();
   }
 }
 

@@ -35,8 +35,8 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
-        // Validación de tamaño de request
-        options.MaxModelBindingCollectionSize = 1000;
+        // Configuraciones de API behavior (MaxModelBindingCollectionSize fue removido en .NET 9.0)
+        // El límite de tamaño de colección se maneja ahora a través de RequestFormLimits
     });
 
 // Static files (para servir imágenes)
@@ -81,10 +81,6 @@ builder.Services.AddSwaggerGen(c =>
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionString: builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
-        name: "sqlserver",
-        tags: new[] { "ready", "db" })
     .AddCheck<Minimarket.Infrastructure.HealthChecks.DatabaseHealthCheck>("database_custom", tags: new[] { "ready", "db" });
 
 // Database
@@ -161,6 +157,9 @@ if (app.Environment.IsProduction())
 {
     app.UseHsts();
 }
+
+// Correlation ID Middleware - debe ir antes del exception handler
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Global Exception Handler Middleware - debe ir al inicio del pipeline
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

@@ -14,6 +14,7 @@ export interface CategoryDto {
   id: string;
   name: string;
   description: string;
+  imageUrl?: string;
   isActive: boolean;
 }
 
@@ -25,6 +26,7 @@ export interface CreateCategoryDto {
 export interface UpdateCategoryDto {
   name: string;
   description?: string;
+  imageUrl?: string;
   isActive: boolean;
 }
 
@@ -45,11 +47,17 @@ export class CategoriesService {
   }
 
   create(category: CreateCategoryDto): Observable<CategoryDto> {
-    return this.http.post<CategoryDto>(this.apiUrl, { category });
+    // NOTA: El backend CreateCategoryCommand espera { category: {...} }
+    // pero ASP.NET Core model binding puede mapear directamente si el JSON coincide
+    // Manteniendo consistencia con ProductsService y CustomersService que envían directamente
+    return this.http.post<CategoryDto>(this.apiUrl, category);
   }
 
   update(id: string, category: UpdateCategoryDto): Observable<CategoryDto> {
-    return this.http.put<CategoryDto>(`${this.apiUrl}/${id}`, { category });
+    // NOTA: El backend UpdateCategoryCommand espera { category: {...} }
+    // pero ASP.NET Core model binding puede mapear directamente si el JSON coincide
+    // Manteniendo consistencia con ProductsService y CustomersService que envían directamente
+    return this.http.put<CategoryDto>(`${this.apiUrl}/${id}`, category);
   }
 
   delete(id: string): Observable<void> {

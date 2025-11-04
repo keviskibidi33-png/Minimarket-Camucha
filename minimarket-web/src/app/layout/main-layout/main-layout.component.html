@@ -15,49 +15,84 @@
 
       <!-- Navigation -->
       <nav class="flex flex-col gap-2" [class.hidden]="!sidebarOpen">
-        @if (permissionsService.canViewDashboard()) {
+        @if (permissions.canViewDashboard()) {
           <a routerLink="/admin/dashboard" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">dashboard</span>
             <p class="text-sm font-medium leading-normal">Dashboard</p>
           </a>
         }
-        @if (permissionsService.canUsePOS()) {
+        @if (permissions.canUsePOS()) {
           <a routerLink="/pos" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">point_of_sale</span>
             <p class="text-sm font-medium leading-normal">Punto de Venta</p>
           </a>
         }
-        @if (permissionsService.canManageSales()) {
+        @if (permissions.canManageSales()) {
           <a routerLink="/admin/ventas" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">receipt_long</span>
             <p class="text-sm font-medium leading-normal">Ventas</p>
           </a>
         }
-        @if (permissionsService.canManageProducts()) {
+        @if (permissions.canManageProducts()) {
           <a routerLink="/admin/productos" [routerLinkActiveOptions]="{exact: false}" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">inventory_2</span>
             <p class="text-sm font-medium leading-normal">Productos</p>
           </a>
         }
-        @if (permissionsService.canManageCustomers()) {
+        @if (permissions.canManageCustomers()) {
           <a routerLink="/admin/clientes" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">people</span>
             <p class="text-sm font-medium leading-normal">Clientes</p>
           </a>
         }
-        @if (permissionsService.canManageProducts()) {
+        @if (permissions.canManageProducts()) {
           <a routerLink="/admin/categorias" [routerLinkActiveOptions]="{exact: false}" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">category</span>
             <p class="text-sm font-medium leading-normal">Categorías</p>
           </a>
         }
-        @if (permissionsService.isAdmin()) {
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/sedes" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">location_on</span>
+            <p class="text-sm font-medium leading-normal">Sedes</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/ofertas" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">local_offer</span>
+            <p class="text-sm font-medium leading-normal">Ofertas</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/page-builder" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">web</span>
+            <p class="text-sm font-medium leading-normal">Page Builder</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/analytics" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">analytics</span>
+            <p class="text-sm font-medium leading-normal">Analytics</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/configuraciones" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">settings</span>
+            <p class="text-sm font-medium leading-normal">Configuraciones</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
           <a routerLink="/admin/usuarios" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">people</span>

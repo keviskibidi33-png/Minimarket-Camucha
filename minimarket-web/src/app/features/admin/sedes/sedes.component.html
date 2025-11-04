@@ -1,0 +1,218 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Heading -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Sedes</h1>
+      <button
+        (click)="openForm()"
+        class="px-4 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+        <span class="material-symbols-outlined inline-block mr-2">add</span>
+        Nueva Sede
+      </button>
+    </div>
+
+    <!-- Sedes List -->
+    @if (isLoading()) {
+      <div class="text-center py-12 text-gray-500">Cargando sedes...</div>
+    } @else if (sedes().length === 0) {
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-12 text-center">
+        <p class="text-gray-500 dark:text-gray-400">No hay sedes registradas</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (sede of sedes(); track sede.id) {
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            @if (sede.logoUrl) {
+              <img [src]="sede.logoUrl" [alt]="sede.nombre" class="w-full h-32 object-cover rounded-lg mb-4">
+            }
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ sede.nombre }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.direccion }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.ciudad }}, {{ sede.pais }}</p>
+            @if (sede.telefono) {
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ sede.telefono }}</p>
+            }
+            <div class="flex items-center gap-2 mb-4">
+              @if (sede.isOpen) {
+                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Abierto</span>
+              } @else {
+                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Cerrado</span>
+                @if (sede.nextOpenTime) {
+                  <span class="text-xs text-gray-500">{{ sede.nextOpenTime }}</span>
+                }
+              }
+            </div>
+            <div class="flex gap-2">
+              <button
+                (click)="openForm(sede)"
+                class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                Editar
+              </button>
+              <button
+                (click)="deleteSede(sede)"
+                class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Form Modal -->
+    @if (showForm()) {
+      <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="closeForm()">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              {{ editingSede() ? 'Editar Sede' : 'Nueva Sede' }}
+            </h2>
+
+            <form (ngSubmit)="saveSede()">
+              <!-- Nombre -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nombre <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="nombre"
+                  name="nombre"
+                  required
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+
+              <!-- Dirección -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Dirección <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="direccion"
+                  name="direccion"
+                  required
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              </div>
+
+              <!-- Ciudad y País -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Ciudad <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="ciudad"
+                    name="ciudad"
+                    required
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">País</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="pais"
+                    name="pais"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+              </div>
+
+              <!-- Coordenadas -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Latitud</label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    [(ngModel)]="latitud"
+                    name="latitud"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Longitud</label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    [(ngModel)]="longitud"
+                    name="longitud"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+              </div>
+
+              <!-- Teléfono y Logo -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Teléfono</label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="telefono"
+                    name="telefono"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onLogoUpload($event)"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                </div>
+              </div>
+
+              <!-- Horarios -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Horarios</label>
+                <div class="space-y-2">
+                  @for (dia of diasSemana; track dia) {
+                    <div class="flex items-center gap-2">
+                      <span class="w-24 text-sm text-gray-600 dark:text-gray-400 capitalize">{{ dia }}</span>
+                      <input
+                        type="time"
+                        [value]="getHorarioAbre(dia)"
+                        (change)="updateHorario(dia, 'abre', $any($event.target).value)"
+                        class="flex-1 px-3 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                      <span class="text-gray-500">-</span>
+                      <input
+                        type="time"
+                        [value]="getHorarioCierra(dia)"
+                        (change)="updateHorario(dia, 'cierra', $any($event.target).value)"
+                        class="flex-1 px-3 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Estado -->
+              <div class="mb-6">
+                <label class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="estado"
+                    name="estado"
+                    class="w-4 h-4 text-primary-admin">
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Activa</span>
+                </label>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex justify-end gap-4">
+                <button
+                  type="button"
+                  (click)="closeForm()"
+                  class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold">
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="px-6 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+

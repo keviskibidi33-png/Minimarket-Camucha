@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ProductsService, Product } from '../../../core/services/products.service';
 import { CartService } from '../../../core/services/cart.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 
@@ -24,9 +25,13 @@ export class ProductDetailComponent implements OnInit {
   quantity = signal(1);
   selectedImage = signal(0);
 
+  // Helper methods for template
+  parseInt = parseInt;
+
   constructor(
     private productsService: ProductsService,
     private cartService: CartService,
+    private toastService: ToastService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -70,19 +75,41 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
+  private isAdding = false;
+
   addToCart() {
+    // Prevenir doble click
+    if (this.isAdding) {
+      return;
+    }
+
     const product = this.product();
     if (product && product.stock > 0) {
+      this.isAdding = true;
+      
+      // Pasar el GUID directamente, el CartService lo convertirá de forma consistente
       this.cartService.addToCart({
-        id: parseInt(product.id),
+        id: product.id, // Pasar el GUID string directamente
         name: product.name,
         imageUrl: product.imageUrl,
         salePrice: product.salePrice,
         stock: product.stock
       }, this.quantity());
       
-      // Opcional: Mostrar mensaje de éxito
-      alert(`Se agregaron ${this.quantity()} ${product.name} al carrito`);
+      // Obtener cantidad total de productos en el carrito
+      const totalItems = this.cartService.getTotalItems();
+      const quantityText = this.quantity() === 1 ? 'producto' : 'productos';
+      const message = totalItems === this.quantity()
+        ? `Se agregaron ${this.quantity()} ${quantityText} de "${product.name}" al carrito`
+        : `Se agregaron ${this.quantity()} ${quantityText} de "${product.name}" al carrito (Total: ${totalItems} productos)`;
+      
+      // Mostrar notificación de éxito
+      this.toastService.success(message, 3000);
+      
+      // Resetear el flag después de un breve delay
+      setTimeout(() => {
+        this.isAdding = false;
+      }, 500);
     }
   }
 

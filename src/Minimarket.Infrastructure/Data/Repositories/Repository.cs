@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Minimarket.Application.Common.Models;
+using Minimarket.Domain.Common;
 using Minimarket.Domain.Interfaces;
 
 namespace Minimarket.Infrastructure.Data.Repositories;

@@ -13,7 +13,7 @@ describe('Login', () => {
 
   it('should login successfully with valid credentials', () => {
     cy.get('[data-cy=email-input]').type('admin');
-    cy.get('[data-cy=password-input]').type('Admin@1234');
+    cy.get('[data-cy=password-input]').type('Admin123!');
     cy.get('[data-cy=login-button]').click();
 
     // Verificar redirección
@@ -47,6 +47,21 @@ describe('Login', () => {
     cy.get('[data-cy=forgot-password-link]').click();
     // Verificar que existe el enlace (aunque la página aún no esté implementada)
     cy.get('[data-cy=forgot-password-link]').should('exist');
+  });
+
+  it('should redirect to login when accessing protected routes without authentication', () => {
+    cy.visit('/admin/dashboard');
+    cy.url().should('include', '/login');
+  });
+
+  it('should store token after successful login', () => {
+    cy.get('[data-cy=email-input]').type('admin');
+    cy.get('[data-cy=password-input]').type('Admin123!');
+    cy.get('[data-cy=login-button]').click();
+    
+    // Verificar que se navega a una ruta protegida
+    cy.url().should('not.include', '/login');
+    cy.get('[data-cy=user-menu]').should('be.visible');
   });
 });
 

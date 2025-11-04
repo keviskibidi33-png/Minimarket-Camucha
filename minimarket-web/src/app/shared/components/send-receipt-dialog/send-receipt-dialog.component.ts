@@ -1,4 +1,4 @@
-import { Component, signal, input, output, effect } from '@angular/core';
+import { Component, signal, input, output, effect, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -19,6 +19,8 @@ export class SendReceiptDialogComponent {
   onSend = output<{ email: string }>();
 
   sendForm: FormGroup;
+  private readonly destroyRef = inject(DestroyRef);
+  private effectCleanup?: ReturnType<typeof effect>;
 
   constructor(private fb: FormBuilder) {
     this.sendForm = this.fb.group({
@@ -26,11 +28,17 @@ export class SendReceiptDialogComponent {
     });
 
     // Actualizar email cuando cambie customerEmail
-    effect(() => {
+    // Ejecutar effect directamente en el constructor (contexto válido)
+    this.effectCleanup = effect(() => {
       const email = this.customerEmail();
       if (email && this.isOpen()) {
         this.sendForm.patchValue({ email });
       }
+    }, { allowSignalWrites: true });
+
+    // Limpiar el effect cuando el componente se destruya
+    this.destroyRef.onDestroy(() => {
+      this.effectCleanup?.destroy();
     });
   }
 

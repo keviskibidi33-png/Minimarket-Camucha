@@ -11,6 +11,19 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IRepository<Sale> Sales { get; }
     IRepository<SaleDetail> SaleDetails { get; }
     IRepository<InventoryMovement> InventoryMovements { get; }
+    IRepository<SystemSettings> SystemSettings { get; }
+    IRepository<ShippingRate> ShippingRates { get; }
+    IRepository<Banner> Banners { get; }
+    IRepository<BrandSettings> BrandSettings { get; }
+    IRepository<Module> Modules { get; }
+    IRepository<RolePermission> RolePermissions { get; }
+    IRepository<Sede> Sedes { get; }
+    IRepository<Oferta> Ofertas { get; }
+    IRepository<Page> Pages { get; }
+    IRepository<PageSection> PageSections { get; }
+    IRepository<Translation> Translations { get; }
+    IRepository<PageView> PageViews { get; }
+    IRepository<ProductView> ProductViews { get; }
 
     // Repositorios específicos
     IProductRepository ProductRepository { get; }

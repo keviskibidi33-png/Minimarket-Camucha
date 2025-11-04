@@ -17,6 +17,19 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Sale>? _sales;
     private IRepository<SaleDetail>? _saleDetails;
     private IRepository<InventoryMovement>? _inventoryMovements;
+    private IRepository<SystemSettings>? _systemSettings;
+    private IRepository<ShippingRate>? _shippingRates;
+    private IRepository<Banner>? _banners;
+    private IRepository<BrandSettings>? _brandSettings;
+    private IRepository<Module>? _modules;
+    private IRepository<RolePermission>? _rolePermissions;
+    private IRepository<Sede>? _sedes;
+    private IRepository<Oferta>? _ofertas;
+    private IRepository<Page>? _pages;
+    private IRepository<PageSection>? _pageSections;
+    private IRepository<Translation>? _translations;
+    private IRepository<PageView>? _pageViews;
+    private IRepository<ProductView>? _productViews;
 
     // Repositorios específicos
     private IProductRepository? _productRepository;
@@ -48,6 +61,45 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<InventoryMovement> InventoryMovements =>
         _inventoryMovements ??= new Repository<InventoryMovement>(_context);
+
+    public IRepository<SystemSettings> SystemSettings =>
+        _systemSettings ??= new Repository<SystemSettings>(_context);
+
+    public IRepository<ShippingRate> ShippingRates =>
+        _shippingRates ??= new Repository<ShippingRate>(_context);
+
+    public IRepository<Banner> Banners =>
+        _banners ??= new Repository<Banner>(_context);
+
+    public IRepository<BrandSettings> BrandSettings =>
+        _brandSettings ??= new Repository<BrandSettings>(_context);
+
+    public IRepository<Module> Modules =>
+        _modules ??= new Repository<Module>(_context);
+
+    public IRepository<RolePermission> RolePermissions =>
+        _rolePermissions ??= new Repository<RolePermission>(_context);
+
+    public IRepository<Sede> Sedes =>
+        _sedes ??= new Repository<Sede>(_context);
+
+    public IRepository<Oferta> Ofertas =>
+        _ofertas ??= new Repository<Oferta>(_context);
+
+    public IRepository<Page> Pages =>
+        _pages ??= new Repository<Page>(_context);
+
+    public IRepository<PageSection> PageSections =>
+        _pageSections ??= new Repository<PageSection>(_context);
+
+    public IRepository<Translation> Translations =>
+        _translations ??= new Repository<Translation>(_context);
+
+    public IRepository<PageView> PageViews =>
+        _pageViews ??= new Repository<PageView>(_context);
+
+    public IRepository<ProductView> ProductViews =>
+        _productViews ??= new Repository<ProductView>(_context);
 
     // Repositorios específicos
     public IProductRepository ProductRepository =>

@@ -10,6 +10,11 @@ TAREAS PENDIENTES - MINIMARKET CAMUCHA
    ----------------------------------
    - Implementar login (inicio de sesión)
    - Implementar perfil de usuario en el botón de perfil
+   - Usar Better Auth como framework de autenticación
+     * Repositorio: https://github.com/better-auth/better-auth
+     * Framework-agnostic authentication para TypeScript
+     * Incluye características avanzadas: 2FA, multi-tenant, OAuth, etc.
+     * Documentación: https://better-auth.com
 
 3. PANEL DE ADMINISTRACIÓN
    -----------------------
@@ -19,6 +24,11 @@ TAREAS PENDIENTES - MINIMARKET CAMUCHA
 NOTAS:
 - Estas funcionalidades se implementarán en orden de prioridad
 - Primero se trabajará en las funciones del admin (aprobación de pedidos y confirmación de pago)
-- Luego se implementará el sistema de login y perfil de usuario
+- Luego se implementará el sistema de login y perfil de usuario usando Better Auth
 - Finalmente se revisará y completará el panel de administración
+- Better Auth es ideal para este proyecto ya que:
+  * Está diseñado para TypeScript (compatible con nuestro stack)
+  * Proporciona autenticación completa out-of-the-box
+  * Tiene un ecosistema de plugins para funcionalidades avanzadas
+  * Es framework-agnostic y funciona bien con Angular
 

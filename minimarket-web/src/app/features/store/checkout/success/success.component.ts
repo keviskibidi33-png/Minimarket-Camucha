@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { CartService } from '../../../../core/services/cart.service';
+import { SettingsService } from '../../../../core/services/settings.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-success',
@@ -36,9 +38,16 @@ export class SuccessComponent implements OnInit {
   yapeNumber = '999 888 777'; // TODO: Mover a configuración
   yapeQR = signal<string>('');
 
+  // Shipping settings
+  deliveryDays = signal(3);
+  deliveryTime = signal('18:00');
+  pickupDays = signal(2);
+  pickupTime = signal('16:00');
+
   constructor(
     private router: Router,
-    private cartService: CartService
+    private cartService: CartService,
+    private settingsService: SettingsService
   ) {}
 
   ngOnInit() {
@@ -73,6 +82,9 @@ export class SuccessComponent implements OnInit {
       if (this.requiresProof() && this.paymentData?.paymentMethod === 'wallet') {
         this.generateYapeQR();
       }
+
+      // Cargar configuraciones de envío desde el backend
+      this.loadShippingSettings();
       
       // Limpiar datos de checkout DESPUÉS de cargarlos (solo se necesitan para mostrar)
       // Esto permite que los datos persistan hasta aquí pero se limpien para el próximo pedido
@@ -149,6 +161,104 @@ export class SuccessComponent implements OnInit {
 
   isStripePayment(): boolean {
     return this.paymentData?.paymentMethod === 'card' && this.paymentData?.paymentIntentId;
+  }
+
+  async loadShippingSettings(): Promise<void> {
+    try {
+      // Cargar configuraciones de envío desde el backend
+      const deliveryDaysValue = await firstValueFrom(
+        this.settingsService.getSettingValue('delivery_days', '3')
+      );
+      this.deliveryDays.set(parseInt(deliveryDaysValue) || 3);
+
+      const deliveryTimeValue = await firstValueFrom(
+        this.settingsService.getSettingValue('delivery_time', '18:00')
+      );
+      this.deliveryTime.set(deliveryTimeValue || '18:00');
+
+      const pickupDaysValue = await firstValueFrom(
+        this.settingsService.getSettingValue('pickup_days', '2')
+      );
+      this.pickupDays.set(parseInt(pickupDaysValue) || 2);
+
+      const pickupTimeValue = await firstValueFrom(
+        this.settingsService.getSettingValue('pickup_time', '16:00')
+      );
+      this.pickupTime.set(pickupTimeValue || '16:00');
+    } catch (error) {
+      console.error('Error loading shipping settings:', error);
+      // Usar valores por defecto si hay error
+    }
+  }
+
+  // Métodos para el estado del pedido
+  getEstimatedDeliveryDate(): string {
+    const today = new Date();
+    let daysToAdd = 0;
+    let time = '';
+    
+    if (this.shippingData?.shippingMethod === 'delivery') {
+      daysToAdd = this.deliveryDays();
+      time = this.deliveryTime();
+    } else if (this.shippingData?.shippingMethod === 'pickup') {
+      daysToAdd = this.pickupDays();
+      time = this.pickupTime();
+    } else {
+      daysToAdd = 3;
+      time = '18:00';
+    }
+    
+    const deliveryDate = new Date(today);
+    deliveryDate.setDate(today.getDate() + daysToAdd);
+    
+    // Formatear fecha en español
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const day = deliveryDate.getDate();
+    const month = months[deliveryDate.getMonth()];
+    const year = deliveryDate.getFullYear();
+    
+    // Formatear hora (convertir de 24h a 12h)
+    const [hours, minutes] = time.split(':');
+    let hour12 = parseInt(hours);
+    const ampm = hour12 >= 12 ? 'PM' : 'AM';
+    
+    if (hour12 === 0) {
+      hour12 = 12; // 00:00 -> 12:00 AM
+    } else if (hour12 > 12) {
+      hour12 = hour12 - 12; // 13:00 -> 1:00 PM
+    }
+    // Si es 12:00, se mantiene como 12:00 PM
+    
+    const formattedTime = `${hour12}:${minutes} ${ampm}`;
+    
+    return `${day} de ${month}, ${year} a las ${formattedTime}`;
+  }
+
+  getOrderStatus(): { icon: string; message: string; color: string } {
+    // Estado inicial: preparando pedido
+    return {
+      icon: 'local_shipping',
+      message: 'Preparando tu pedido',
+      color: 'text-primary'
+    };
+  }
+
+  getShippingMethodName(): string {
+    if (this.shippingData?.shippingMethod === 'delivery') {
+      return 'Despacho a Domicilio';
+    } else if (this.shippingData?.shippingMethod === 'pickup') {
+      return 'Retiro en Tienda';
+    }
+    return 'Envío';
+  }
+
+  getNotificationMethod(): string {
+    // Usar correo electrónico si está disponible, sino mencionar WhatsApp
+    if (this.shippingData?.email) {
+      return 'correo electrónico';
+    }
+    return 'WhatsApp';
   }
 
   // No limpiar datos aquí - se mantendrán hasta que se complete la venta o se limpie el carrito

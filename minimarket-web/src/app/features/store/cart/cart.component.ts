@@ -22,7 +22,7 @@ export class CartComponent implements OnInit {
   
   // Configuración de IGV
   applyIgvToCart = signal(false); // Por defecto false
-  igvRate = signal(0.18); // 18% IGV
+  igvRate = signal(0.18); // 18% IGV por defecto
 
   cartItems!: ReturnType<typeof CartService.prototype.getCartItems>;
 
@@ -42,6 +42,16 @@ export class CartComponent implements OnInit {
       },
       error: () => {
         this.applyIgvToCart.set(false);
+      }
+    });
+    
+    // Cargar tasa de IGV desde configuración
+    this.settingsService.getSettingValue('igv_rate', '0.18').subscribe({
+      next: (rate) => {
+        this.igvRate.set(parseFloat(rate) || 0.18);
+      },
+      error: () => {
+        this.igvRate.set(0.18);
       }
     });
   }

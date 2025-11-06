@@ -19,6 +19,48 @@ export interface ShippingCalculationResponse {
   calculationDetails: string;
 }
 
+export interface ShippingRate {
+  id: string;
+  zoneName: string;
+  basePrice: number;
+  pricePerKm: number;
+  pricePerKg: number;
+  minDistance: number;
+  maxDistance: number;
+  minWeight: number;
+  maxWeight: number;
+  freeShippingThreshold: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateShippingRate {
+  zoneName: string;
+  basePrice: number;
+  pricePerKm: number;
+  pricePerKg: number;
+  minDistance: number;
+  maxDistance: number;
+  minWeight: number;
+  maxWeight: number;
+  freeShippingThreshold: number;
+  isActive: boolean;
+}
+
+export interface UpdateShippingRate {
+  zoneName: string;
+  basePrice: number;
+  pricePerKm: number;
+  pricePerKg: number;
+  minDistance: number;
+  maxDistance: number;
+  minWeight: number;
+  maxWeight: number;
+  freeShippingThreshold: number;
+  isActive: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -45,6 +87,31 @@ export class ShippingService {
 
   private toRad(degrees: number): number {
     return degrees * (Math.PI / 180);
+  }
+
+  // Shipping Rates Management
+  getAllRates(onlyActive?: boolean): Observable<ShippingRate[]> {
+    let params = new HttpParams();
+    if (onlyActive !== undefined) {
+      params = params.set('onlyActive', onlyActive.toString());
+    }
+    return this.http.get<ShippingRate[]>(`${this.apiUrl}/rates`, { params });
+  }
+
+  getRateById(id: string): Observable<ShippingRate> {
+    return this.http.get<ShippingRate>(`${this.apiUrl}/rates/${id}`);
+  }
+
+  createRate(rate: CreateShippingRate): Observable<ShippingRate> {
+    return this.http.post<ShippingRate>(`${this.apiUrl}/rates`, rate);
+  }
+
+  updateRate(id: string, rate: UpdateShippingRate): Observable<ShippingRate> {
+    return this.http.put<ShippingRate>(`${this.apiUrl}/rates/${id}`, rate);
+  }
+
+  deleteRate(id: string): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}/rates/${id}`);
   }
 }
 

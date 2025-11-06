@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { PaymentsService } from '../../../../core/services/payments.service';
+import { OrdersService } from '../../../../core/services/orders.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
@@ -37,10 +38,14 @@ export class ConfirmationComponent implements OnInit {
   paymentProofPreview = signal<string | null>(null);
   paymentProofUploading = signal(false);
   operationCode = signal(''); // Código de operación opcional
+  
+  // Order confirmation state
+  isConfirming = signal(false);
 
   constructor(
     private cartService: CartService,
     private paymentsService: PaymentsService,
+    private ordersService: OrdersService,
     private toastService: ToastService,
     private router: Router
   ) {
@@ -121,10 +126,63 @@ export class ConfirmationComponent implements OnInit {
       return;
     }
 
+    // Prevenir múltiples clics
+    if (this.isConfirming()) {
+      return;
+    }
+
+    // Activar estado de carga
+    this.isConfirming.set(true);
+
     try {
-      // TODO: Enviar orden al backend y obtener número de pedido real
-      // Por ahora, generar número temporal
+      // Generar número de orden
       const orderNum = 'ORD-' + Date.now().toString().slice(-8);
+      
+      // Preparar datos del pedido para enviar al backend
+      const orderData = {
+        orderNumber: orderNum,
+        customerEmail: this.shippingData.email || '',
+        customerName: `${this.shippingData.firstName || ''} ${this.shippingData.lastName || ''}`.trim(),
+        customerPhone: this.shippingData.phone || undefined,
+        shippingMethod: this.shippingData.shippingMethod || 'delivery',
+        shippingAddress: this.shippingData.address || undefined,
+        shippingCity: this.shippingData.city || undefined,
+        shippingRegion: this.shippingData.region || undefined,
+        selectedSedeId: this.shippingData.selectedSede?.id || undefined,
+        paymentMethod: this.paymentData.paymentMethod || 'cash',
+        walletMethod: this.paymentData.walletMethod || undefined,
+        requiresPaymentProof: this.paymentData.requiresProof || false,
+        subtotal: this.subtotal(),
+        shippingCost: this.shippingCost(),
+        total: this.total(),
+        items: this.cartItems().map(item => {
+          // Validar que productGuid existe y es un GUID válido
+          if (!item.productGuid) {
+            console.error('Item sin productGuid:', item);
+            this.toastService.error(`El producto "${item.productName}" no tiene un ID válido. Por favor, elimínalo del carrito y vuelve a agregarlo.`);
+            throw new Error(`El producto "${item.productName}" no tiene un ID válido.`);
+          }
+          
+          // Validar formato de GUID básico
+          const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!guidPattern.test(item.productGuid)) {
+            console.error('productGuid con formato inválido:', item.productGuid);
+            this.toastService.error(`El producto "${item.productName}" tiene un ID con formato inválido. Por favor, elimínalo del carrito y vuelve a agregarlo.`);
+            throw new Error(`El producto "${item.productName}" tiene un ID con formato inválido.`);
+          }
+          
+          return {
+            productId: item.productGuid, // Siempre usar el GUID original
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal
+          };
+        })
+      };
+
+      // Enviar pedido al backend (esto enviará el correo automáticamente)
+      const createdOrder = await firstValueFrom(this.ordersService.createOrder(orderData));
       
       // Guardar TODOS los datos necesarios para la página de éxito ANTES de limpiar cualquier cosa
       const orderItems = this.cartItems();
@@ -132,10 +190,11 @@ export class ConfirmationComponent implements OnInit {
       const orderSubtotal = this.subtotal();
       const orderShippingCost = this.shippingCost();
       
-      // Guardar todos los datos necesarios
-      localStorage.setItem('current-order-number', orderNum);
+      // Guardar todos los datos necesarios (usar el número de orden del backend si está disponible)
+      localStorage.setItem('current-order-number', createdOrder.orderNumber || orderNum);
       localStorage.setItem('checkout-total', orderTotal.toString());
       localStorage.setItem('checkout-subtotal', orderSubtotal.toString());
+      localStorage.setItem('checkout-shipping-cost', orderShippingCost.toString());
       localStorage.setItem('checkout-items', JSON.stringify(orderItems));
       // Guardar shipping y payment para la página de éxito (se limpiarán después)
       localStorage.setItem('checkout-shipping', JSON.stringify(this.shippingData));
@@ -148,6 +207,9 @@ export class ConfirmationComponent implements OnInit {
       // NO limpiar datos de checkout aquí - se necesitan para la página de éxito
       this.cartService.clearCart(false);
       
+      // Desactivar estado de carga antes de navegar
+      this.isConfirming.set(false);
+      
       // Navegar a página de éxito INMEDIATAMENTE después de guardar datos
       // Los datos de checkout se limpiarán en la página de éxito después de mostrarlos
       this.router.navigate(['/checkout/exito']).then(() => {
@@ -159,10 +221,14 @@ export class ConfirmationComponent implements OnInit {
         this.toastService.error('Error al navegar. Por favor intenta de nuevo.');
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error confirming order:', error);
       localStorage.removeItem('order-confirming');
-      this.toastService.error('Error al confirmar el pedido. Por favor intenta de nuevo.');
+      this.isConfirming.set(false);
+      
+      // Si el error es del backend, mostrar mensaje específico
+      const errorMessage = error?.error?.message || error?.message || 'Error al confirmar el pedido. Por favor intenta de nuevo.';
+      this.toastService.error(errorMessage);
     }
   }
 

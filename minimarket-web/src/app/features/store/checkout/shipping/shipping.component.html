@@ -20,121 +20,93 @@
             <!-- Contact Information -->
             <section>
               <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Información de Contacto</h2>
-              <div class="flex max-w-[480px] flex-wrap items-end">
-                <label class="flex flex-col min-w-40 flex-1">
-                  <p class="text-base font-medium leading-normal pb-2">Correo Electrónico</p>
-                  <input 
-                    type="email"
-                    [ngModel]="email()"
-                    (ngModelChange)="email.set($event); onFieldChange()"
-                    name="email"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="tucorreo@ejemplo.com"/>
-                </label>
+              <div class="space-y-4">
+                <div class="flex max-w-[480px] flex-wrap items-end">
+                  <label class="flex flex-col min-w-40 flex-1">
+                    <p class="text-base font-medium leading-normal pb-2">Correo Electrónico</p>
+                    <input 
+                      type="email"
+                      [ngModel]="email()"
+                      (ngModelChange)="email.set($event); onFieldChange()"
+                      name="email"
+                      required
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="tucorreo@ejemplo.com"/>
+                  </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[480px]">
+                  <label class="flex flex-col min-w-40 flex-1">
+                    <p class="text-base font-medium leading-normal pb-2">Nombre</p>
+                    <input 
+                      type="text"
+                      [ngModel]="firstName()"
+                      (ngModelChange)="firstName.set($event); onFieldChange()"
+                      name="firstName"
+                      required
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="Juan"/>
+                  </label>
+                  <label class="flex flex-col min-w-40 flex-1">
+                    <p class="text-base font-medium leading-normal pb-2">Apellido</p>
+                    <input 
+                      type="text"
+                      [ngModel]="lastName()"
+                      (ngModelChange)="lastName.set($event); onFieldChange()"
+                      name="lastName"
+                      required
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="Pérez"/>
+                  </label>
+                </div>
               </div>
             </section>
 
-            <!-- Shipping Address -->
-            <section>
-              <h2 class="text-[#0d141c] dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Dirección de Envío</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label class="flex flex-col min-w-40 flex-1">
-                  <p class="text-base font-medium leading-normal pb-2">Nombre</p>
-                  <input 
-                    type="text"
-                    [ngModel]="firstName()"
-                    (ngModelChange)="firstName.set($event); onFieldChange()"
-                    name="firstName"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Juan"/>
-                </label>
-                <label class="flex flex-col min-w-40 flex-1">
-                  <p class="text-base font-medium leading-normal pb-2">Apellido</p>
-                  <input 
-                    type="text"
-                    [ngModel]="lastName()"
-                    (ngModelChange)="lastName.set($event); onFieldChange()"
-                    name="lastName"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Pérez"/>
-                </label>
-                <label class="flex flex-col min-w-40 flex-1 md:col-span-2">
-                  <p class="text-base font-medium leading-normal pb-2">Dirección</p>
-                  <input 
-                    type="text"
-                    [ngModel]="address()"
-                    (ngModelChange)="address.set($event); onAddressChange(); onFieldChange()"
-                    name="address"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Av. Siempre Viva 123"/>
-                </label>
-                <label class="flex flex-col min-w-40 flex-1">
-                  <p class="text-base font-medium leading-normal pb-2">Ciudad</p>
-                  <input 
-                    type="text"
-                    [ngModel]="city()"
-                    (ngModelChange)="city.set($event); onAddressChange(); onFieldChange()"
-                    name="city"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Lima"/>
-                </label>
-                <label class="flex flex-col min-w-40 flex-1">
-                  <p class="text-base font-medium leading-normal pb-2">Región</p>
-                  <input 
-                    type="text"
-                    [ngModel]="region()"
-                    (ngModelChange)="region.set($event); onFieldChange()"
-                    name="region"
-                    required
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                    placeholder="Metropolitana"/>
-                </label>
-              </div>
-            </section>
-
-            <!-- Shipping Method -->
+            <!-- Shipping Method Selection -->
             <section>
               <h2 class="text-text-primary-light dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Método de Envío</h2>
-              <div class="space-y-4">
+              <div class="space-y-3">
+                <!-- Despacho a Domicilio -->
                 <label [class]="shippingMethod() === 'delivery' 
-                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
-                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
+                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10 transition-all' 
+                  : 'flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all'">
                   <input 
                     type="radio"
                     name="shipping"
                     [value]="'delivery'"
                     [checked]="shippingMethod() === 'delivery'"
                     (change)="onShippingMethodChange('delivery')"
-                    class="form-radio text-primary focus:ring-primary"/>
+                    class="w-5 h-5 text-primary focus:ring-primary focus:ring-2 border-gray-300 dark:border-gray-600 cursor-pointer"/>
                   <div class="ml-4 flex-1">
                     <div class="flex justify-between items-center">
                       <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Despacho a Domicilio</span>
                       @if (isCalculatingShipping()) {
-                        <span class="text-sm text-gray-500">Calculando...</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Calculando...</span>
                       } @else {
-                        <span class="font-bold text-text-primary-light dark:text-text-primary-dark">{{ getPriceFormatted(shippingCost()) }}</span>
+                        <span class="font-bold text-text-primary-light dark:text-text-primary-dark">
+                          {{ shippingCost() === 0 ? 'S/ 0.00' : getPriceFormatted(shippingCost()) }}
+                        </span>
                       }
                     </div>
-                    @if (shippingCalculationDetails() && shippingMethod() === 'delivery') {
-                      <p class="text-xs text-gray-500 mt-1">{{ shippingCalculationDetails() }}</p>
+                    @if (shippingCalculationDetails() && shippingMethod() === 'delivery' && !isCalculatingShipping() && shippingCost() > 0) {
+                      <div class="mt-2 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <p class="font-medium">Desglose del costo:</p>
+                        <p class="pl-2">{{ shippingCalculationDetails() }}</p>
+                      </div>
                     }
                   </div>
                 </label>
+                
+                <!-- Retiro en Tienda -->
                 <label [class]="shippingMethod() === 'pickup' 
-                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
-                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
+                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10 transition-all' 
+                  : 'flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all'">
                   <input 
                     type="radio"
                     name="shipping"
                     [value]="'pickup'"
                     [checked]="shippingMethod() === 'pickup'"
                     (change)="onShippingMethodChange('pickup')"
-                    class="form-radio text-primary focus:ring-primary"/>
+                    class="w-5 h-5 text-primary focus:ring-primary focus:ring-2 border-gray-300 dark:border-gray-600 cursor-pointer"/>
                   <div class="ml-4 flex-1 flex justify-between items-center">
                     <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Retiro en Tienda</span>
                     <span class="font-bold text-text-primary-light dark:text-text-primary-dark">Gratis</span>
@@ -142,6 +114,136 @@
                 </label>
               </div>
             </section>
+
+            <!-- Shipping Address Form (solo para delivery) -->
+            @if (shippingMethod() === 'delivery') {
+              <section class="animate-fade-in">
+                <h2 class="text-[#0d141c] dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Dirección de Envío</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label class="flex flex-col min-w-40 flex-1 md:col-span-2">
+                    <p class="text-base font-medium leading-normal pb-2">Dirección</p>
+                    <input 
+                      type="text"
+                      [ngModel]="address()"
+                      (ngModelChange)="address.set($event); onAddressChange(); onFieldChange()"
+                      name="address"
+                      [required]="shippingMethod() === 'delivery'"
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="Av. Siempre Viva 123"/>
+                  </label>
+                  <label class="flex flex-col min-w-40 flex-1">
+                    <p class="text-base font-medium leading-normal pb-2">Ciudad</p>
+                    <input 
+                      type="text"
+                      [ngModel]="city()"
+                      (ngModelChange)="city.set($event); onAddressChange(); onFieldChange()"
+                      name="city"
+                      [required]="shippingMethod() === 'delivery'"
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="Lima"/>
+                  </label>
+                  <label class="flex flex-col min-w-40 flex-1">
+                    <p class="text-base font-medium leading-normal pb-2">Región</p>
+                    <input 
+                      type="text"
+                      [ngModel]="region()"
+                      (ngModelChange)="region.set($event); onFieldChange()"
+                      name="region"
+                      [required]="shippingMethod() === 'delivery'"
+                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                      placeholder="Metropolitana"/>
+                  </label>
+                </div>
+              </section>
+            }
+
+            <!-- Store Pickup Information (solo para pickup) -->
+            @if (shippingMethod() === 'pickup') {
+              <section class="animate-fade-in">
+                <h2 class="text-[#0d141c] dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Información de Retiro</h2>
+                
+                @if (sedes().length > 0) {
+                  <!-- Selección de Sede -->
+                  @if (sedes().length > 1) {
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Seleccionar Sede para Retiro
+                      </label>
+                      <select
+                        [value]="selectedSede()?.id || ''"
+                        (change)="onSedeChange($any($event.target).value)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
+                        @for (sede of sedes(); track sede.id) {
+                          <option [value]="sede.id">{{ sede.nombre }} - {{ sede.ciudad }}</option>
+                        }
+                      </select>
+                    </div>
+                  }
+                  
+                  <!-- Información de la Sede Seleccionada -->
+                  @if (selectedSede()) {
+                    <div class="bg-primary/5 dark:bg-primary/10 border-2 border-primary rounded-lg p-6 space-y-4">
+                      <div class="flex items-start gap-3">
+                        @if (selectedSede()!.logoUrl) {
+                          <img [src]="selectedSede()!.logoUrl" [alt]="selectedSede()!.nombre" class="w-16 h-16 object-cover rounded-lg">
+                        } @else {
+                          <span class="material-symbols-outlined text-primary text-2xl">store</span>
+                        }
+                        <div class="flex-1">
+                          <h3 class="font-bold text-lg text-text-primary-light dark:text-text-primary-dark mb-2">{{ selectedSede()!.nombre }}</h3>
+                          <p class="text-text-secondary-light dark:text-text-secondary-dark mb-1">{{ selectedSede()!.direccion }}</p>
+                          <p class="text-text-secondary-light dark:text-text-secondary-dark mb-1">{{ selectedSede()!.ciudad }}, {{ selectedSede()!.pais }}</p>
+                          @if (selectedSede()!.telefono) {
+                            <p class="text-text-secondary-light dark:text-text-secondary-dark mb-1">Teléfono: {{ selectedSede()!.telefono }}</p>
+                          }
+                          <p class="text-text-secondary-light dark:text-text-secondary-dark">
+                            @if (selectedSede()!.isOpen) {
+                              <span class="text-green-600 dark:text-green-400 font-medium">Abierto ahora</span>
+                            } @else {
+                              <span class="text-red-600 dark:text-red-400 font-medium">Cerrado</span>
+                              @if (selectedSede()!.nextOpenTime) {
+                                <span class="ml-2">- Próxima apertura: {{ selectedSede()!.nextOpenTime }}</span>
+                              }
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div class="pt-4 border-t border-primary/20">
+                        <p class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark mb-2">Instrucciones para retiro:</p>
+                        <ul class="text-sm text-text-secondary-light dark:text-text-secondary-dark space-y-1 list-disc list-inside">
+                          <li>Presenta tu número de pedido al llegar a la tienda</li>
+                          <li>El pedido estará listo en un plazo de 2-4 horas después de la confirmación</li>
+                          <li>Puedes retirar tu pedido en el horario de atención</li>
+                          <li>No se requiere pago adicional al retirar</li>
+                        </ul>
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <!-- Fallback si no hay sedes -->
+                  <div class="bg-primary/5 dark:bg-primary/10 border-2 border-primary rounded-lg p-6 space-y-4">
+                    <div class="flex items-start gap-3">
+                      <span class="material-symbols-outlined text-primary text-2xl">store</span>
+                      <div class="flex-1">
+                        <h3 class="font-bold text-lg text-text-primary-light dark:text-text-primary-dark mb-2">Minimarket Camucha</h3>
+                        <p class="text-text-secondary-light dark:text-text-secondary-dark mb-1">Av. Principal 123, Lima, Perú</p>
+                        <p class="text-text-secondary-light dark:text-text-secondary-dark mb-1">Teléfono: (01) 123-4567</p>
+                        <p class="text-text-secondary-light dark:text-text-secondary-dark">Horario: Lunes a Sábado 8:00 AM - 8:00 PM</p>
+                      </div>
+                    </div>
+                    <div class="pt-4 border-t border-primary/20">
+                      <p class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark mb-2">Instrucciones para retiro:</p>
+                      <ul class="text-sm text-text-secondary-light dark:text-text-secondary-dark space-y-1 list-disc list-inside">
+                        <li>Presenta tu número de pedido al llegar a la tienda</li>
+                        <li>El pedido estará listo en un plazo de 2-4 horas después de la confirmación</li>
+                        <li>Puedes retirar tu pedido en el horario de atención</li>
+                        <li>No se requiere pago adicional al retirar</li>
+                      </ul>
+                    </div>
+                  </div>
+                }
+              </section>
+            }
 
             <!-- Actions -->
             <div class="flex items-center justify-between pt-6 border-t border-border-light dark:border-border-dark">

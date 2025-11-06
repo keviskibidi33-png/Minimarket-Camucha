@@ -61,3 +61,73 @@
 .view-container .grid > *:nth-child(5) { animation-delay: 0.25s; }
 .view-container .grid > *:nth-child(6) { animation-delay: 0.3s; }
 
+/* Price Range Slider Styles */
+.price-slider-container {
+  position: relative;
+  padding: 8px 0;
+}
+
+.price-slider-container .relative {
+  position: relative;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.price-slider-container .relative:hover {
+  background-color: #d1d5db;
+}
+
+.dark .price-slider-container .relative {
+  background-color: #374151;
+}
+
+.dark .price-slider-container .relative:hover {
+  background-color: #4b5563;
+}
+
+/* Selected Range */
+.price-slider-container .absolute.bg-primary {
+  height: 100%;
+  border-radius: 9999px;
+  transition: left 0.1s ease, width 0.1s ease;
+  background-color: #4CAF50;
+}
+
+/* Handle Container */
+.price-slider-container .absolute.z-10 {
+  top: -10px;
+}
+
+/* Handles */
+.price-slider-container .absolute.z-10 .w-5 {
+  width: 20px;
+  height: 20px;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  background-color: #4CAF50;
+}
+
+.price-slider-container .absolute.z-10 .w-5:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.price-slider-container .absolute.z-10 .w-5:active {
+  transform: scale(1.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Price Labels */
+.price-slider-container .absolute.z-10 .mt-2 {
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Dark mode adjustments */
+.dark .price-slider-container .absolute.z-10 .w-5 {
+  border-color: #1f2937;
+}
+

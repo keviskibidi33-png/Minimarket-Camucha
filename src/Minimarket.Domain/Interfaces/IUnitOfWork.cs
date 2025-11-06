@@ -24,6 +24,8 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IRepository<Translation> Translations { get; }
     IRepository<PageView> PageViews { get; }
     IRepository<ProductView> ProductViews { get; }
+    IRepository<WebOrder> WebOrders { get; }
+    IRepository<WebOrderItem> WebOrderItems { get; }
 
     // Repositorios específicos
     IProductRepository ProductRepository { get; }

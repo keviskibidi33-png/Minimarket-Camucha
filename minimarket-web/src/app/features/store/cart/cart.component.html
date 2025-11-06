@@ -116,7 +116,7 @@
           </div>
           @if (applyIgvToCart()) {
             <div class="flex justify-between text-gray-600 dark:text-gray-300">
-              <span>IGV (18%)</span>
+              <span>IGV ({{ (igvRate() * 100).toFixed(0) }}%)</span>
               <span>{{ getPriceFormatted(igv()) }}</span>
             </div>
           }

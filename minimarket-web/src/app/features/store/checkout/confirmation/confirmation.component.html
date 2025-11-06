@@ -184,9 +184,17 @@
               </a>
               <button 
                 (click)="confirmOrder()"
-                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
-                <span class="truncate">Confirmar Pedido</span>
-                <span class="material-symbols-outlined ml-2">check_circle</span>
+                [disabled]="isConfirming()"
+                [class.opacity-50]="isConfirming()"
+                [class.cursor-not-allowed]="isConfirming()"
+                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors disabled:pointer-events-none">
+                @if (isConfirming()) {
+                  <span class="material-symbols-outlined animate-spin mr-2">sync</span>
+                  <span class="truncate">Procesando...</span>
+                } @else {
+                  <span class="truncate">Confirmar Pedido</span>
+                  <span class="material-symbols-outlined ml-2">check_circle</span>
+                }
               </button>
             </div>
           </div>

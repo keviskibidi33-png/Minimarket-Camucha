@@ -1,0 +1,24 @@
+TAREAS PENDIENTES - MINIMARKET CAMUCHA
+========================================
+
+1. FUNCIONALIDADES DEL ADMIN
+   --------------------------
+   - El admin va a enviar/aprobar pedidos
+   - El admin va a enviar la confirmación del pago
+
+2. AUTENTICACIÓN Y PERFIL DE USUARIO
+   ----------------------------------
+   - Implementar login (inicio de sesión)
+   - Implementar perfil de usuario en el botón de perfil
+
+3. PANEL DE ADMINISTRACIÓN
+   -----------------------
+   - Revisar y desarrollar las funciones del panel admin
+   - Implementar todas las funcionalidades necesarias del panel
+
+NOTAS:
+- Estas funcionalidades se implementarán en orden de prioridad
+- Primero se trabajará en las funciones del admin (aprobación de pedidos y confirmación de pago)
+- Luego se implementará el sistema de login y perfil de usuario
+- Finalmente se revisará y completará el panel de administración
+

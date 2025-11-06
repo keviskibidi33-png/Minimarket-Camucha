@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { ShippingService } from '../../../../core/services/shipping.service';
+import { SedesService, Sede } from '../../../../core/services/sedes.service';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../../shared/components/store-footer/store-footer.component';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
@@ -33,9 +34,13 @@ export class ShippingComponent implements OnInit {
   city = signal('');
   region = signal('');
   
-  // Coordinates for distance calculation (ejemplo: tienda en Lima Centro)
-  private storeLat = -12.0464; // Latitud de la tienda (ejemplo)
-  private storeLon = -77.0428; // Longitud de la tienda (ejemplo)
+  // Store locations (sedes)
+  sedes = signal<Sede[]>([]);
+  selectedSede = signal<Sede | null>(null);
+  
+  // Coordinates for distance calculation
+  private storeLat = -12.0464; // Latitud de la tienda (se actualizará con la sede seleccionada)
+  private storeLon = -77.0428; // Longitud de la tienda (se actualizará con la sede seleccionada)
   customerLat = signal<number | null>(null);
   customerLon = signal<number | null>(null);
   
@@ -57,6 +62,7 @@ export class ShippingComponent implements OnInit {
   constructor(
     private cartService: CartService,
     private shippingService: ShippingService,
+    private sedesService: SedesService,
     private router: Router,
     private ngZone: NgZone
   ) {
@@ -76,8 +82,12 @@ export class ShippingComponent implements OnInit {
     // 2. Se limpie el carrito manualmente (en cart.service.ts)
     // No limpiar aquí para permitir que los datos persistan durante todo el proceso
 
+    // Cargar sedes primero para que estén disponibles cuando se carguen los datos guardados
+    this.loadSedes();
+    
     // Cargar datos guardados desde localStorage (persistencia incluso después de recargar la página)
     // Esto protege contra pérdida de datos por errores de red o recargas accidentales
+    // La sede ya se carga dentro de loadSedes(), así que solo cargamos los demás datos aquí
     this.loadShippingDataFromStorage();
 
     // Calcular shipping inicial después de que el componente esté inicializado
@@ -99,6 +109,44 @@ export class ShippingComponent implements OnInit {
         this.shippingCost.set(0);
         this.shippingCalculationDetails.set('Retiro en tienda - Sin costo de envío');
         this.onFieldChange(); // Guardar el cambio
+      }
+    });
+  }
+  
+  loadSedes(): void {
+    // Cargar sedes activas para mostrar en pickup
+    this.sedesService.getAll(true).subscribe({
+      next: (sedes) => {
+        this.sedes.set(sedes);
+        
+        // Intentar cargar la sede guardada desde localStorage
+        try {
+          const savedShipping = localStorage.getItem('checkout-shipping');
+          if (savedShipping) {
+            const shippingData = JSON.parse(savedShipping);
+            if (shippingData?.selectedSede) {
+              const savedSede = sedes.find(s => s.id === shippingData.selectedSede.id);
+              if (savedSede) {
+                this.selectedSede.set(savedSede);
+                this.storeLat = savedSede.latitud;
+                this.storeLon = savedSede.longitud;
+                return; // Ya tenemos la sede guardada, no seleccionar la primera
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading saved sede:', error);
+        }
+        
+        // Si no hay sede guardada, seleccionar la primera por defecto
+        if (sedes.length > 0 && !this.selectedSede()) {
+          this.selectedSede.set(sedes[0]);
+          this.storeLat = sedes[0].latitud;
+          this.storeLon = sedes[0].longitud;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading sedes:', error);
       }
     });
   }
@@ -176,6 +224,20 @@ export class ShippingComponent implements OnInit {
     }
   }
 
+  onSedeChange(sedeId: string): void {
+    const sede = this.sedes().find(s => s.id === sedeId);
+    if (sede) {
+      this.selectedSede.set(sede);
+      this.storeLat = sede.latitud;
+      this.storeLon = sede.longitud;
+      // Si hay dirección y es delivery, recalcular costo
+      if (this.shippingMethod() === 'delivery' && this.address()) {
+        this.calculateShippingCost();
+      }
+      this.onFieldChange();
+    }
+  }
+
   onAddressChange() {
     // Cuando el usuario cambia la dirección, recalcular distancia
     // Nota: En producción, usarías un servicio de geocoding para obtener coordenadas
@@ -188,6 +250,21 @@ export class ShippingComponent implements OnInit {
   }
 
   continueToPayment() {
+    // Validar que los datos requeridos estén completos según el método seleccionado
+    // Nombre y apellido son obligatorios para ambos métodos
+    if (!this.email() || !this.firstName() || !this.lastName()) {
+      // Mostrar mensaje de error o validar en el formulario
+      return;
+    }
+
+    if (this.shippingMethod() === 'delivery') {
+      // Para delivery, también se requiere dirección completa
+      if (!this.address() || !this.city() || !this.region()) {
+        // Mostrar mensaje de error o validar en el formulario
+        return;
+      }
+    }
+
     // Guardar datos en localStorage o servicio
     const shippingData = {
       email: this.email(),
@@ -198,7 +275,14 @@ export class ShippingComponent implements OnInit {
       region: this.region(),
       shippingMethod: this.shippingMethod() as 'delivery' | 'pickup',
       shippingCost: this.shippingCost(),
-      shippingCalculationDetails: this.shippingCalculationDetails()
+      shippingCalculationDetails: this.shippingCalculationDetails(),
+      selectedSede: this.selectedSede() ? {
+        id: this.selectedSede()!.id,
+        nombre: this.selectedSede()!.nombre,
+        direccion: this.selectedSede()!.direccion,
+        ciudad: this.selectedSede()!.ciudad,
+        telefono: this.selectedSede()!.telefono
+      } : null
     };
     localStorage.setItem('checkout-shipping', JSON.stringify(shippingData));
     
@@ -223,6 +307,8 @@ export class ShippingComponent implements OnInit {
           this.shippingMethod.set(shippingData.shippingMethod || 'delivery');
           this.shippingCost.set(shippingData.shippingCost || 0);
           this.shippingCalculationDetails.set(shippingData.shippingCalculationDetails || '');
+          
+          // La sede ya se carga en loadSedes(), no necesitamos cargarla aquí de nuevo
         }
       }
     } catch (error) {
@@ -248,7 +334,14 @@ export class ShippingComponent implements OnInit {
         region: this.region(),
         shippingMethod: this.shippingMethod() as 'delivery' | 'pickup',
         shippingCost: this.shippingCost(),
-        shippingCalculationDetails: this.shippingCalculationDetails()
+        shippingCalculationDetails: this.shippingCalculationDetails(),
+        selectedSede: this.selectedSede() ? {
+          id: this.selectedSede()!.id,
+          nombre: this.selectedSede()!.nombre,
+          direccion: this.selectedSede()!.direccion,
+          ciudad: this.selectedSede()!.ciudad,
+          telefono: this.selectedSede()!.telefono
+        } : null
       };
       localStorage.setItem('checkout-shipping', JSON.stringify(shippingData));
     } catch (error) {

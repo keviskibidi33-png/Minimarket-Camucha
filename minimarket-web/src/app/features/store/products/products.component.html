@@ -15,24 +15,61 @@
             </div>
             
             <!-- Price Range Filter -->
-            <div class="flex w-full flex-col items-start gap-3">
+            <div class="flex w-full flex-col items-start gap-4">
               <p class="text-text-light dark:text-text-dark text-base font-medium leading-normal">Rango de Precio</p>
-              <div class="flex flex-col gap-2 w-full">
-                <div class="flex gap-2 w-full min-w-0">
-                  <input 
-                    type="number" 
-                    [value]="minPrice()"
-                    (input)="minPrice.set(parseFloat($any($event.target).value) || 0)"
-                    class="flex-1 min-w-0 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
-                    placeholder="Mín"
-                    min="0">
-                  <input 
-                    type="number" 
-                    [value]="maxPrice()"
-                    (input)="maxPrice.set(parseFloat($any($event.target).value) || 1000)"
-                    class="flex-1 min-w-0 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 py-2 text-sm"
-                    placeholder="Máx"
-                    min="0">
+              
+              <!-- Slider Container -->
+              <div class="price-slider-container w-full">
+                <!-- Slider Track -->
+                <div 
+                  class="relative w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer mb-6"
+                  (click)="onSliderTrackClick($event)">
+                  <!-- Selected Range -->
+                  <div 
+                    class="absolute h-2 bg-primary rounded-full"
+                    [style.left]="getMinPricePercent() + '%'"
+                    [style.width]="getRangeWidth() + '%'">
+                  </div>
+                  
+                  <!-- Min Handle with Price Label -->
+                  <div 
+                    class="absolute z-10"
+                    [style.left]="getMinPricePercent() + '%'"
+                    [style.transform]="'translateX(-50%)'">
+                    <!-- Handle -->
+                    <div 
+                      class="w-5 h-5 bg-primary rounded-full cursor-grab active:cursor-grabbing shadow-lg hover:scale-110 transition-transform mx-auto"
+                      (mousedown)="onSliderMouseDown($event, 'min')"
+                      role="slider"
+                      [attr.aria-valuemin]="priceRangeMin()"
+                      [attr.aria-valuemax]="maxPrice()"
+                      [attr.aria-valuenow]="minPrice()">
+                    </div>
+                    <!-- Price Label -->
+                    <div class="mt-2 text-center">
+                      <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">{{ getPriceFormatted(minPrice()) }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Max Handle with Price Label -->
+                  <div 
+                    class="absolute z-10"
+                    [style.left]="getMaxPricePercent() + '%'"
+                    [style.transform]="'translateX(-50%)'">
+                    <!-- Handle -->
+                    <div 
+                      class="w-5 h-5 bg-primary rounded-full cursor-grab active:cursor-grabbing shadow-lg hover:scale-110 transition-transform mx-auto"
+                      (mousedown)="onSliderMouseDown($event, 'max')"
+                      role="slider"
+                      [attr.aria-valuemin]="minPrice()"
+                      [attr.aria-valuemax]="priceRangeMax()"
+                      [attr.aria-valuenow]="maxPrice()">
+                    </div>
+                    <!-- Price Label -->
+                    <div class="mt-2 text-center">
+                      <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">{{ getPriceFormatted(maxPrice()) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

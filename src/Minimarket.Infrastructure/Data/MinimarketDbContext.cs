@@ -31,6 +31,8 @@ public class MinimarketDbContext : IdentityDbContext<IdentityUser<Guid>, Identit
     public DbSet<Translation> Translations { get; set; }
     public DbSet<PageView> PageViews { get; set; }
     public DbSet<ProductView> ProductViews { get; set; }
+    public DbSet<WebOrder> WebOrders { get; set; }
+    public DbSet<WebOrderItem> WebOrderItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

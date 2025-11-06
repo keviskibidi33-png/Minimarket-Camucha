@@ -30,6 +30,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Translation>? _translations;
     private IRepository<PageView>? _pageViews;
     private IRepository<ProductView>? _productViews;
+    private IRepository<WebOrder>? _webOrders;
+    private IRepository<WebOrderItem>? _webOrderItems;
 
     // Repositorios específicos
     private IProductRepository? _productRepository;
@@ -101,6 +103,12 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ProductView> ProductViews =>
         _productViews ??= new Repository<ProductView>(_context);
 
+    public IRepository<WebOrder> WebOrders =>
+        _webOrders ??= new Repository<WebOrder>(_context);
+
+    public IRepository<WebOrderItem> WebOrderItems =>
+        _webOrderItems ??= new Repository<WebOrderItem>(_context);
+
     // Repositorios específicos
     public IProductRepository ProductRepository =>
         _productRepository ??= new ProductRepository(_context);
@@ -124,6 +132,16 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
+        // Si ya hay una transacción activa, no crear otra
+        if (_transaction != null)
+        {
+            return;
+        }
+        
+        // NOTA: BeginTransactionAsync no debe usarse dentro de ExecuteAsync
+        // porque la estrategia de reintentos no soporta transacciones iniciadas por el usuario.
+        // Si necesitas transacciones con reintentos, envuelve toda la operación en ExecuteAsync
+        // en lugar de solo el BeginTransactionAsync.
         _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 

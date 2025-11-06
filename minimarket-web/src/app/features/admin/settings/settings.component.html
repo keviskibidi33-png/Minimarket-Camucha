@@ -33,6 +33,20 @@
           Envíos
         </button>
         <button
+          (click)="setTab('shipping-rates')"
+          [class.border-primary-admin]="activeTab() === 'shipping-rates'"
+          [class.text-primary-admin]="activeTab() === 'shipping-rates'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Tarifas de Envío
+        </button>
+        <button
+          (click)="setTab('email-templates')"
+          [class.border-primary-admin]="activeTab() === 'email-templates'"
+          [class.text-primary-admin]="activeTab() === 'email-templates'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Templates de Email
+        </button>
+        <button
           (click)="setTab('banners')"
           [class.border-primary-admin]="activeTab() === 'banners'"
           [class.text-primary-admin]="activeTab() === 'banners'"
@@ -60,7 +74,7 @@
             <div>
               <h3 class="font-medium text-gray-900 dark:text-white">Aplicar IGV al Carrito</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Si está activado, el IGV (18%) se mostrará y aplicará al carrito de compras
+                Si está activado, el IGV se mostrará y aplicará al carrito de compras
               </p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -72,6 +86,25 @@
               <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
             </label>
           </div>
+
+          @if (applyIgvToCart()) {
+            <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tasa de IGV (%)
+              </label>
+              <input
+                type="number"
+                [value]="igvRate() * 100"
+                (input)="igvRate.set(parseFloat($any($event.target).value) / 100 || 0.18)"
+                min="0"
+                max="100"
+                step="0.01"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Porcentaje de IGV (ej: 18 para 18%)
+              </p>
+            </div>
+          }
 
           <button
             (click)="saveCartSetting()"
@@ -85,17 +118,441 @@
         <!-- Shipping Config -->
         <div class="space-y-6">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración de Envíos</h2>
-          <p class="text-gray-600 dark:text-gray-400">
-            Las tarifas de envío se calculan automáticamente usando fórmulas basadas en distancia, peso y zona.
-            Las configuraciones avanzadas se gestionan desde el backend.
-          </p>
+          
+          <!-- Delivery Settings -->
+          <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Despacho a Domicilio</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Días estimados de entrega
+                </label>
+                <input
+                  type="number"
+                  [value]="deliveryDays()"
+                  (input)="deliveryDays.set(parseInt($any($event.target).value) || 3)"
+                  min="1"
+                  max="30"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Número de días hábiles para la entrega
+                </p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora estimada de entrega
+                </label>
+                <input
+                  type="time"
+                  [value]="deliveryTime()"
+                  (input)="deliveryTime.set($any($event.target).value)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Hora aproximada de entrega (formato 24h)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pickup Settings -->
+          <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Retiro en Tienda</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Días estimados para retiro
+                </label>
+                <input
+                  type="number"
+                  [value]="pickupDays()"
+                  (input)="pickupDays.set(parseInt($any($event.target).value) || 2)"
+                  min="1"
+                  max="30"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Número de días hábiles para preparar el pedido
+                </p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora estimada para retiro
+                </label>
+                <input
+                  type="time"
+                  [value]="pickupTime()"
+                  (input)="pickupTime.set($any($event.target).value)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Hora aproximada para retiro (formato 24h)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            (click)="saveShippingSettings()"
+            class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+            Guardar Configuraciones de Envío
+          </button>
+
           <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p class="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Fórmula de cálculo:</strong> Base + (Distancia × Precio/km) + (Peso × Precio/kg)
+              <strong>Nota:</strong> Las tarifas de envío se calculan automáticamente usando fórmulas basadas en distancia, peso y zona.
             </p>
             <p class="text-sm text-blue-700 dark:text-blue-400 mt-2">
               El cálculo se realiza automáticamente cuando el cliente ingresa su dirección en el checkout.
             </p>
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'shipping-rates') {
+        <!-- Shipping Rates Management -->
+        <div class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Tarifas de Envío</h2>
+            <button
+              (click)="openShippingRateForm()"
+              class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+              + Nueva Tarifa
+            </button>
+          </div>
+
+          @if (shippingRates().length === 0) {
+            <div class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p class="text-gray-500 dark:text-gray-400">No hay tarifas de envío configuradas</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (rate of shippingRates(); track rate.id) {
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ rate.zoneName }}</h3>
+                    @if (rate.isActive) {
+                      <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900 dark:text-green-100">Activa</span>
+                    } @else {
+                      <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full dark:bg-gray-700 dark:text-gray-300">Inactiva</span>
+                    }
+                  </div>
+                  <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <p><strong>Precio Base:</strong> S/ {{ rate.basePrice.toFixed(2) }}</p>
+                    <p><strong>Por Km:</strong> S/ {{ rate.pricePerKm.toFixed(2) }}</p>
+                    <p><strong>Por Kg:</strong> S/ {{ rate.pricePerKg.toFixed(2) }}</p>
+                    <p><strong>Distancia:</strong> {{ rate.minDistance }} - {{ rate.maxDistance === 0 ? '∞' : rate.maxDistance }} km</p>
+                    <p><strong>Peso:</strong> {{ rate.minWeight }} - {{ rate.maxWeight === 0 ? '∞' : rate.maxWeight }} kg</p>
+                    @if (rate.freeShippingThreshold > 0) {
+                      <p><strong>Envío Gratis:</strong> S/ {{ rate.freeShippingThreshold.toFixed(2) }}+</p>
+                    }
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      (click)="openShippingRateForm(rate)"
+                      class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                      Editar
+                    </button>
+                    <button
+                      (click)="deleteShippingRate(rate)"
+                      class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Form Modal -->
+          @if (showShippingRateForm()) {
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closeShippingRateForm()">
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  {{ editingShippingRate() ? 'Editar' : 'Nueva' }} Tarifa de Envío
+                </h3>
+                
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Nombre de la Zona *
+                    </label>
+                    <input
+                      type="text"
+                      [value]="zoneName()"
+                      (input)="zoneName.set($any($event.target).value)"
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+                      placeholder="Ej: Lima Centro">
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Precio Base (S/)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="basePrice()"
+                        (input)="basePrice.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Precio por Km (S/)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="pricePerKm()"
+                        (input)="pricePerKm.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Precio por Kg (S/)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="pricePerKg()"
+                        (input)="pricePerKg.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Distancia Mínima (km)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="minDistance()"
+                        (input)="minDistance.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Distancia Máxima (km, 0 = sin límite)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="maxDistance()"
+                        (input)="maxDistance.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Peso Mínimo (kg)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="minWeight()"
+                        (input)="minWeight.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Peso Máximo (kg, 0 = sin límite)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        [value]="maxWeight()"
+                        (input)="maxWeight.set(parseFloat($any($event.target).value) || 0)"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Monto Mínimo para Envío Gratis (S/, 0 = no aplica)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      [value]="freeShippingThreshold()"
+                      (input)="freeShippingThreshold.set(parseFloat($any($event.target).value) || 0)"
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                  </div>
+
+                  <div class="flex items-center">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="isActiveRate()"
+                        (change)="isActiveRate.set($any($event.target).checked)"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+                      <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Tarifa Activa</span>
+                    </label>
+                  </div>
+
+                  <div class="flex gap-3 pt-4">
+                    <button
+                      (click)="saveShippingRate()"
+                      class="flex-1 px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+                      Guardar
+                    </button>
+                    <button
+                      (click)="closeShippingRateForm()"
+                      class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (activeTab() === 'email-templates') {
+        <!-- Email Templates Management -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración de Templates de Email</h2>
+          
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Nota:</strong> Las imágenes deben estar accesibles públicamente. Puedes subirlas a la carpeta <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">wwwroot/email-templates/</code> o usar URLs externas.
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                URL del Logo (arriba del email)
+              </label>
+              <input
+                type="text"
+                [value]="emailLogoUrl()"
+                (input)="emailLogoUrl.set($any($event.target).value)"
+                placeholder="https://tudominio.com/email-templates/logo.png o http://localhost:5000/email-templates/logo.png"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                URL completa de la imagen del logo. Se mostrará arriba del email.
+              </p>
+              @if (emailLogoUrl()) {
+                <div class="mt-2">
+                  <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Vista previa:</p>
+                  <img [src]="emailLogoUrl()" alt="Logo preview" class="max-w-[200px] h-auto border border-gray-300 dark:border-gray-700 rounded" 
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                  <p class="text-xs text-red-500 hidden">Error al cargar la imagen. Verifica la URL.</p>
+                </div>
+              }
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                URL de Imagen de Promoción (abajo del email)
+              </label>
+              <input
+                type="text"
+                [value]="emailPromotionImageUrl()"
+                (input)="emailPromotionImageUrl.set($any($event.target).value)"
+                placeholder="https://tudominio.com/email-templates/promotion.png o http://localhost:5000/email-templates/promotion.png"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                URL completa de la imagen de promoción. Se mostrará abajo del email, antes del footer.
+              </p>
+              @if (emailPromotionImageUrl()) {
+                <div class="mt-2">
+                  <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Vista previa:</p>
+                  <img [src]="emailPromotionImageUrl()" alt="Promotion preview" class="max-w-full h-auto border border-gray-300 dark:border-gray-700 rounded" 
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                  <p class="text-xs text-red-500 hidden">Error al cargar la imagen. Verifica la URL.</p>
+                </div>
+              }
+            </div>
+
+            <div class="pt-4 flex gap-4">
+              <button
+                (click)="saveEmailTemplateSettings()"
+                class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+                Guardar Configuración
+              </button>
+              <button
+                (click)="testConfirmationEmail()"
+                class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
+                📧 Probar Email de Confirmación
+              </button>
+              <button
+                (click)="testStatusUpdateEmail()"
+                class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">
+                📧 Probar Email de Estado
+              </button>
+            </div>
+
+            <!-- Test Email Section -->
+            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Enviar Correo de Prueba</h3>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Correo Electrónico de Prueba
+                  </label>
+                  <input
+                    type="email"
+                    [value]="testEmailAddress()"
+                    (input)="testEmailAddress.set($any($event.target).value)"
+                    placeholder="tu@email.com"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tipo de Template
+                  </label>
+                  <select
+                    [value]="testTemplateType()"
+                    (change)="testTemplateType.set($any($event.target).value)"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                    <option value="order_confirmation">Confirmación de Pedido</option>
+                    <option value="order_status_update">Actualización de Estado</option>
+                  </select>
+                </div>
+
+                <div>
+                  <button
+                    (click)="sendTestEmail()"
+                    [disabled]="isSendingTestEmail() || !testEmailAddress().trim()"
+                    class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    @if (isSendingTestEmail()) {
+                      Enviando...
+                    } @else {
+                      Enviar Correo de Prueba
+                    }
+                  </button>
+                </div>
+
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                    <strong>Nota:</strong> Asegúrate de que la configuración de email (SMTP) esté correcta en <code class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">appsettings.json</code>. 
+                    El correo se enviará a la dirección especificada con datos de prueba.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Cómo subir imágenes:</h3>
+              <ol class="list-decimal list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <li>Coloca las imágenes en: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">src/Minimarket.API/wwwroot/email-templates/</code></li>
+                <li>Nombra el logo como: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">logo.png</code></li>
+                <li>Nombra la promoción como: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">promotion.png</code></li>
+                <li>Las URLs serán: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">http://localhost:5000/email-templates/logo.png</code></li>
+                <li>En producción, usa la URL completa de tu dominio</li>
+              </ol>
+            </div>
           </div>
         </div>
       }

@@ -1,7 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 
 export interface CartItem {
-  productId: number;
+  productId: number; // Hash numérico para comparaciones internas
+  productGuid: string; // GUID original del producto para enviar al backend
   productName: string;
   productImageUrl?: string;
   unitPrice: number;
@@ -64,8 +65,10 @@ export class CartService {
     stock: number;
   }, quantity: number = 1) {
     const currentItems = this.cartItems();
-    // Convertir GUID a número de forma consistente
+    // Convertir GUID a número de forma consistente para comparaciones
     const productId = this.guidToProductId(product.id);
+    // Mantener el GUID original como string
+    const productGuid = typeof product.id === 'string' ? product.id : product.id.toString();
     const existingItem = currentItems.find(item => item.productId === productId);
 
     if (existingItem) {
@@ -75,6 +78,7 @@ export class CartService {
       // Si no existe, agregar nuevo item
       const newItem: CartItem = {
         productId: productId,
+        productGuid: productGuid,
         productName: product.name,
         productImageUrl: product.imageUrl,
         unitPrice: product.salePrice,
@@ -172,6 +176,20 @@ export class CartService {
     const itemMap = new Map<number, CartItem>();
     
     for (const item of items) {
+      // Si el item no tiene productGuid, no podemos usarlo (necesitamos el GUID real)
+      // Filtrar items sin productGuid válido
+      if (!item.productGuid) {
+        console.warn('Item sin productGuid encontrado, será eliminado:', item);
+        continue; // Saltar este item
+      }
+      
+      // Validar que productGuid sea un GUID válido
+      const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!guidPattern.test(item.productGuid)) {
+        console.warn('Item con productGuid inválido, será eliminado:', item);
+        continue; // Saltar este item
+      }
+      
       const existingItem = itemMap.get(item.productId);
       if (existingItem) {
         // Si ya existe, sumar las cantidades
@@ -179,7 +197,7 @@ export class CartService {
         existingItem.subtotal = existingItem.unitPrice * existingItem.quantity;
       } else {
         // Si no existe, agregarlo
-        itemMap.set(item.productId, { ...item });
+        itemMap.set(item.productId, item);
       }
     }
     

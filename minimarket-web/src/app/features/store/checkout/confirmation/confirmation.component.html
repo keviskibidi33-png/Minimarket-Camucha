@@ -42,8 +42,111 @@
                     <p><span class="font-medium">Tarjeta:</span> **** **** **** {{ paymentData.cardNumber.slice(-4) }}</p>
                     <p><span class="font-medium">Titular:</span> {{ paymentData.cardName }}</p>
                   }
+                  @if (paymentData.paymentMethod === 'bank') {
+                    <p><span class="font-medium">Cuenta:</span> {{ paymentData.bankAccountNumber }}</p>
+                    <p><span class="font-medium">Titular:</span> {{ paymentData.bankAccountName }}</p>
+                  }
+                  @if (paymentData.paymentMethod === 'wallet') {
+                    <p><span class="font-medium">Número:</span> {{ paymentData.walletNumber }}</p>
+                  }
                 </div>
                 <a routerLink="/checkout/pago" class="text-primary text-sm font-medium hover:underline mt-4 inline-block">Editar</a>
+              </section>
+            }
+
+            <!-- Payment Proof Upload Section (removido - ahora se hace en página de éxito) -->
+            @if (false) {
+              <section class="bg-white dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark p-6">
+                <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4 mb-4 border-b border-border-light dark:border-border-dark">Subir Comprobante de Pago</h2>
+                
+                <div class="space-y-4">
+                  <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                      <strong>Número de Pedido:</strong> <span class="font-mono text-lg">{{ orderNumber() }}</span>
+                    </p>
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                      Por favor sube el comprobante de pago para procesar tu pedido. El administrador será notificado inmediatamente.
+                    </p>
+                  </div>
+
+                  <!-- Código de Operación (opcional) -->
+                  <label class="flex flex-col">
+                    <p class="text-base font-medium leading-normal pb-2">Código de Operación (Opcional)</p>
+                    <input 
+                      type="text"
+                      [(ngModel)]="operationCode"
+                      name="operationCode"
+                      placeholder="Ej: 123456789"
+                      class="form-input flex w-full rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal"/>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Ingresa el código de operación que aparece en tu comprobante
+                    </p>
+                  </label>
+
+                  <!-- Upload Payment Proof -->
+                  <label class="flex flex-col">
+                    <p class="text-base font-medium leading-normal pb-2">Comprobante de Pago <span class="text-red-500">*</span></p>
+                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                      <input 
+                        type="file"
+                        accept="image/*,.pdf"
+                        (change)="onPaymentProofSelected($event)"
+                        class="hidden"
+                        id="payment-proof-input"
+                        #paymentProofInput
+                        [disabled]="paymentProofUploading()"/>
+                      @if (!paymentProofPreview()) {
+                        <div class="flex flex-col items-center">
+                          <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
+                          <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            Haz clic para subir el comprobante
+                          </p>
+                          <p class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                            Formatos: JPG, PNG, PDF (máx. 5MB)
+                          </p>
+                          <button 
+                            type="button"
+                            (click)="paymentProofInput.click()"
+                            [disabled]="paymentProofUploading()"
+                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                            Seleccionar Archivo
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="flex flex-col items-center">
+                          @if (paymentProofFile() && paymentProofFile()!.type.startsWith('image/')) {
+                            <img [src]="paymentProofPreview()" alt="Comprobante" class="max-h-48 rounded-lg mb-2">
+                          }
+                          <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            {{ paymentProofFile()?.name }}
+                          </p>
+                          <button 
+                            type="button"
+                            (click)="removePaymentProof()"
+                            [disabled]="paymentProofUploading()"
+                            class="text-red-500 hover:text-red-700 text-sm disabled:opacity-50">
+                            Eliminar
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </label>
+
+                  <!-- Upload Button -->
+                  <button 
+                    type="button"
+                    (click)="uploadPaymentProof()"
+                    [disabled]="!paymentProofFile() || paymentProofUploading()"
+                    class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (paymentProofUploading()) {
+                      <span class="material-symbols-outlined animate-spin">sync</span>
+                      <span>Enviando...</span>
+                    } @else {
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Enviar Comprobante</span>
+                    }
+                  </button>
+                </div>
               </section>
             }
 

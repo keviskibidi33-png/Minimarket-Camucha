@@ -117,9 +117,23 @@ export class CartService {
   }
 
   // Limpiar carrito
-  clearCart() {
+  clearCart(clearCheckoutData: boolean = true) {
     this.cartItems.set([]);
     this.saveCartToStorage();
+    // Limpiar también los datos de checkout cuando se limpia el carrito manualmente
+    // Pero NO limpiar cuando se está confirmando un pedido (clearCheckoutData = false)
+    if (clearCheckoutData) {
+      this.clearCheckoutData();
+    }
+  }
+
+  // Limpiar datos de checkout
+  clearCheckoutData() {
+    localStorage.removeItem('checkout-shipping');
+    localStorage.removeItem('checkout-payment');
+    localStorage.removeItem('checkout-total');
+    localStorage.removeItem('checkout-items');
+    // No limpiar current-order-number para mantener el historial del último pedido
   }
 
   // Guardar carrito en localStorage

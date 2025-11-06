@@ -25,7 +25,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Correo Electrónico</p>
                   <input 
                     type="email"
-                    [(ngModel)]="email"
+                    [ngModel]="email()"
+                    (ngModelChange)="email.set($event); onFieldChange()"
                     name="email"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -42,7 +43,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Nombre</p>
                   <input 
                     type="text"
-                    [(ngModel)]="firstName"
+                    [ngModel]="firstName()"
+                    (ngModelChange)="firstName.set($event); onFieldChange()"
                     name="firstName"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -52,7 +54,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Apellido</p>
                   <input 
                     type="text"
-                    [(ngModel)]="lastName"
+                    [ngModel]="lastName()"
+                    (ngModelChange)="lastName.set($event); onFieldChange()"
                     name="lastName"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -62,8 +65,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Dirección</p>
                   <input 
                     type="text"
-                    [(ngModel)]="address"
-                    (ngModelChange)="onAddressChange()"
+                    [ngModel]="address()"
+                    (ngModelChange)="address.set($event); onAddressChange(); onFieldChange()"
                     name="address"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -73,8 +76,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Ciudad</p>
                   <input 
                     type="text"
-                    [(ngModel)]="city"
-                    (ngModelChange)="onAddressChange()"
+                    [ngModel]="city()"
+                    (ngModelChange)="city.set($event); onAddressChange(); onFieldChange()"
                     name="city"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
@@ -84,7 +87,8 @@
                   <p class="text-base font-medium leading-normal pb-2">Región</p>
                   <input 
                     type="text"
-                    [(ngModel)]="region"
+                    [ngModel]="region()"
+                    (ngModelChange)="region.set($event); onFieldChange()"
                     name="region"
                     required
                     class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 

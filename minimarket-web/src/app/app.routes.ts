@@ -40,6 +40,10 @@ export const routes: Routes = [
     path: 'checkout/confirmacion',
     loadComponent: () => import('./features/store/checkout/confirmation/confirmation.component').then(m => m.ConfirmationComponent)
   },
+  {
+    path: 'checkout/exito',
+    loadComponent: () => import('./features/store/checkout/success/success.component').then(m => m.SuccessComponent)
+  },
   // Rutas de ADMIN (protegidas)
   {
     path: 'login',

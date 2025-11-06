@@ -20,6 +20,21 @@ export interface ConfirmPayment {
   saleId: string;
 }
 
+export interface PaymentProofRequest {
+  orderNumber: string;
+  email: string;
+  phone: string;
+  customerName: string;
+  total: number;
+  paymentMethod: string;
+  walletMethod: string | null;
+  bankAccount: string | null;
+  fileName: string;
+  fileData: string; // Base64
+  fileType: string;
+  operationCode: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,6 +49,10 @@ export class PaymentsService {
 
   confirmPayment(payment: ConfirmPayment): Observable<boolean> {
     return this.http.post<boolean>(`${this.apiUrl}/confirm`, payment);
+  }
+
+  sendPaymentProof(proof: PaymentProofRequest): Observable<boolean> {
+    return this.http.post<boolean>(`${this.apiUrl}/send-proof`, proof);
   }
 }
 

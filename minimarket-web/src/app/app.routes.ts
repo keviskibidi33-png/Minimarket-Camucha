@@ -13,6 +13,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/store/products/products.component').then(m => m.StoreProductsComponent)
   },
   {
+    path: 'tienda/ofertas',
+    loadComponent: () => import('./features/store/ofertas/ofertas.component').then(m => m.StoreOfertasComponent)
+  },
+  {
+    path: 'tienda/contacto',
+    loadComponent: () => import('./features/store/contact/contact.component').then(m => m.StoreContactComponent)
+  },
+  {
     path: 'tienda/producto/:id',
     loadComponent: () => import('./features/store/product-detail/product-detail.component').then(m => m.ProductDetailComponent)
   },

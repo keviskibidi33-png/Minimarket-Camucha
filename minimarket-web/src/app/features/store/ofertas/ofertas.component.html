@@ -1,0 +1,98 @@
+<div class="relative flex min-h-screen w-full flex-col">
+  <!-- Header -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="flex-1 w-full">
+    <div class="mx-auto max-w-7xl px-4 py-8 lg:py-16">
+      <!-- Page Heading -->
+      <div class="mb-8">
+        <h1 class="text-4xl lg:text-5xl font-black leading-tight tracking-tight mb-4 text-text-light dark:text-text-dark">
+          Ofertas Especiales
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400">
+          Descubre nuestras mejores ofertas y ahorra en tus productos favoritos
+        </p>
+      </div>
+
+      <!-- Ofertas Grid -->
+      @if (isLoading()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (item of [1,2,3,4,5,6]; track $index) {
+            <div class="animate-pulse flex flex-col rounded-xl bg-gray-200 dark:bg-gray-700 h-64"></div>
+          }
+        </div>
+      } @else if (ofertas().length === 0) {
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-12 text-center">
+          <div class="text-6xl mb-4 text-gray-300 dark:text-gray-600">
+            <span class="material-symbols-outlined">local_offer</span>
+          </div>
+          <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">No hay ofertas disponibles en este momento</p>
+          <a routerLink="/tienda/productos" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors">
+            Ver Todos los Productos
+          </a>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (oferta of ofertas(); track oferta.id) {
+            <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-shadow">
+              <!-- Badge de Descuento -->
+              <div class="relative bg-gradient-to-r from-primary to-secondary p-6 text-white">
+                <div class="absolute top-4 right-4">
+                  @if (isActive(oferta)) {
+                    <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-bold rounded-full">
+                      Activa
+                    </span>
+                  }
+                </div>
+                <div class="text-4xl font-black mb-2">{{ getDescuentoText(oferta) }}</div>
+                <h3 class="text-xl font-bold mb-2">{{ oferta.nombre }}</h3>
+                @if (oferta.descripcion) {
+                  <p class="text-sm text-white/90">{{ oferta.descripcion }}</p>
+                }
+              </div>
+
+              <!-- Detalles -->
+              <div class="p-6">
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-base mr-2">calendar_today</span>
+                    <span><strong>Inicio:</strong> {{ formatDate(oferta.fechaInicio) }}</span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-base mr-2">event</span>
+                    <span><strong>Fin:</strong> {{ formatDate(oferta.fechaFin) }}</span>
+                  </div>
+                  @if (oferta.categoriasIds.length > 0 || oferta.productosIds.length > 0) {
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span class="material-symbols-outlined text-base mr-2">category</span>
+                      <span>
+                        @if (oferta.categoriasIds.length > 0 && oferta.productosIds.length > 0) {
+                          Aplica a categorías y productos específicos
+                        } @else if (oferta.categoriasIds.length > 0) {
+                          Aplica a {{ oferta.categoriasIds.length }} categoría(s)
+                        } @else {
+                          Aplica a {{ oferta.productosIds.length }} producto(s)
+                        }
+                      </span>
+                    </div>
+                  }
+                </div>
+
+                <a 
+                  routerLink="/tienda/productos" 
+                  class="block w-full text-center px-4 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors">
+                  Ver Productos en Oferta
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <app-store-footer></app-store-footer>
+</div>
+

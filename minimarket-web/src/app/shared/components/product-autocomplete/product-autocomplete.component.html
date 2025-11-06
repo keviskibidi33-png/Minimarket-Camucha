@@ -1,0 +1,120 @@
+<div class="relative w-full" #container style="position: relative; z-index: 1000; width: 100%;">
+  <div class="flex w-full items-stretch rounded-lg h-10 relative bg-gray-100 dark:bg-gray-800" style="width: 100%;">
+    <div class="text-gray-500 flex bg-gray-100 dark:bg-gray-800 items-center justify-center pl-3 rounded-l-lg border-r-0">
+      <span class="material-symbols-outlined">search</span>
+    </div>
+    <input 
+      #inputRef
+      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-gray-100 dark:bg-gray-800 h-full placeholder:text-gray-500 px-4 rounded-l-none border-l-0 pl-2 text-sm" 
+      [placeholder]="placeholder"
+      [value]="searchTerm()"
+      (input)="onInputChange($any($event.target).value)"
+      (focus)="onInputFocus()"
+      (blur)="onInputBlur()"
+      (keydown)="onKeyDown($event)"
+      type="text"
+      autocomplete="off"
+      style="flex: 1 1 0%; min-width: 0; width: 100%;"/>
+    @if (searchTerm().length > 0) {
+      <button
+        (click)="clearSearch()"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 flex items-center"
+        type="button">
+        <span class="material-symbols-outlined text-base">close</span>
+      </button>
+    }
+  </div>
+
+  <!-- Dropdown de sugerencias -->
+  @if (showDropdown() || isLoading()) {
+    <div 
+      #dropdownRef
+      class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-xl border-2 border-blue-500 max-h-96 overflow-y-auto"
+      style="z-index: 99999; position: absolute; top: calc(100% + 0.5rem); left: 0; right: 0; min-height: 100px; background: white;"
+      (mousedown)="$event.preventDefault()"
+      (click)="$event.stopPropagation()"
+      (mouseenter)="onDropdownMouseEnter()"
+      (mouseleave)="onDropdownMouseLeave()">
+      
+      @if (isLoading()) {
+        <div class="p-4 text-center text-gray-500" style="background: white; padding: 20px;">
+          <span class="material-symbols-outlined animate-spin text-2xl">sync</span>
+          <p class="mt-2 text-sm font-semibold">Buscando productos...</p>
+        </div>
+      } @else if (suggestions().length > 0) {
+        <!-- Mostrar productos encontrados -->
+        <div class="py-2">
+          <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+            Productos encontrados ({{ suggestions().length }})
+          </div>
+          @for (product of suggestions(); track product.id; let i = $index) {
+            <div 
+              (click)="selectProduct(product)"
+              (mouseenter)="selectedIndex.set(i)"
+              [class.selected]="selectedIndex() === i"
+              class="suggestion-item flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+              
+              <!-- Imagen del producto -->
+              <div class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                @if (product.imageUrl) {
+                  <img 
+                    [src]="product.imageUrl" 
+                    [alt]="product.name"
+                    class="w-full h-full object-cover"
+                    loading="lazy">
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-gray-400 text-xl">inventory_2</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Información del producto -->
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm text-gray-900 dark:text-white truncate">
+                  {{ product.name }}
+                </div>
+                @if (product.categoryName) {
+                  <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {{ product.categoryName }}
+                  </div>
+                }
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm font-bold text-primary">
+                    {{ getPriceFormatted(product.salePrice) }}
+                  </span>
+                  @if (product.stock === 0) {
+                    <span class="text-xs text-red-500">Sin stock</span>
+                  } @else if (product.stock < 10) {
+                    <span class="text-xs text-orange-500">Pocas unidades</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Icono de flecha -->
+              <div class="flex-shrink-0 text-gray-400">
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </div>
+            </div>
+          }
+          
+          <!-- Ver todos los resultados -->
+          <div 
+            (click)="onSearch()"
+            class="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <div class="flex items-center justify-center gap-2 text-sm font-medium text-primary">
+              <span>Ver todos los resultados</span>
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- No hay resultados pero el dropdown está visible -->
+        <div class="p-4 text-center text-gray-500">
+          <p class="text-sm">No se encontraron productos</p>
+        </div>
+      }
+    </div>
+  }
+</div>
+

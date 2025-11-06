@@ -87,7 +87,11 @@ export class CartComponent implements OnInit {
 
   applyDiscount() {
     // TODO: Implementar lógica de aplicación de descuento
-    console.log('Applying discount code:', this.discountCode());
+    const code = this.discountCode().trim();
+    if (code) {
+      // Aquí se implementará la lógica de descuento
+      // Por ahora solo validamos que haya un código
+    }
   }
 
   proceedToPayment() {

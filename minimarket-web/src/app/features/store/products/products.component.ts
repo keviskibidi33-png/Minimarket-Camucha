@@ -61,10 +61,13 @@ export class StoreProductsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Obtener categoría de query params
+    // Obtener categoría y término de búsqueda de query params
     this.route.queryParams.subscribe(params => {
       if (params['category']) {
         this.selectedCategory.set(params['category']);
+      }
+      if (params['search']) {
+        this.searchTerm.set(params['search']);
       }
       this.loadProducts();
     });

@@ -1,0 +1,38 @@
+.suggestion-item {
+  position: relative;
+}
+
+.suggestion-item.selected {
+  background-color: rgb(249 250 251); /* gray-50 */
+}
+
+.dark .suggestion-item.selected {
+  background-color: rgb(31 41 55); /* gray-800 */
+}
+
+/* Scrollbar personalizado para el dropdown */
+.max-h-96::-webkit-scrollbar {
+  width: 6px;
+}
+
+.max-h-96::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.max-h-96::-webkit-scrollbar-thumb {
+  background: rgb(209 213 219); /* gray-300 */
+  border-radius: 3px;
+}
+
+.dark .max-h-96::-webkit-scrollbar-thumb {
+  background: rgb(75 85 99); /* gray-600 */
+}
+
+.max-h-96::-webkit-scrollbar-thumb:hover {
+  background: rgb(156 163 175); /* gray-400 */
+}
+
+.dark .max-h-96::-webkit-scrollbar-thumb:hover {
+  background: rgb(107 114 128); /* gray-500 */
+}
+

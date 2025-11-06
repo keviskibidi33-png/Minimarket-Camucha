@@ -1,0 +1,196 @@
+<div class="relative flex min-h-screen w-full flex-col">
+  <!-- Header -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="flex-1 w-full">
+    <div class="mx-auto max-w-7xl px-4 py-8 lg:py-16">
+      <!-- Page Heading -->
+      <div class="mb-12 text-center">
+        <h1 class="text-4xl lg:text-5xl font-black leading-tight tracking-tight mb-4 text-text-light dark:text-text-dark">
+          Contáctanos
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Estamos aquí para ayudarte. Envíanos un mensaje y te responderemos lo antes posible.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Contact Form -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 p-8">
+          <h2 class="text-2xl font-bold mb-6 text-text-light dark:text-text-dark">Envíanos un Mensaje</h2>
+          
+          <form (ngSubmit)="onSubmit()" class="space-y-6">
+            <!-- Nombre -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nombre <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="name"
+                name="name"
+                required
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="Tu nombre completo">
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Correo Electrónico <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                [(ngModel)]="email"
+                name="email"
+                required
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="tu@email.com">
+            </div>
+
+            <!-- Teléfono -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Teléfono
+              </label>
+              <input
+                type="tel"
+                [(ngModel)]="phone"
+                name="phone"
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="+51 999 999 999">
+            </div>
+
+            <!-- Asunto -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Asunto
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="subject"
+                name="subject"
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="¿Sobre qué quieres contactarnos?">
+            </div>
+
+            <!-- Mensaje -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Mensaje <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                [(ngModel)]="message"
+                name="message"
+                required
+                rows="5"
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                placeholder="Escribe tu mensaje aquí..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              [disabled]="isSubmitting()"
+              class="w-full px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (isSubmitting()) {
+                <span class="flex items-center justify-center">
+                  <span class="material-symbols-outlined animate-spin mr-2">sync</span>
+                  Enviando...
+                </span>
+              } @else {
+                Enviar Mensaje
+              }
+            </button>
+          </form>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="space-y-8">
+          <!-- Información de Contacto -->
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 p-8">
+            <h2 class="text-2xl font-bold mb-6 text-text-light dark:text-text-dark">Información de Contacto</h2>
+            
+            <div class="space-y-6">
+              <!-- Dirección -->
+              <div class="flex items-start gap-4">
+                <div class="text-primary text-2xl">
+                  <span class="material-symbols-outlined">location_on</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Dirección</h3>
+                  <p class="text-gray-600 dark:text-gray-400">
+                    123 Market St, City, Country<br>
+                    Lima, Perú
+                  </p>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="flex items-start gap-4">
+                <div class="text-primary text-2xl">
+                  <span class="material-symbols-outlined">email</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Email</h3>
+                  <p class="text-gray-600 dark:text-gray-400">
+                    <a href="mailto:contact&#64;camucha.com" class="hover:text-primary">contact&#64;camucha.com</a>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Teléfono -->
+              <div class="flex items-start gap-4">
+                <div class="text-primary text-2xl">
+                  <span class="material-symbols-outlined">phone</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Teléfono</h3>
+                  <p class="text-gray-600 dark:text-gray-400">
+                    <a href="tel:+1234567890" class="hover:text-primary">+123 456 7890</a>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Horario -->
+              <div class="flex items-start gap-4">
+                <div class="text-primary text-2xl">
+                  <span class="material-symbols-outlined">schedule</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Horario de Atención</h3>
+                  <p class="text-gray-600 dark:text-gray-400">
+                    Lunes - Viernes: 8:00 AM - 8:00 PM<br>
+                    Sábados: 9:00 AM - 6:00 PM<br>
+                    Domingos: 10:00 AM - 4:00 PM
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Redes Sociales -->
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 p-8">
+            <h2 class="text-2xl font-bold mb-6 text-text-light dark:text-text-dark">Síguenos</h2>
+            <div class="flex gap-4">
+              <a href="#" class="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary hover:text-white transition-colors">
+                <span class="material-symbols-outlined">facebook</span>
+              </a>
+              <a href="#" class="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary hover:text-white transition-colors">
+                <span class="material-symbols-outlined">instagram</span>
+              </a>
+              <a href="#" class="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary hover:text-white transition-colors">
+                <span class="material-symbols-outlined">twitter</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <app-store-footer></app-store-footer>
+</div>
+

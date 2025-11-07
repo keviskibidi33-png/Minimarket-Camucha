@@ -5,9 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { ShippingService } from '../../../../core/services/shipping.service';
 import { SedesService, Sede } from '../../../../core/services/sedes.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../../shared/components/store-footer/store-footer.component';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-shipping',
@@ -28,8 +30,13 @@ export class ShippingComponent implements OnInit {
   email = signal('');
   
   // Shipping address
+  isDifferentRecipient = signal(false);
   firstName = signal('');
   lastName = signal('');
+  recipientFirstName = signal('');
+  recipientLastName = signal('');
+  recipientDni = signal('');
+  recipientPhone = signal('');
   address = signal('');
   city = signal('');
   region = signal('');
@@ -63,6 +70,7 @@ export class ShippingComponent implements OnInit {
     private cartService: CartService,
     private shippingService: ShippingService,
     private sedesService: SedesService,
+    private authService: AuthService,
     private router: Router,
     private ngZone: NgZone
   ) {
@@ -84,6 +92,9 @@ export class ShippingComponent implements OnInit {
 
     // Cargar sedes primero para que estén disponibles cuando se carguen los datos guardados
     this.loadSedes();
+    
+    // Cargar datos del perfil del usuario si está autenticado
+    this.loadUserProfile();
     
     // Cargar datos guardados desde localStorage (persistencia incluso después de recargar la página)
     // Esto protege contra pérdida de datos por errores de red o recargas accidentales
@@ -249,12 +260,49 @@ export class ShippingComponent implements OnInit {
     this.onFieldChange();
   }
 
+  async loadUserProfile() {
+    if (this.authService.isAuthenticated()) {
+      try {
+        const profile = await firstValueFrom(this.authService.getProfile());
+        if (profile && !this.firstName() && !this.lastName()) {
+          // Solo cargar si no hay datos guardados
+          this.firstName.set(profile.firstName || '');
+          this.lastName.set(profile.lastName || '');
+          this.email.set(profile.email || '');
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    }
+  }
+
+  onRecipientChange() {
+    const isDifferent = this.isDifferentRecipient();
+    if (!isDifferent) {
+      // Si no es diferente destinatario, cargar datos del perfil
+      this.loadUserProfile();
+      // Limpiar campos de destinatario diferente
+      this.recipientFirstName.set('');
+      this.recipientLastName.set('');
+      this.recipientDni.set('');
+      this.recipientPhone.set('');
+    }
+    this.onFieldChange();
+  }
+
   continueToPayment() {
     // Validar que los datos requeridos estén completos según el método seleccionado
-    // Nombre y apellido son obligatorios para ambos métodos
     if (!this.email() || !this.firstName() || !this.lastName()) {
       // Mostrar mensaje de error o validar en el formulario
       return;
+    }
+
+    // Si es diferente destinatario, validar campos del destinatario
+    if (this.isDifferentRecipient()) {
+      if (!this.recipientFirstName() || !this.recipientLastName() || !this.recipientDni() || !this.recipientPhone()) {
+        // Mostrar mensaje de error
+        return;
+      }
     }
 
     if (this.shippingMethod() === 'delivery') {
@@ -270,6 +318,11 @@ export class ShippingComponent implements OnInit {
       email: this.email(),
       firstName: this.firstName(),
       lastName: this.lastName(),
+      isDifferentRecipient: this.isDifferentRecipient(),
+      recipientFirstName: this.recipientFirstName(),
+      recipientLastName: this.recipientLastName(),
+      recipientDni: this.recipientDni(),
+      recipientPhone: this.recipientPhone(),
       address: this.address(),
       city: this.city(),
       region: this.region(),
@@ -301,6 +354,11 @@ export class ShippingComponent implements OnInit {
           this.email.set(shippingData.email || '');
           this.firstName.set(shippingData.firstName || '');
           this.lastName.set(shippingData.lastName || '');
+          this.isDifferentRecipient.set(shippingData.isDifferentRecipient || false);
+          this.recipientFirstName.set(shippingData.recipientFirstName || '');
+          this.recipientLastName.set(shippingData.recipientLastName || '');
+          this.recipientDni.set(shippingData.recipientDni || '');
+          this.recipientPhone.set(shippingData.recipientPhone || '');
           this.address.set(shippingData.address || '');
           this.city.set(shippingData.city || '');
           this.region.set(shippingData.region || '');
@@ -329,6 +387,11 @@ export class ShippingComponent implements OnInit {
         email: this.email(),
         firstName: this.firstName(),
         lastName: this.lastName(),
+        isDifferentRecipient: this.isDifferentRecipient(),
+        recipientFirstName: this.recipientFirstName(),
+        recipientLastName: this.recipientLastName(),
+        recipientDni: this.recipientDni(),
+        recipientPhone: this.recipientPhone(),
         address: this.address(),
         city: this.city(),
         region: this.region(),

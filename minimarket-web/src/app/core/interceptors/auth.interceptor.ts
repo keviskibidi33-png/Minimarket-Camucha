@@ -14,15 +14,25 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.authService.getToken();
 
+    // Headers base para todas las peticiones
+    const headers: { [key: string]: string } = {
+      'Accept': 'application/json'
+    };
+
+    // Agregar token si existe
     if (token) {
-      const cloned = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return next.handle(cloned);
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return next.handle(req);
+    // Solo agregar Content-Type para peticiones que envían datos
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'DELETE') {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const cloned = req.clone({
+      setHeaders: headers
+    });
+
+    return next.handle(cloned);
   }
 }

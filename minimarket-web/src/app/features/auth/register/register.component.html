@@ -1,0 +1,270 @@
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;' [@fadeSlide]>
+  <div class="w-full max-w-md p-6">
+    <div class="flex flex-col items-center rounded-xl border border-border-light/50 bg-card-light p-8 shadow-sm dark:border-border-dark/50 dark:bg-card-dark">
+      <!-- Logo and Title -->
+      <div class="mb-6 flex flex-col items-center">
+        <div class="mb-4">
+          <svg class="h-14 w-14 text-primary" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" x2="21" y1="6" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Crear Cuenta</h1>
+        <p class="mt-1 text-base text-text-light/70 dark:text-text-dark/70">Únete a Minimarket Camucha</p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="w-full">
+        <div class="flex w-full flex-col gap-4">
+          <!-- Email Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="email">Correo Electrónico</label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">email</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="email"
+                type="email"
+                placeholder="tu@correo.com"
+                formControlName="email"
+                [class.border-red-500]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            </div>
+            @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                @if (registerForm.get('email')?.errors?.['required']) {
+                  El correo es requerido
+                } @else if (registerForm.get('email')?.errors?.['email']) {
+                  Ingresa un correo válido
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Username Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="username">Nombre de Usuario</label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">person</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="username"
+                type="text"
+                placeholder="usuario123"
+                formControlName="username"
+                [class.border-red-500]="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">
+            </div>
+            @if (registerForm.get('username')?.invalid && registerForm.get('username')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                El nombre de usuario es requerido (mínimo 3 caracteres)
+              </span>
+            }
+          </div>
+
+          <!-- First Name Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="firstName">Nombre <span class="text-red-500">*</span></label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">badge</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="firstName"
+                type="text"
+                placeholder="Juan"
+                formControlName="firstName"
+                [class.border-red-500]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+            </div>
+            @if (registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                El nombre es requerido
+              </span>
+            }
+          </div>
+
+          <!-- Last Name Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="lastName">Apellido <span class="text-red-500">*</span></label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">badge</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="lastName"
+                type="text"
+                placeholder="Pérez"
+                formControlName="lastName"
+                [class.border-red-500]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+            </div>
+            @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                El apellido es requerido
+              </span>
+            }
+          </div>
+
+          <!-- DNI Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="dni">DNI <span class="text-red-500">*</span></label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">credit_card</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="dni"
+                type="text"
+                placeholder="12345678"
+                formControlName="dni"
+                maxlength="8"
+                [class.border-red-500]="registerForm.get('dni')?.invalid && registerForm.get('dni')?.touched">
+            </div>
+            @if (registerForm.get('dni')?.invalid && registerForm.get('dni')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                @if (registerForm.get('dni')?.errors?.['required']) {
+                  El DNI es requerido
+                } @else if (registerForm.get('dni')?.errors?.['pattern']) {
+                  El DNI debe tener exactamente 8 dígitos
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Phone Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="phone">Teléfono <span class="text-red-500">*</span></label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">phone</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="phone"
+                type="tel"
+                placeholder="+51 999 999 999"
+                formControlName="phone"
+                [class.border-red-500]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched">
+            </div>
+            @if (registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched) {
+              <span class="mt-1 text-sm text-red-500">
+                @if (registerForm.get('phone')?.errors?.['required']) {
+                  El teléfono es requerido
+                } @else if (registerForm.get('phone')?.errors?.['pattern']) {
+                  Ingresa un teléfono válido
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Password Field -->
+          <div class="flex w-full flex-col">
+            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="password">Contraseña</label>
+            <div class="relative flex w-full items-center">
+              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">lock</span>
+              <input
+                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-10 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                placeholder="Mínimo 6 caracteres"
+                formControlName="password"
+                [class.border-red-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+              <button
+                type="button"
+                class="absolute right-3 text-placeholder-light dark:text-placeholder-dark hover:text-text-light dark:hover:text-text-dark"
+                (click)="togglePasswordVisibility()">
+                <span class="material-symbols-outlined text-xl">
+                  {{ showPassword() ? 'visibility' : 'visibility_off' }}
+                </span>
+              </button>
+            </div>
+            @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+              <span class="mt-1 text-sm text-red-500">La contraseña es requerida (mínimo 6 caracteres)</span>
+            }
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="flex flex-col gap-3 pt-2">
+            <!-- Checkbox 1: Finalidades Adicionales -->
+            <div class="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="acceptAdditionalPurposes"
+                formControlName="acceptAdditionalPurposes"
+                class="mt-1 h-4 w-4 rounded border-border-light text-green-600 focus:ring-2 focus:ring-green-500 dark:border-border-dark accent-green-600"
+                [class.border-red-500]="registerForm.get('acceptAdditionalPurposes')?.invalid && registerForm.get('acceptAdditionalPurposes')?.touched">
+              <label for="acceptAdditionalPurposes" class="text-sm text-text-light dark:text-text-dark cursor-pointer">
+                Autorizo los 
+                <a [routerLink]="['/legal/additional-purposes']" target="_blank" class="text-green-600 dark:text-green-500 underline hover:text-green-700 dark:hover:text-green-400">
+                  fines adicionales, de tratamiento de mis datos
+                </a>
+              </label>
+            </div>
+            @if (registerForm.get('acceptAdditionalPurposes')?.invalid && registerForm.get('acceptAdditionalPurposes')?.touched) {
+              <span class="text-sm text-red-500 ml-7">Debes aceptar los fines adicionales de tratamiento</span>
+            }
+
+            <!-- Checkbox 2: Términos y Condiciones -->
+            <div class="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                formControlName="acceptTerms"
+                class="mt-1 h-4 w-4 rounded border-border-light text-green-600 focus:ring-2 focus:ring-green-500 dark:border-border-dark accent-green-600"
+                [class.border-red-500]="registerForm.get('acceptTerms')?.invalid && registerForm.get('acceptTerms')?.touched">
+              <label for="acceptTerms" class="text-sm text-text-light dark:text-text-dark cursor-pointer">
+                He leído y acepto los 
+                <a [routerLink]="['/legal/terms']" target="_blank" class="text-green-600 dark:text-green-500 underline hover:text-green-700 dark:hover:text-green-400">
+                  términos y condiciones
+                </a>
+                y 
+                <a [routerLink]="['/legal/privacy']" target="_blank" class="text-green-600 dark:text-green-500 underline hover:text-green-700 dark:hover:text-green-400">
+                  política de privacidad
+                </a>
+              </label>
+            </div>
+            @if (registerForm.get('acceptTerms')?.invalid && registerForm.get('acceptTerms')?.touched) {
+              <span class="text-sm text-red-500 ml-7">Debes aceptar los términos y condiciones</span>
+            }
+          </div>
+
+          <!-- Error Message -->
+          @if (errorMessage()) {
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3">
+              <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="pt-4">
+            <button
+              type="submit"
+              [disabled]="registerForm.invalid || isLoading()"
+              class="flex h-12 w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary px-5 text-base font-bold leading-normal text-white transition-colors duration-200 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (isLoading()) {
+                <span class="material-symbols-outlined animate-spin mr-2">refresh</span>
+              }
+              <span class="truncate">Crear Cuenta</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Divider -->
+      <div class="my-6 flex items-center gap-4">
+        <div class="flex-1 border-t border-border-light dark:border-border-dark"></div>
+        <span class="text-sm text-text-light/70 dark:text-text-dark/70">o</span>
+        <div class="flex-1 border-t border-border-light dark:border-border-dark"></div>
+      </div>
+
+      <!-- Google Register Button Container -->
+      <div id="google-signin-button-register" class="w-full" style="min-width: 300px;"></div>
+
+      <!-- Login Link -->
+      <div class="mt-6 w-full text-center">
+        <div class="text-sm text-text-light/70 dark:text-text-dark/70">
+          ¿Ya tienes cuenta? 
+          <a 
+            (click)="goToLogin()"
+            class="text-primary hover:text-primary/80 cursor-pointer font-medium">
+            Inicia sesión aquí
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

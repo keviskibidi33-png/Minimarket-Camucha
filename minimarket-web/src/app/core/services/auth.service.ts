@@ -8,17 +8,34 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  username: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  dni?: string;
+  phone?: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
 export interface LoginResponse {
   token: string;
   expiration: string;
   userId: string;
   username: string;
+  email?: string;
   roles: string[];
+  profileCompleted?: boolean;
 }
 
 export interface User {
   id: string;
   username: string;
+  email?: string;
   roles: string[];
 }
 
@@ -45,11 +62,121 @@ export class AuthService {
         this.currentUser.set({
           id: response.userId,
           username: response.username,
+          email: response.email,
           roles: response.roles
         });
         this.isAuthenticated.set(true);
       })
     );
+  }
+
+  private googleInitialized = false;
+
+  initializeGoogleSignIn(): void {
+    // Evitar inicialización múltiple
+    if (this.googleInitialized) {
+      return;
+    }
+
+    // Verificar si Google Identity Services está cargado
+    if (typeof (window as any).google === 'undefined') {
+      console.error('Google Identity Services no está cargado');
+      return;
+    }
+
+    const clientId = environment.googleClientId;
+    if (!clientId) {
+      console.error('Google ClientId no está configurado');
+      return;
+    }
+
+    // Log para debugging
+    console.log('Inicializando Google Sign-In con Client ID:', clientId);
+    console.log('Origen actual:', window.location.origin);
+
+    // Inicializar Google Sign-In una sola vez
+    try {
+      (window as any).google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response: any) => {
+          console.log('Google Sign-In callback recibido');
+          this.handleGoogleSignIn(response.credential).subscribe({
+            next: (loginResponse) => {
+              this.storeAuth(loginResponse);
+              this.currentUser.set({
+                id: loginResponse.userId,
+                username: loginResponse.username,
+                email: loginResponse.email,
+                roles: loginResponse.roles
+              });
+              this.isAuthenticated.set(true);
+              
+              // Redirigir según el estado del perfil
+              if (loginResponse.profileCompleted === false) {
+                window.location.href = '/auth/complete-profile';
+              } else {
+                window.location.href = '/';
+              }
+            },
+            error: (error) => {
+              console.error('Error en Google Sign-In:', error);
+              alert('Error al iniciar sesión con Google. Por favor, intenta nuevamente.');
+            }
+          });
+        },
+        error_callback: (error: any) => {
+          console.error('Error en inicialización de Google Sign-In:', error);
+        }
+      });
+      this.googleInitialized = true;
+    } catch (error) {
+      console.error('Error al inicializar Google Sign-In:', error);
+    }
+  }
+
+  loginWithGoogle(): void {
+    // Asegurar que Google Identity Services esté inicializado
+    this.initializeGoogleSignIn();
+    
+    // Intentar mostrar One Tap
+    if (typeof (window as any).google !== 'undefined' && (window as any).google.accounts) {
+      try {
+        (window as any).google.accounts.id.prompt((notification: any) => {
+          // Si One Tap no se puede mostrar, el usuario puede usar el botón renderizado
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.log('One Tap no disponible, usar botón de Google');
+          }
+        });
+      } catch (error) {
+        console.log('Error al mostrar One Tap:', error);
+      }
+    }
+  }
+
+  renderGoogleButton(elementId: string): void {
+    // Inicializar primero
+    this.initializeGoogleSignIn();
+    
+    // Renderizar el botón de Google
+    if (typeof (window as any).google !== 'undefined' && (window as any).google.accounts) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        // Obtener el ancho del contenedor en píxeles
+        const containerWidth = element.offsetWidth || 400;
+        
+        (window as any).google.accounts.id.renderButton(element, {
+          theme: 'outline',
+          size: 'large',
+          width: containerWidth, // Usar número en lugar de porcentaje
+          text: 'signin_with',
+          locale: 'es'
+        });
+      }
+    }
+  }
+
+  private handleGoogleSignIn(credential: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/google-signin`, { credential });
   }
 
   logout(): void {
@@ -69,11 +196,12 @@ export class AuthService {
 
   private storeAuth(response: LoginResponse): void {
     localStorage.setItem(this.tokenKey, response.token);
-    localStorage.setItem(this.userKey, JSON.stringify({
-      id: response.userId,
-      username: response.username,
-      roles: response.roles
-    }));
+      localStorage.setItem(this.userKey, JSON.stringify({
+        id: response.userId,
+        username: response.username,
+        email: response.email,
+        roles: response.roles
+      }));
   }
 
   private getStoredUser(): User | null {
@@ -91,5 +219,209 @@ export class AuthService {
       this.isAuthenticated.set(true);
     }
   }
+
+  register(credentials: RegisterRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/register`, credentials).pipe(
+      tap(response => {
+        this.storeAuth(response);
+        this.currentUser.set({
+          id: response.userId,
+          username: response.username,
+          email: response.email,
+          roles: response.roles
+        });
+        this.isAuthenticated.set(true);
+      })
+    );
+  }
+
+  handleGoogleCallback(token: string): void {
+    // Decodificar el token JWT para obtener la información del usuario
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const loginResponse: LoginResponse = {
+        token: token,
+        expiration: new Date(payload.exp * 1000).toISOString(),
+        userId: payload.sub || payload.nameid,
+        username: payload.name || payload.unique_name || '',
+        email: payload.email,
+        roles: Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : [],
+        profileCompleted: payload.profileCompleted || false
+      };
+
+      this.storeAuth(loginResponse);
+      this.currentUser.set({
+        id: loginResponse.userId,
+        username: loginResponse.username,
+        email: loginResponse.email,
+        roles: loginResponse.roles
+      });
+      this.isAuthenticated.set(true);
+    } catch (error) {
+      console.error('Error al procesar token de Google:', error);
+    }
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, request);
+  }
+
+  resetPassword(token: string, email: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, {
+      email,
+      token,
+      newPassword
+    });
+  }
+
+  completeProfile(profileData: { 
+    firstName: string; 
+    lastName: string; 
+    dni: string; 
+    phone: string;
+    paymentMethod?: {
+      cardHolderName: string;
+      cardNumber: string;
+      expiryMonth: number;
+      expiryYear: number;
+      isDefault?: boolean;
+    };
+    address?: {
+      label: string;
+      fullName: string;
+      phone: string;
+      address: string;
+      reference?: string;
+      district: string;
+      city: string;
+      region: string;
+      postalCode?: string;
+      latitude?: number;
+      longitude?: number;
+      isDefault?: boolean;
+    };
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/complete-profile`, profileData);
+  }
+
+  // Perfil de usuario
+  getProfile(): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${this.apiUrl}/profile`);
+  }
+
+  updateProfile(profileData: { firstName: string; lastName: string; phone: string }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/profile`, profileData);
+  }
+
+  // Métodos de pago
+  getPaymentMethods(): Observable<PaymentMethod[]> {
+    return this.http.get<PaymentMethod[]>(`${this.apiUrl}/payment-methods`);
+  }
+
+  addPaymentMethod(paymentMethod: {
+    cardHolderName: string;
+    cardNumber: string;
+    expiryMonth: number;
+    expiryYear: number;
+    isDefault?: boolean;
+  }): Observable<PaymentMethod> {
+    return this.http.post<PaymentMethod>(`${this.apiUrl}/payment-methods`, paymentMethod);
+  }
+
+  updatePaymentMethod(id: string, paymentMethod: {
+    cardHolderName: string;
+    expiryMonth: number;
+    expiryYear: number;
+    isDefault: boolean;
+  }): Observable<PaymentMethod> {
+    return this.http.put<PaymentMethod>(`${this.apiUrl}/payment-methods/${id}`, paymentMethod);
+  }
+
+  deletePaymentMethod(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/payment-methods/${id}`);
+  }
+
+  // Direcciones de envío
+  getAddresses(): Observable<UserAddress[]> {
+    return this.http.get<UserAddress[]>(`${this.apiUrl}/addresses`);
+  }
+
+  addAddress(address: {
+    label: string;
+    fullName: string;
+    phone: string;
+    address: string;
+    reference?: string;
+    district: string;
+    city: string;
+    region: string;
+    postalCode?: string;
+    latitude?: number;
+    longitude?: number;
+    isDefault?: boolean;
+  }): Observable<UserAddress> {
+    return this.http.post<UserAddress>(`${this.apiUrl}/addresses`, address);
+  }
+
+  updateAddress(id: string, address: {
+    label: string;
+    fullName: string;
+    phone: string;
+    address: string;
+    reference?: string;
+    district: string;
+    city: string;
+    region: string;
+    postalCode?: string;
+    latitude?: number;
+    longitude?: number;
+    isDefault: boolean;
+  }): Observable<UserAddress> {
+    return this.http.put<UserAddress>(`${this.apiUrl}/addresses/${id}`, address);
+  }
+
+  deleteAddress(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/addresses/${id}`);
+  }
+}
+
+export interface PaymentMethod {
+  id: string;
+  cardHolderName: string;
+  cardNumberMasked: string;
+  cardType: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isDefault: boolean;
+  last4Digits?: string;
+}
+
+export interface UserProfile {
+  firstName?: string;
+  lastName?: string;
+  dni?: string;
+  phone?: string;
+  email?: string;
+  profileCompleted?: boolean;
+}
+
+export interface UserAddress {
+  id: string;
+  label: string;
+  isDifferentRecipient: boolean;
+  fullName: string;
+  firstName?: string;
+  lastName?: string;
+  dni?: string;
+  phone: string;
+  address: string;
+  reference?: string;
+  district: string;
+  city: string;
+  region: string;
+  postalCode?: string;
+  latitude?: number;
+  longitude?: number;
+  isDefault: boolean;
 }
 

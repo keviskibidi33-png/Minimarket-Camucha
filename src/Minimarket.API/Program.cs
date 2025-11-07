@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -32,11 +33,43 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 // Add services to the container
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Deshabilitar negociación de contenido estricta para evitar errores 406
+        options.ReturnHttpNotAcceptable = false;
+    })
+    .AddJsonOptions(options =>
+    {
+        // Configurar serialización JSON con buenas prácticas
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
+        // NO ignorar nulls para asegurar que los datos se serialicen correctamente
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         // Configuraciones de API behavior (MaxModelBindingCollectionSize fue removido en .NET 9.0)
         // El límite de tamaño de colección se maneja ahora a través de RequestFormLimits
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors.Select(e => new
+                {
+                    Field = x.Key,
+                    Message = e.ErrorMessage
+                }))
+                .ToList();
+
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
+            {
+                succeeded = false,
+                message = "Error de validación",
+                errors = errors
+            });
+        };
     });
 
 // Static files (para servir imágenes)
@@ -101,13 +134,27 @@ builder.Services.AddIdentity<IdentityUser<Guid>, IdentityRole<Guid>>(options =>
 
     // User settings
     options.User.RequireUniqueEmail = true;
+
+    // Token provider settings - Configurar expiración de tokens a 15 minutos
+    options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
 })
 .AddEntityFrameworkStores<MinimarketDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddErrorDescriber<Minimarket.Infrastructure.Identity.SpanishIdentityErrorDescriber>();
+
+// Configurar expiración del token de recuperación de contraseña a 15 minutos
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(15);
+});
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
+
+var googleOAuth = builder.Configuration.GetSection("GoogleOAuth");
+var googleClientId = googleOAuth["ClientId"];
+var googleClientSecret = googleOAuth["ClientSecret"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -126,6 +173,15 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
     };
+})
+.AddGoogle(options =>
+{
+    if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.CallbackPath = "/api/auth/google-callback";
+    }
 });
 
 // CORS
@@ -163,6 +219,9 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Global Exception Handler Middleware - debe ir al inicio del pipeline
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+// Response Logging Middleware - para diagnosticar problemas de respuestas
+app.UseMiddleware<ResponseLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 

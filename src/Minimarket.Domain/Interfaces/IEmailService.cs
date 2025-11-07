@@ -6,5 +6,7 @@ public interface IEmailService
     Task<bool> SendSaleReceiptAsync(string toEmail, string customerName, string saleNumber, string pdfPath, string documentType);
     Task<bool> SendOrderConfirmationAsync(string toEmail, string customerName, string orderNumber, decimal total, string shippingMethod, DateTime? estimatedDelivery);
     Task<bool> SendOrderStatusUpdateAsync(string toEmail, string customerName, string orderNumber, string status, string? trackingUrl = null);
+    Task<bool> SendWelcomeEmailAsync(string toEmail, string customerName, string username);
+    Task<bool> SendPasswordResetEmailAsync(string toEmail, string customerName, string resetUrl);
 }
 

@@ -115,6 +115,83 @@
               </div>
             </section>
 
+            <!-- Recipient Information (solo para delivery) -->
+            @if (shippingMethod() === 'delivery') {
+              <section class="animate-fade-in">
+                <h2 class="text-[#0d141c] dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Información del Destinatario</h2>
+                
+                <div class="mb-4">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox"
+                      [ngModel]="isDifferentRecipient()"
+                      (ngModelChange)="isDifferentRecipient.set($event); onRecipientChange()"
+                      name="isDifferentRecipient"
+                      class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                    <span class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">Recibe otra persona</span>
+                  </label>
+                </div>
+
+                @if (!isDifferentRecipient()) {
+                  <!-- Información del usuario mismo (ya está en la sección de contacto) -->
+                  <div class="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                      El pedido será entregado a: <strong>{{ firstName() }} {{ lastName() }}</strong>
+                    </p>
+                  </div>
+                } @else {
+                  <!-- Campos para otra persona -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">Nombre del Destinatario <span class="text-red-500">*</span></p>
+                      <input 
+                        type="text"
+                        [ngModel]="recipientFirstName()"
+                        (ngModelChange)="recipientFirstName.set($event); onFieldChange()"
+                        name="recipientFirstName"
+                        required
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="Juan"/>
+                    </label>
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">Apellido del Destinatario <span class="text-red-500">*</span></p>
+                      <input 
+                        type="text"
+                        [ngModel]="recipientLastName()"
+                        (ngModelChange)="recipientLastName.set($event); onFieldChange()"
+                        name="recipientLastName"
+                        required
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="Pérez"/>
+                    </label>
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">DNI del Destinatario <span class="text-red-500">*</span></p>
+                      <input 
+                        type="text"
+                        [ngModel]="recipientDni()"
+                        (ngModelChange)="recipientDni.set($event); onFieldChange()"
+                        name="recipientDni"
+                        maxlength="8"
+                        required
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="12345678"/>
+                    </label>
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">Teléfono del Destinatario <span class="text-red-500">*</span></p>
+                      <input 
+                        type="tel"
+                        [ngModel]="recipientPhone()"
+                        (ngModelChange)="recipientPhone.set($event); onFieldChange()"
+                        name="recipientPhone"
+                        required
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="987654321"/>
+                    </label>
+                  </div>
+                }
+              </section>
+            }
+
             <!-- Shipping Address Form (solo para delivery) -->
             @if (shippingMethod() === 'delivery') {
               <section class="animate-fade-in">

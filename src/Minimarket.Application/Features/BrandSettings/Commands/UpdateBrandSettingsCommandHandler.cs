@@ -38,6 +38,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
                 Phone = request.BrandSettings.Phone,
                 Email = request.BrandSettings.Email,
                 Address = request.BrandSettings.Address,
+                Ruc = request.BrandSettings.Ruc,
                 UpdatedBy = request.UpdatedBy
             };
 
@@ -59,6 +60,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             brandSettings.Phone = request.BrandSettings.Phone;
             brandSettings.Email = request.BrandSettings.Email;
             brandSettings.Address = request.BrandSettings.Address;
+            brandSettings.Ruc = request.BrandSettings.Ruc;
             brandSettings.UpdatedBy = request.UpdatedBy;
 
             await _unitOfWork.BrandSettings.UpdateAsync(brandSettings, cancellationToken);
@@ -82,6 +84,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             Phone = brandSettings.Phone,
             Email = brandSettings.Email,
             Address = brandSettings.Address,
+            Ruc = brandSettings.Ruc,
             CreatedAt = brandSettings.CreatedAt,
             UpdatedAt = brandSettings.UpdatedAt
         };

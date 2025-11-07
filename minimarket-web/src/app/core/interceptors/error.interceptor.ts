@@ -30,6 +30,8 @@ export class ErrorInterceptor implements HttpInterceptor {
       this.handleValidationError(error);
     } else if (error.status === 401) {
       this.handleUnauthorizedError(req);
+    } else if (error.status === 403) {
+      this.toastr.error(error.error?.message || 'No tienes permiso para acceder a este recurso', 'Acceso Denegado');
     } else if (error.status === 404) {
       this.toastr.error(error.error?.message || 'Recurso no encontrado', 'Error');
     } else if (error.status === 422) {

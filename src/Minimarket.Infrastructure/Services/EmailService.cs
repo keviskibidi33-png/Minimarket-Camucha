@@ -250,6 +250,145 @@ public class EmailService : IEmailService
         return await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
     }
 
+    public async Task<bool> SendWelcomeEmailAsync(string toEmail, string customerName, string username)
+    {
+        var subject = "¡Bienvenido a Minimarket Camucha!";
+        
+        // Cargar imágenes desde el sistema de archivos e incrustarlas
+        var wwwrootPath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", "email-templates");
+        var logoPath = Path.Combine(wwwrootPath, "logo.png");
+        var promotionPath = Path.Combine(wwwrootPath, "promotion.png");
+        
+        // Usar Content-ID para incrustar imágenes
+        var logoCid = "logo@minimarket";
+        var promotionCid = "promotion@minimarket";
+        
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;'>
+                <div style='max-width: 600px; margin: 0 auto; background-color: white;'>
+                    <!-- Logo -->
+                    <div style='text-align: center; padding: 30px 20px 20px 20px; background-color: white;'>
+                        <img src='cid:{logoCid}' alt='Minimarket Camucha' style='max-width: 200px; height: auto;'>
+                    </div>
+                    
+                    <!-- Título -->
+                    <div style='text-align: center; padding: 20px; background-color: white;'>
+                        <h1 style='margin: 0; font-size: 28px; color: #333; font-weight: bold;'>¡Bienvenido a Minimarket Camucha!</h1>
+                    </div>
+                    
+                    <!-- Cuerpo -->
+                    <div style='padding: 30px; background-color: white;'>
+                        <p style='font-size: 16px; margin-bottom: 20px; color: #333;'>Estimado/a <strong>{customerName}</strong>,</p>
+                        
+                        <p style='font-size: 16px; margin-bottom: 20px; color: #333;'>
+                            ¡Gracias por registrarte en Minimarket Camucha! Estamos emocionados de tenerte como parte de nuestra comunidad.
+                        </p>
+                        
+                        <!-- Detalles de la Cuenta -->
+                        <div style='background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;'>
+                            <h3 style='margin-top: 0; margin-bottom: 15px; color: #333; font-size: 18px;'>Detalles de tu Cuenta</h3>
+                            <p style='margin: 10px 0; font-size: 15px; color: #666;'><strong style='color: #333;'>Usuario:</strong> {username}</p>
+                            <p style='margin: 10px 0; font-size: 15px; color: #666;'><strong style='color: #333;'>Correo:</strong> {toEmail}</p>
+                        </div>
+                        
+                        <p style='font-size: 16px; margin-top: 30px; color: #333;'>
+                            Ahora puedes explorar nuestros productos, realizar pedidos y disfrutar de nuestras ofertas especiales.
+                        </p>
+                        
+                        <p style='font-size: 16px; margin-top: 20px; color: #333;'>
+                            Si tienes alguna pregunta, no dudes en contactarnos. ¡Estamos aquí para ayudarte!
+                        </p>
+                    </div>
+                    
+                    <!-- Imagen de Promoción -->
+                    <div style='text-align: center; padding: 20px; background-color: white;'>
+                        <img src='cid:{promotionCid}' alt='Promoción Minimarket Camucha' style='max-width: 100%; height: auto; border-radius: 8px;'>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style='background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;'>
+                        <p style='margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;'>Minimarket Camucha</p>
+                        <p style='margin: 5px 0; font-size: 12px; color: #999;'>Este es un correo automático, por favor no responder.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+        return await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
+    }
+
+    public async Task<bool> SendPasswordResetEmailAsync(string toEmail, string customerName, string resetUrl)
+    {
+        var subject = "Recuperación de Contraseña - Minimarket Camucha";
+        
+        // Cargar imágenes desde el sistema de archivos e incrustarlas
+        var wwwrootPath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", "email-templates");
+        var logoPath = Path.Combine(wwwrootPath, "logo.png");
+        var promotionPath = Path.Combine(wwwrootPath, "promotion.png");
+        
+        // Usar Content-ID para incrustar imágenes
+        var logoCid = "logo@minimarket";
+        var promotionCid = "promotion@minimarket";
+        
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;'>
+                <div style='max-width: 600px; margin: 0 auto; background-color: white;'>
+                    <!-- Logo -->
+                    <div style='text-align: center; padding: 30px 20px 20px 20px; background-color: white;'>
+                        <img src='cid:{logoCid}' alt='Minimarket Camucha' style='max-width: 200px; height: auto;'>
+                    </div>
+                    
+                    <!-- Título -->
+                    <div style='text-align: center; padding: 20px; background-color: white;'>
+                        <h1 style='margin: 0; font-size: 28px; color: #333; font-weight: bold;'>Recuperación de Contraseña</h1>
+                    </div>
+                    
+                    <!-- Cuerpo -->
+                    <div style='padding: 30px; background-color: white;'>
+                        <p style='font-size: 16px; margin-bottom: 20px; color: #333;'>Estimado/a <strong>{customerName}</strong>,</p>
+                        
+                        <p style='font-size: 16px; margin-bottom: 20px; color: #333;'>
+                            Has solicitado recuperar tu contraseña. Haz clic en el siguiente botón para restablecerla:
+                        </p>
+                        
+                        <!-- Botón de Restablecimiento -->
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{resetUrl}' style='background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;'>
+                                Restablecer Contraseña
+                            </a>
+                        </div>
+                        
+                        <p style='font-size: 14px; margin-top: 30px; color: #666;'>
+                            Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:
+                        </p>
+                        <p style='font-size: 12px; word-break: break-all; color: #2563eb; margin: 10px 0;'>
+                            {resetUrl}
+                        </p>
+                        
+                        <p style='font-size: 14px; margin-top: 30px; color: #666;'>
+                            <strong>Importante:</strong> Este enlace expirará en 15 minutos. Si no solicitaste este cambio, puedes ignorar este correo de forma segura.
+                        </p>
+                    </div>
+                    
+                    <!-- Imagen de Promoción -->
+                    <div style='text-align: center; padding: 20px; background-color: white;'>
+                        <img src='cid:{promotionCid}' alt='Promoción Minimarket Camucha' style='max-width: 100%; height: auto; border-radius: 8px;'>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style='background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;'>
+                        <p style='margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;'>Minimarket Camucha</p>
+                        <p style='margin: 5px 0; font-size: 12px; color: #999;'>Este es un correo automático, por favor no responder.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+        return await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
+    }
+
     private async Task<bool> SendEmailWithEmbeddedImagesAsync(string to, string subject, string body, string? logoPath, string logoCid, string? promotionPath, string promotionCid)
     {
         try

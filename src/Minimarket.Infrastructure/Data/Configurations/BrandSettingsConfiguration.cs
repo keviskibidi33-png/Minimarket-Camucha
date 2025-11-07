@@ -58,6 +58,9 @@ public class BrandSettingsConfiguration : IEntityTypeConfiguration<BrandSettings
         builder.Property(b => b.Address)
             .HasMaxLength(500);
 
+        builder.Property(b => b.Ruc)
+            .HasMaxLength(20);
+
         // Solo debe haber un registro de BrandSettings
         builder.HasIndex(b => b.Id)
             .IsUnique();

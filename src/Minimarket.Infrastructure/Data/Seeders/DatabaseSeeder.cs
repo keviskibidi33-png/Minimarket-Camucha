@@ -18,11 +18,12 @@ public static class DatabaseSeeder
         await SeedShippingRatesAsync(context);
         await SeedModulesAsync(context);
         await SeedBrandSettingsAsync(context);
+        await SeedPaymentMethodSettingsAsync(context);
     }
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager)
     {
-        var roles = new[] { "Administrador", "Cajero", "Almacenero" };
+        var roles = new[] { "Administrador", "Cajero", "Almacenero", "Cliente" };
 
         foreach (var role in roles)
         {
@@ -422,6 +423,56 @@ public static class DatabaseSeeder
         };
 
         await context.BrandSettings.AddAsync(brandSettings);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedPaymentMethodSettingsAsync(MinimarketDbContext context)
+    {
+        // Solo crear si no existen registros
+        if (await context.PaymentMethodSettings.AnyAsync())
+            return;
+
+        var paymentMethods = new[]
+        {
+            new PaymentMethodSettings
+            {
+                PaymentMethodId = (int)PaymentMethod.Efectivo,
+                Name = "Efectivo",
+                IsEnabled = true,
+                RequiresCardDetails = false,
+                Description = "Pago en efectivo al momento de la entrega",
+                DisplayOrder = 1
+            },
+            new PaymentMethodSettings
+            {
+                PaymentMethodId = (int)PaymentMethod.Tarjeta,
+                Name = "Tarjeta",
+                IsEnabled = true,
+                RequiresCardDetails = true,
+                Description = "Pago con tarjeta de crédito o débito",
+                DisplayOrder = 2
+            },
+            new PaymentMethodSettings
+            {
+                PaymentMethodId = (int)PaymentMethod.YapePlin,
+                Name = "Yape/Plin",
+                IsEnabled = true,
+                RequiresCardDetails = false,
+                Description = "Pago mediante Yape o Plin",
+                DisplayOrder = 3
+            },
+            new PaymentMethodSettings
+            {
+                PaymentMethodId = (int)PaymentMethod.Transferencia,
+                Name = "Transferencia",
+                IsEnabled = true,
+                RequiresCardDetails = false,
+                Description = "Transferencia bancaria",
+                DisplayOrder = 4
+            }
+        };
+
+        await context.PaymentMethodSettings.AddRangeAsync(paymentMethods);
         await context.SaveChangesAsync();
     }
 }

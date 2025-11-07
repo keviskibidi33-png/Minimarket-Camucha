@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Auth.Commands;
 using Minimarket.Application.Features.Auth.DTOs;
+using Minimarket.Application.Features.Auth.Queries;
+using Minimarket.Domain.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,45 +18,74 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly UserManager<IdentityUser<Guid>> _userManager;
     private readonly SignInManager<IdentityUser<Guid>> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly IUnitOfWork _unitOfWork;
 
     public LoginCommandHandler(
         UserManager<IdentityUser<Guid>> userManager,
         SignInManager<IdentityUser<Guid>> signInManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user == null)
+        try
         {
-            return Result<LoginResponse>.Failure("Usuario o contraseña incorrectos");
+            // Intentar buscar por email primero, luego por username
+            var user = await _userManager.FindByEmailAsync(request.Username);
+            if (user == null)
+            {
+                user = await _userManager.FindByNameAsync(request.Username);
+            }
+            
+            if (user == null)
+            {
+                // Verificar si es un email válido para dar un mensaje más específico
+                var isEmail = request.Username.Contains("@");
+                var errorMessage = isEmail 
+                    ? "No existe una cuenta asociada a este correo electrónico" 
+                    : "No existe una cuenta con este usuario o correo";
+                return Result<LoginResponse>.Failure(errorMessage);
+            }
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+            if (!result.Succeeded)
+            {
+                return Result<LoginResponse>.Failure("La contraseña es incorrecta");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = GenerateJwtToken(user, roles);
+
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
+
+            // Verificar si el perfil está completo
+            var profile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
+                up => up.UserId == user.Id, cancellationToken);
+            var profileCompleted = profile?.ProfileCompleted ?? false;
+
+            return Result<LoginResponse>.Success(new LoginResponse
+            {
+                Token = token,
+                Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes),
+                UserId = user.Id.ToString(),
+                Username = user.UserName ?? string.Empty,
+                Email = user.Email,
+                Roles = roles,
+                ProfileCompleted = profileCompleted
+            });
         }
-
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!result.Succeeded)
+        catch (Exception ex)
         {
-            return Result<LoginResponse>.Failure("Usuario o contraseña incorrectos");
+            // Log de error para debugging
+            return Result<LoginResponse>.Failure("Ocurrió un error al procesar el inicio de sesión. Por favor, intente nuevamente.");
         }
-
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = GenerateJwtToken(user, roles);
-
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
-
-        return Result<LoginResponse>.Success(new LoginResponse
-        {
-            Token = token,
-            Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes),
-            UserId = user.Id.ToString(),
-            Username = user.UserName ?? string.Empty,
-            Roles = roles
-        });
     }
 
     private string GenerateJwtToken(IdentityUser<Guid> user, IList<string> roles)

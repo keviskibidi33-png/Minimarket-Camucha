@@ -44,10 +44,56 @@ export const routes: Routes = [
     path: 'checkout/exito',
     loadComponent: () => import('./features/store/checkout/success/success.component').then(m => m.SuccessComponent)
   },
-  // Rutas de ADMIN (protegidas)
+  // Rutas de AUTENTICACIÓN (públicas)
+  {
+    path: 'auth/login',
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'auth/register',
+    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
+  },
+  {
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'auth/success-reset-password',
+    loadComponent: () => import('./features/auth/success-reset-password/success-reset-password.component').then(m => m.SuccessResetPasswordComponent)
+  },
+  {
+    path: 'auth/complete-profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/complete-profile/complete-profile.component').then(m => m.CompleteProfileComponent)
+  },
+  // Rutas LEGALES (públicas)
+  {
+    path: 'legal/terms',
+    loadComponent: () => import('./features/legal/terms/terms.component').then(m => m.TermsComponent)
+  },
+  {
+    path: 'legal/privacy',
+    loadComponent: () => import('./features/legal/privacy/privacy.component').then(m => m.PrivacyComponent)
+  },
+  {
+    path: 'legal/additional-purposes',
+    loadComponent: () => import('./features/legal/additional-purposes/additional-purposes.component').then(m => m.AdditionalPurposesComponent)
+  },
+  // Ruta legacy para login (redirigir a /auth/login)
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+    redirectTo: '/auth/login',
+    pathMatch: 'full'
+  },
+  // Ruta de PERFIL DE USUARIO (protegida)
+  {
+    path: 'perfil',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/store/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
     path: 'pos',

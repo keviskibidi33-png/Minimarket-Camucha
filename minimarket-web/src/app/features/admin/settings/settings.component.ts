@@ -6,6 +6,7 @@ import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../
 import { CategoriesService } from '../../../core/services/categories.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
 import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
+import { PaymentMethodSettingsService, PaymentMethodSetting, UpdatePaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
@@ -19,7 +20,7 @@ export class SettingsComponent implements OnInit {
   settings = signal<SystemSettings[]>([]);
   categories = signal<any[]>([]);
   isLoading = signal(false);
-  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories'>('cart');
+  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'>('cart');
   
   // Configuraciones del carrito
   applyIgvToCart = signal(false);
@@ -58,6 +59,10 @@ export class SettingsComponent implements OnInit {
   emailLogoUrl = signal('');
   emailPromotionImageUrl = signal('');
   
+  // Configuraciones de métodos de pago
+  paymentMethodSettings = signal<PaymentMethodSetting[]>([]);
+  isLoadingPaymentMethods = signal(false);
+  
   // Computed para obtener el nombre de la categoría seleccionada
   selectedCategoryName = computed(() => {
     const categoryId = this.selectedCategory();
@@ -71,6 +76,7 @@ export class SettingsComponent implements OnInit {
     private categoriesService: CategoriesService,
     private shippingService: ShippingService,
     private emailTemplatesService: EmailTemplatesService,
+    private paymentMethodSettingsService: PaymentMethodSettingsService,
     private toastService: ToastService
   ) {}
 
@@ -79,6 +85,7 @@ export class SettingsComponent implements OnInit {
     this.loadCategories();
     this.loadShippingRates();
     this.loadEmailTemplateSettings();
+    this.loadPaymentMethodSettings();
   }
 
   loadSettings(): void {
@@ -262,7 +269,7 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories'): void {
+  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'): void {
     this.activeTab.set(tab);
   }
   
@@ -489,6 +496,46 @@ export class SettingsComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Métodos de pago
+  loadPaymentMethodSettings(): void {
+    this.isLoadingPaymentMethods.set(true);
+    this.paymentMethodSettingsService.getAll().subscribe({
+      next: (settings) => {
+        this.paymentMethodSettings.set(settings);
+        this.isLoadingPaymentMethods.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading payment method settings:', error);
+        this.toastService.error('Error al cargar métodos de pago');
+        this.isLoadingPaymentMethods.set(false);
+      }
+    });
+  }
+
+  togglePaymentMethod(setting: PaymentMethodSetting): void {
+    const update: UpdatePaymentMethodSetting = {
+      isEnabled: !setting.isEnabled,
+      displayOrder: setting.displayOrder,
+      description: setting.description
+    };
+
+    this.paymentMethodSettingsService.update(setting.id, update).subscribe({
+      next: (updated) => {
+        const settings = this.paymentMethodSettings();
+        const index = settings.findIndex(s => s.id === setting.id);
+        if (index !== -1) {
+          settings[index] = updated;
+          this.paymentMethodSettings.set([...settings]);
+        }
+        this.toastService.success(`Método de pago ${updated.isEnabled ? 'habilitado' : 'deshabilitado'} correctamente`);
+      },
+      error: (error) => {
+        console.error('Error updating payment method setting:', error);
+        this.toastService.error('Error al actualizar método de pago');
+      }
+    });
   }
 
   // Helper methods for template

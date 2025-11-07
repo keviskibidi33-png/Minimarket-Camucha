@@ -40,6 +40,7 @@ public class GetBrandSettingsQueryHandler : IRequestHandler<GetBrandSettingsQuer
             Phone = brandSettings.Phone,
             Email = brandSettings.Email,
             Address = brandSettings.Address,
+            Ruc = brandSettings.Ruc,
             CreatedAt = brandSettings.CreatedAt,
             UpdatedAt = brandSettings.UpdatedAt
         };

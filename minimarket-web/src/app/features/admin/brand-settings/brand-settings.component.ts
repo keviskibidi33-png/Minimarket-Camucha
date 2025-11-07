@@ -32,6 +32,7 @@ export class BrandSettingsComponent implements OnInit {
   phone = signal('');
   email = signal('');
   address = signal('');
+  ruc = signal('');
 
   // Preview
   previewLogoUrl = signal('');
@@ -65,6 +66,7 @@ export class BrandSettingsComponent implements OnInit {
           this.phone.set(settings.phone || '');
           this.email.set(settings.email || '');
           this.address.set(settings.address || '');
+          this.ruc.set(settings.ruc || '');
 
           this.previewLogoUrl.set(settings.logoUrl);
           this.previewFaviconUrl.set(settings.faviconUrl || '');
@@ -147,7 +149,8 @@ export class BrandSettingsComponent implements OnInit {
       slogan: this.slogan() || undefined,
       phone: this.phone() || undefined,
       email: this.email() || undefined,
-      address: this.address() || undefined
+      address: this.address() || undefined,
+      ruc: this.ruc() || undefined
     };
 
     this.brandSettingsService.update(updateData).subscribe({

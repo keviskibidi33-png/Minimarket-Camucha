@@ -19,6 +19,7 @@ export interface BrandSettings {
   phone?: string;
   email?: string;
   address?: string;
+  ruc?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -37,6 +38,7 @@ export interface UpdateBrandSettings {
   phone?: string;
   email?: string;
   address?: string;
+  ruc?: string;
 }
 
 @Injectable({

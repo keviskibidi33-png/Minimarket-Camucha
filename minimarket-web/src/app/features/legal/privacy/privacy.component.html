@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-background-light dark:bg-background-dark py-8">
+  <div class="container mx-auto px-4 max-w-4xl">
+    <div class="bg-card-light dark:bg-card-dark rounded-lg shadow-lg p-8">
+      <h1 class="text-3xl font-bold text-text-light dark:text-text-dark mb-6">Política de Privacidad</h1>
+      
+      <div class="prose prose-lg dark:prose-invert max-w-none text-text-light dark:text-text-dark space-y-4">
+        <p>
+          Por medio del presente documento <strong>{{ companyName }}</strong> ("la Empresa"), con
+          RUC N° <strong>{{ companyRuc }}</strong>, domiciliada para estos efectos en
+          <strong>{{ companyAddress }}</strong> pone a disposición de sus usuarios, prospectos
+          (potenciales clientes) y clientes su Política de Privacidad mediante la cual se le informa el
+          tratamiento de los datos que se recopilan a través de los formularios contenidos en el sitio web.
+        </p>
+
+        <p>
+          Los Datos Personales que serán objeto de tratamiento por parte de {{ companyName }} serán
+          almacenados en el banco de datos de titularidad de {{ companyName }} inscrito en el Registro
+          Nacional de Protección de Datos Personales bajo la denominación "Clientes". {{ companyName }}
+          declara que cualquier tratamiento de los Datos Personales se ajusta en las normativas de protección
+          de datos personales vigentes y aplicables dentro del territorio peruano.
+        </p>
+
+        <h2 class="text-2xl font-bold mt-6 mb-4">INFORMACIÓN SOBRE EL TRATAMIENTO OBLIGATORIO DE DATOS PERSONALES:</h2>
+
+        <p>
+          {{ companyName }} informa al cliente que, para la prestación de los servicios y/o ejecución de las
+          disposiciones establecidas en los Términos y Condiciones aceptados, realizará el tratamiento de
+          su nombre, apellidos, N° de documento de identidad, Carnet de extranjería, dirección, correo
+          electrónico, contraseña y/o teléfono mientras dure la relación contractual. Este tratamiento será
+          realizado por {{ companyName }} de forma directa y/o a través de sus proveedores, así como otras
+          empresas encargadas del procesamiento y almacenamiento de datos, las cuales se detallan en el
+          ANEXO 1.
+        </p>
+
+        <p>
+          {{ companyName }} cumple con informarle al cliente que la información mencionada en el párrafo
+          precedente es necesaria para el cumplimiento de las obligaciones a su cargo, las mismas que de
+          otra forma no podrían ejecutarse. Entre los servicios y/o disposiciones mencionados se encuentran:
+          i) la creación y gestión de cuenta de usuario, ii) brindarle al cliente el producto solicitado,
+          la coordinación, entrega de productos y realizar las atención de solicitudes de post-venta a través
+          de medios electrónicos (medición de satisfacción, registro de vales/cupones), y, iii) la atención
+          de solicitudes y reclamos.
+        </p>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-border-light dark:border-border-dark">
+        <a routerLink="/auth/register" class="text-primary hover:text-primary/80 underline">
+          ← Volver al registro
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+

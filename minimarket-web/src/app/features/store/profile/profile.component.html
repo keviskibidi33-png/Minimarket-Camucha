@@ -1,0 +1,708 @@
+<div class="relative flex min-h-screen w-full flex-col">
+  <!-- Header -->
+  <app-store-header></app-store-header>
+
+  <!-- Main Content -->
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-10 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- SideNavBar -->
+      <aside class="w-full lg:w-64 flex-shrink-0">
+        <div class="sticky top-28 flex h-full flex-col justify-between bg-white dark:bg-background-dark rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col gap-4">
+            <!-- User Info -->
+            <div class="flex gap-3 items-center">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-base font-bold">
+                {{ (currentUser()?.username?.charAt(0) || 'U').toUpperCase() }}
+              </div>
+              <div class="flex flex-col">
+                <h1 class="text-base font-semibold text-text-light dark:text-text-dark">{{ currentUser()?.username || 'Usuario' }}</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-normal">{{ currentUser()?.email || currentUser()?.id || '' }}</p>
+              </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="flex flex-col gap-1 mt-4">
+              <button type="button" (click)="setActiveSection('dashboard')" [class]="getButtonClasses('dashboard')">
+                <span class="material-symbols-outlined" [class.fill]="activeSection() === 'dashboard'">dashboard</span>
+                <p class="text-sm font-medium">Dashboard / Resumen</p>
+              </button>
+              <button type="button" (click)="setActiveSection('personal')" [class]="getButtonClasses('personal')">
+                <span class="material-symbols-outlined">person</span>
+                <p class="text-sm font-medium">Mis Datos Personales</p>
+              </button>
+              <button type="button" (click)="setActiveSection('orders')" [class]="getButtonClasses('orders')">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <p class="text-sm font-medium">Historial de Pedidos</p>
+              </button>
+              <button type="button" (click)="setActiveSection('addresses')" [class]="getButtonClasses('addresses')">
+                <span class="material-symbols-outlined">map</span>
+                <p class="text-sm font-medium">Direcciones de Envío</p>
+              </button>
+              <button type="button" (click)="setActiveSection('payment')" [class]="getButtonClasses('payment')">
+                <span class="material-symbols-outlined">credit_card</span>
+                <p class="text-sm font-medium">Métodos de Pago</p>
+              </button>
+              <button type="button" (click)="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors mt-4">
+                <span class="material-symbols-outlined text-red-500">logout</span>
+                <p class="text-sm font-medium text-red-500">Cerrar Sesión</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="flex-1 flex flex-col gap-8">
+        <!-- Dashboard Section -->
+        @if (activeSection() === 'dashboard') {
+          <!-- Page Heading -->
+          <div>
+            <p class="text-4xl font-black tracking-tight text-text-light dark:text-text-dark">Hola, {{ currentUser()?.username || 'Usuario' }}</p>
+            <p class="text-gray-500 dark:text-gray-400 text-base font-normal mt-2">Bienvenido a tu panel de control.</p>
+          </div>
+
+          <!-- Section: Resumen -->
+          <div class="flex flex-col gap-6">
+            <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Resumen de tu cuenta</h2>
+            
+            <!-- Cards grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Card: Pedido Reciente -->
+              @if (recentOrder()) {
+                <div class="bg-white dark:bg-background-dark p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between gap-4">
+                  <div class="flex flex-col gap-2">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pedido Reciente: {{ recentOrder()!.orderNumber }}</p>
+                    <p class="text-lg font-bold text-text-light dark:text-text-dark">{{ getOrderStatusText(recentOrder()!.status) }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tu pedido está siendo procesado.</p>
+                  </div>
+                  <button (click)="viewOrderDetails(recentOrder()!.id)" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-primary text-white text-sm font-medium w-fit hover:bg-primary/90 transition-colors">
+                    <span>Ver Detalles del Pedido</span>
+                  </button>
+                </div>
+              } @else {
+                <div class="bg-white dark:bg-background-dark p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-center items-center gap-4">
+                  <span class="material-symbols-outlined text-4xl text-gray-400">receipt_long</span>
+                  <div class="flex flex-col gap-1 text-center">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sin pedidos hoy</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500">No tienes pedidos recientes</p>
+                  </div>
+                </div>
+              }
+
+              <!-- Card: Información Personal -->
+              <div class="bg-white dark:bg-background-dark p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between gap-4">
+                <div class="flex flex-col gap-2">
+                  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Información Personal</p>
+                  <p class="text-lg font-bold text-text-light dark:text-text-dark">{{ currentUser()?.username || 'Usuario' }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ currentUser()?.email || currentUser()?.id || '' }}</p>
+                </div>
+                <button (click)="setActiveSection('personal')" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-gray-100 dark:bg-gray-800 text-text-light dark:text-text-dark text-sm font-medium w-fit border border-gray-200 dark:border-gray-700 hover:bg-primary/10 transition-colors">
+                  <span>Editar Datos</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Historial de Pedidos Recientes -->
+          <div class="flex flex-col gap-6">
+            <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Historial de Pedidos Recientes</h2>
+            @if (isLoading()) {
+              <div class="flex items-center justify-center p-8">
+                <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+              </div>
+            } @else if (orders().length === 0) {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">receipt_long</span>
+                <p class="text-gray-500 dark:text-gray-400">No tienes pedidos aún</p>
+                <a routerLink="/tienda/productos" class="text-primary hover:underline mt-2 inline-block">Ir a comprar</a>
+              </div>
+            } @else {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th class="px-6 py-3" scope="col">ID Pedido</th>
+                      <th class="px-6 py-3" scope="col">Fecha</th>
+                      <th class="px-6 py-3" scope="col">Estado</th>
+                      <th class="px-6 py-3 text-right" scope="col">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (order of orders(); track order.id) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-primary/5 cursor-pointer" (click)="viewOrderDetails(order.id)">
+                        <th class="px-6 py-4 font-medium whitespace-nowrap text-text-light dark:text-text-dark" scope="row">{{ order.orderNumber }}</th>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ formatDate(order.createdAt) }}</td>
+                        <td class="px-6 py-4">
+                          <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full {{ getOrderStatusClass(order.status) }}">
+                            {{ getOrderStatusText(order.status) }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-semibold text-text-light dark:text-text-dark">{{ formatPrice(order.total) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Orders Section -->
+        @if (activeSection() === 'orders') {
+          <div data-section="orders" class="flex flex-col gap-6">
+            <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Historial de Pedidos</h2>
+            @if (isLoading()) {
+              <div class="flex items-center justify-center p-8">
+                <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+              </div>
+            } @else if (orders().length === 0) {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">receipt_long</span>
+                <p class="text-gray-500 dark:text-gray-400">No tienes pedidos aún</p>
+                <a routerLink="/tienda/productos" class="text-primary hover:underline mt-2 inline-block">Ir a comprar</a>
+              </div>
+            } @else {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th class="px-6 py-3" scope="col">ID Pedido</th>
+                      <th class="px-6 py-3" scope="col">Fecha</th>
+                      <th class="px-6 py-3" scope="col">Estado</th>
+                      <th class="px-6 py-3 text-right" scope="col">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (order of orders(); track order.id) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-primary/5 cursor-pointer" (click)="viewOrderDetails(order.id)">
+                        <th class="px-6 py-4 font-medium whitespace-nowrap text-text-light dark:text-text-dark" scope="row">{{ order.orderNumber }}</th>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ formatDate(order.createdAt) }}</td>
+                        <td class="px-6 py-4">
+                          <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full {{ getOrderStatusClass(order.status) }}">
+                            {{ getOrderStatusText(order.status) }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-semibold text-text-light dark:text-text-dark">{{ formatPrice(order.total) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <!-- Detalles del Pedido -->
+            @if (showOrderDetails()) {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                @if (isLoadingOrderDetails()) {
+                  <div class="flex items-center justify-center p-8">
+                    <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+                  </div>
+                } @else if (selectedOrder()) {
+                  <div class="flex flex-col gap-6">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
+                      <div>
+                        <h3 class="text-2xl font-bold text-text-light dark:text-text-dark">Detalles del Pedido</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pedido: {{ selectedOrder()!.orderNumber }}</p>
+                      </div>
+                      <button 
+                        (click)="closeOrderDetails()"
+                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-text-light dark:text-text-dark">close</span>
+                      </button>
+                    </div>
+
+                    <!-- Estado del Pedido -->
+                    <div class="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg p-4">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estado del Pedido</p>
+                          <span class="inline-flex items-center text-sm font-medium px-3 py-1 rounded-full {{ getOrderStatusClass(selectedOrder()!.status) }}">
+                            {{ getOrderStatusText(selectedOrder()!.status) }}
+                          </span>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Fecha</p>
+                          <p class="text-sm font-semibold text-text-light dark:text-text-dark">{{ formatDate(selectedOrder()!.createdAt) }}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Información del Cliente y Envío -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 class="text-lg font-semibold text-text-light dark:text-text-dark mb-2">Información del Cliente</h4>
+                        <div class="space-y-1 text-sm">
+                          <p><strong class="text-gray-700 dark:text-gray-300">Nombre:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.customerName }}</span></p>
+                          <p><strong class="text-gray-700 dark:text-gray-300">Email:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.customerEmail }}</span></p>
+                          @if (selectedOrder()!.customerPhone) {
+                            <p><strong class="text-gray-700 dark:text-gray-300">Teléfono:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.customerPhone }}</span></p>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Información de Envío -->
+                      <div>
+                        <h4 class="text-lg font-semibold text-text-light dark:text-text-dark mb-2">Información de Envío</h4>
+                        <div class="space-y-1 text-sm">
+                          <p><strong class="text-gray-700 dark:text-gray-300">Método:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.shippingMethod === 'delivery' ? 'Despacho a Domicilio' : 'Retiro en Tienda' }}</span></p>
+                          @if (selectedOrder()!.shippingMethod === 'delivery' && selectedOrder()!.shippingAddress) {
+                            <p><strong class="text-gray-700 dark:text-gray-300">Dirección:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.shippingAddress }}</span></p>
+                            @if (selectedOrder()!.shippingCity) {
+                              <p><strong class="text-gray-700 dark:text-gray-300">Ciudad:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.shippingCity }}</span></p>
+                            }
+                            @if (selectedOrder()!.shippingRegion) {
+                              <p><strong class="text-gray-700 dark:text-gray-300">Región:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.shippingRegion }}</span></p>
+                            }
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Información de Pago -->
+                      <div>
+                        <h4 class="text-lg font-semibold text-text-light dark:text-text-dark mb-2">Información de Pago</h4>
+                        <div class="space-y-1 text-sm">
+                          <p><strong class="text-gray-700 dark:text-gray-300">Método:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.paymentMethod }}</span></p>
+                          @if (selectedOrder()!.walletMethod) {
+                            <p><strong class="text-gray-700 dark:text-gray-300">Billetera:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.walletMethod }}</span></p>
+                          }
+                          @if (selectedOrder()!.requiresPaymentProof) {
+                            <p class="text-yellow-600 dark:text-yellow-400"><strong>⚠ Requiere comprobante de pago</strong></p>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Productos del Pedido -->
+                    <div>
+                      <h4 class="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Productos del Pedido</h4>
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                              <th class="px-4 py-3 text-left">Producto</th>
+                              <th class="px-4 py-3 text-center">Cantidad</th>
+                              <th class="px-4 py-3 text-right">Precio Unit.</th>
+                              <th class="px-4 py-3 text-right">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (item of selectedOrder()!.items; track item.productId) {
+                              <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="px-4 py-3 text-text-light dark:text-text-dark">{{ item.productName }}</td>
+                                <td class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">{{ item.quantity }}</td>
+                                <td class="px-4 py-3 text-right text-gray-500 dark:text-gray-400">{{ formatPrice(item.unitPrice) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-text-light dark:text-text-dark">{{ formatPrice(item.subtotal) }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <!-- Resumen de Totales -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <div class="flex flex-col gap-2 max-w-md ml-auto">
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-500 dark:text-gray-400">Subtotal:</span>
+                          <span class="text-text-light dark:text-text-dark">{{ formatPrice(selectedOrder()!.subtotal) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-500 dark:text-gray-400">Costo de Envío:</span>
+                          <span class="text-text-light dark:text-text-dark">{{ formatPrice(selectedOrder()!.shippingCost) }}</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                          <span class="text-text-light dark:text-text-dark">Total:</span>
+                          <span class="text-text-light dark:text-text-dark">{{ formatPrice(selectedOrder()!.total) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Personal Data Section -->
+        @if (activeSection() === 'personal') {
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Mis Datos Personales</h2>
+            </div>
+
+            @if (isLoadingProfile()) {
+              <div class="flex items-center justify-center p-8">
+                <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+              </div>
+            } @else {
+              <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Nombre</label>
+                    <input 
+                      type="text"
+                      formControlName="firstName"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched">
+                    @if (profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">El nombre es requerido</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Apellido</label>
+                    <input 
+                      type="text"
+                      formControlName="lastName"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched">
+                    @if (profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">El apellido es requerido</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">DNI</label>
+                    <input 
+                      type="text"
+                      formControlName="dni"
+                      maxlength="8"
+                      [disabled]="true"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-text-light dark:text-text-dark cursor-not-allowed">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">El DNI no se puede modificar</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Correo Electrónico</label>
+                    <input 
+                      type="email"
+                      formControlName="email"
+                      [disabled]="true"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-text-light dark:text-text-dark cursor-not-allowed">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">El correo electrónico no se puede modificar</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Teléfono</label>
+                    <input 
+                      type="tel"
+                      formControlName="phone"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched">
+                    @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">El teléfono es requerido</p>
+                    }
+                  </div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                  <button 
+                    type="submit"
+                    [disabled]="profileForm.invalid || isSavingProfile()"
+                    class="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (isSavingProfile()) {
+                      <span class="material-symbols-outlined animate-spin text-lg">refresh</span>
+                    }
+                    <span>Guardar Cambios</span>
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+        }
+
+        <!-- Addresses Section -->
+        @if (activeSection() === 'addresses') {
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Direcciones de Envío</h2>
+              @if (!showAddressForm()) {
+                <button 
+                  (click)="showAddAddressForm()"
+                  class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                  <span class="material-symbols-outlined text-lg">add</span>
+                  <span>Agregar Dirección</span>
+                </button>
+              }
+            </div>
+
+            @if (showAddressForm()) {
+              <form [formGroup]="addressForm" (ngSubmit)="saveAddress()" class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+                <h3 class="text-lg font-semibold text-text-light dark:text-text-dark">
+                  {{ isEditingAddress() ? 'Editar Dirección' : 'Agregar Dirección' }}
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Etiqueta <span class="text-red-500">*</span></label>
+                    <input 
+                      type="text"
+                      formControlName="label"
+                      placeholder="Casa, Trabajo, Oficina..."
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="addressForm.get('label')?.invalid && addressForm.get('label')?.touched">
+                    @if (addressForm.get('label')?.invalid && addressForm.get('label')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">La etiqueta es requerida</p>
+                    }
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="flex items-center gap-2 cursor-pointer mb-4">
+                      <input 
+                        type="checkbox"
+                        formControlName="isDifferentRecipient"
+                        (change)="onRecipientChange()"
+                        class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                      <span class="text-sm font-medium text-text-light dark:text-text-dark">Recibe otra persona</span>
+                    </label>
+                  </div>
+
+                  @if (!addressForm.get('isDifferentRecipient')?.value) {
+                    <!-- Campos para el usuario mismo -->
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Nombre Completo <span class="text-red-500">*</span></label>
+                      <input 
+                        type="text"
+                        formControlName="fullName"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('fullName')?.invalid && addressForm.get('fullName')?.touched">
+                      @if (addressForm.get('fullName')?.invalid && addressForm.get('fullName')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El nombre completo es requerido</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Teléfono <span class="text-red-500">*</span></label>
+                      <input 
+                        type="tel"
+                        formControlName="phone"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('phone')?.invalid && addressForm.get('phone')?.touched">
+                      @if (addressForm.get('phone')?.invalid && addressForm.get('phone')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El teléfono es requerido</p>
+                      }
+                    </div>
+                  } @else {
+                    <!-- Campos para otra persona -->
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Nombre <span class="text-red-500">*</span></label>
+                      <input 
+                        type="text"
+                        formControlName="firstName"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('firstName')?.invalid && addressForm.get('firstName')?.touched">
+                      @if (addressForm.get('firstName')?.invalid && addressForm.get('firstName')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El nombre es requerido</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Apellido <span class="text-red-500">*</span></label>
+                      <input 
+                        type="text"
+                        formControlName="lastName"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('lastName')?.invalid && addressForm.get('lastName')?.touched">
+                      @if (addressForm.get('lastName')?.invalid && addressForm.get('lastName')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El apellido es requerido</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">DNI <span class="text-red-500">*</span></label>
+                      <input 
+                        type="text"
+                        formControlName="dni"
+                        maxlength="8"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('dni')?.invalid && addressForm.get('dni')?.touched">
+                      @if (addressForm.get('dni')?.invalid && addressForm.get('dni')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El DNI es requerido (8 dígitos)</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Teléfono <span class="text-red-500">*</span></label>
+                      <input 
+                        type="tel"
+                        formControlName="phone"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                        [class.border-red-500]="addressForm.get('phone')?.invalid && addressForm.get('phone')?.touched">
+                      @if (addressForm.get('phone')?.invalid && addressForm.get('phone')?.touched) {
+                        <p class="text-sm text-red-500 mt-1">El teléfono es requerido</p>
+                      }
+                    </div>
+                  }
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Distrito <span class="text-red-500">*</span></label>
+                    <input 
+                      type="text"
+                      formControlName="district"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="addressForm.get('district')?.invalid && addressForm.get('district')?.touched">
+                    @if (addressForm.get('district')?.invalid && addressForm.get('district')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">El distrito es requerido</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Ciudad <span class="text-red-500">*</span></label>
+                    <input 
+                      type="text"
+                      formControlName="city"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+                    @if (addressForm.get('city')?.invalid && addressForm.get('city')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">La ciudad es requerida</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Región/Departamento <span class="text-red-500">*</span></label>
+                    <input 
+                      type="text"
+                      formControlName="region"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="addressForm.get('region')?.invalid && addressForm.get('region')?.touched">
+                    @if (addressForm.get('region')?.invalid && addressForm.get('region')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">La región es requerida</p>
+                    }
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Dirección Completa <span class="text-red-500">*</span></label>
+                    <textarea 
+                      formControlName="address"
+                      rows="3"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      [class.border-red-500]="addressForm.get('address')?.invalid && addressForm.get('address')?.touched"></textarea>
+                    @if (addressForm.get('address')?.invalid && addressForm.get('address')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">La dirección es requerida</p>
+                    }
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Referencia (opcional)</label>
+                    <textarea 
+                      formControlName="reference"
+                      rows="2"
+                      placeholder="Ej: Al lado del banco, portón verde..."
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Código Postal (opcional)</label>
+                    <input 
+                      type="text"
+                      formControlName="postalCode"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary">
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox"
+                        formControlName="isDefault"
+                        class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                      <span class="text-sm text-text-light dark:text-text-dark">Establecer como dirección predeterminada</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                  <button 
+                    type="submit"
+                    [disabled]="addressForm.invalid || isAddingAddress()"
+                    class="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (isAddingAddress()) {
+                      <span class="material-symbols-outlined animate-spin text-lg">refresh</span>
+                    }
+                    <span>{{ isEditingAddress() ? 'Actualizar' : 'Agregar' }}</span>
+                  </button>
+                  <button 
+                    type="button"
+                    (click)="cancelAddressForm()"
+                    class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-text-light dark:text-text-dark rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            }
+
+            @if (isLoadingAddresses()) {
+              <div class="flex items-center justify-center p-8">
+                <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+              </div>
+            } @else if (addresses().length === 0) {
+              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">map</span>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">No tienes direcciones guardadas</p>
+                <button 
+                  (click)="showAddAddressForm()"
+                  class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                  Agregar Dirección
+                </button>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @for (address of addresses(); track address.id) {
+                  <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-start justify-between mb-4">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="text-lg font-semibold text-text-light dark:text-text-dark">{{ address.label }}</span>
+                          @if (address.isDefault) {
+                            <span class="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Predeterminada</span>
+                          }
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1"><strong>Destinatario:</strong> {{ address.fullName }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1"><strong>Teléfono:</strong> {{ address.phone }}</p>
+                        <p class="text-sm text-text-light dark:text-text-dark mb-1">{{ address.address }}</p>
+                        @if (address.reference) {
+                          <p class="text-sm text-gray-500 dark:text-gray-400 mb-1"><strong>Referencia:</strong> {{ address.reference }}</p>
+                        }
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ address.district }}, {{ address.city }}, {{ address.region }}</p>
+                        @if (address.postalCode) {
+                          <p class="text-sm text-gray-500 dark:text-gray-400">Código Postal: {{ address.postalCode }}</p>
+                        }
+                      </div>
+                    </div>
+                    <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <button 
+                        (click)="editAddress(address)"
+                        class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-text-light dark:text-text-dark rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm">
+                        Editar
+                      </button>
+                      <button 
+                        (click)="deleteAddress(address.id)"
+                        class="flex-1 px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors text-sm">
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Payment Methods Section -->
+        @if (activeSection() === 'payment') {
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Métodos de Pago</h2>
+            </div>
+
+            <!-- Métodos de Pago Disponibles -->
+            <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <p class="text-lg font-semibold text-text-light dark:text-text-dark">Pagos con Visa, Yape, Plin, BCP</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</div>
+

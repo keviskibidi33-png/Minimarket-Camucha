@@ -142,11 +142,6 @@ export class ProfileComponent implements OnInit {
     // Mostrar el tracker para estados en curso (confirmado, preparando, en camino, listo para retiro)
     // También incluir variaciones que el admin pueda usar
     const normalizedStatus = status?.toLowerCase().trim() || '';
-    const activeStates = [
-      'confirmed', 'preparing', 'shipped', 'ready_for_pickup',
-      'in_progress', 'processing', 'on_way', 'out_for_delivery',
-      'ready', 'available'
-    ];
     
     // No mostrar para estados finales o cancelados
     const finalStates = ['delivered', 'cancelled', 'completed', 'finished', 'anulado'];
@@ -154,8 +149,18 @@ export class ProfileComponent implements OnInit {
       return false;
     }
     
-    return activeStates.some(s => normalizedStatus.includes(s)) || 
-           (normalizedStatus && !finalStates.some(s => normalizedStatus.includes(s)));
+    // Estados activos que deben mostrar el tracker
+    const activeStates = [
+      'confirmed', 'preparing', 'shipped', 'ready_for_pickup',
+      'in_progress', 'processing', 'on_way', 'out_for_delivery',
+      'ready', 'available'
+    ];
+    
+    // Verificar si el estado está en la lista de activos
+    const isActiveState = activeStates.some(s => normalizedStatus.includes(s));
+    
+    // Si no es un estado final y tiene contenido, mostrar el tracker
+    return isActiveState || (normalizedStatus.length > 0 && !finalStates.some(s => normalizedStatus.includes(s)));
   }
 
   getOrderStatusClass(status: string): string {

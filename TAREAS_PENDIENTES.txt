@@ -10,11 +10,34 @@ TAREAS PENDIENTES - MINIMARKET CAMUCHA
    ----------------------------------
    - Implementar login (inicio de sesión)
    - Implementar perfil de usuario en el botón de perfil
-   - Usar Better Auth como framework de autenticación
-     * Repositorio: https://github.com/better-auth/better-auth
-     * Framework-agnostic authentication para TypeScript
-     * Incluye características avanzadas: 2FA, multi-tenant, OAuth, etc.
-     * Documentación: https://better-auth.com
+   
+   NOTA SOBRE BETTER AUTH:
+   - Better Auth NO es compatible con nuestro stack (.NET backend)
+   - Better Auth está diseñado para Node.js/TypeScript backends
+   - Nuestro sistema ya usa ASP.NET Core Identity + JWT (funciona bien)
+   
+   DECISIÓN: Mantener ASP.NET Core Identity + JWT
+   - Ya está implementado y funcionando
+   - Integrado con Entity Framework Core
+   - Compatible con Angular frontend
+   - Podemos agregar funcionalidades avanzadas:
+     * Refresh tokens
+     * 2FA (usando ASP.NET Identity)
+     * OAuth/SSO (usando IdentityServer)
+     * Gestión de sesiones mejorada
+   
+   MEJORAS A IMPLEMENTAR:
+   - Frontend (Angular):
+     * Guards de rutas mejorados
+     * Interceptor HTTP optimizado
+     * UI de login/registro completa
+     * Componente de perfil de usuario
+     * Gestión de sesiones en frontend
+   - Backend (.NET):
+     * Refresh tokens para sesiones más largas
+     * Endpoints de gestión de perfil
+     * Validación mejorada de tokens
+     * Logout mejorado
 
 3. PANEL DE ADMINISTRACIÓN
    -----------------------
@@ -24,11 +47,11 @@ TAREAS PENDIENTES - MINIMARKET CAMUCHA
 NOTAS:
 - Estas funcionalidades se implementarán en orden de prioridad
 - Primero se trabajará en las funciones del admin (aprobación de pedidos y confirmación de pago)
-- Luego se implementará el sistema de login y perfil de usuario usando Better Auth
+- Luego se implementará el sistema de login y perfil de usuario usando ASP.NET Identity + JWT
 - Finalmente se revisará y completará el panel de administración
-- Better Auth es ideal para este proyecto ya que:
-  * Está diseñado para TypeScript (compatible con nuestro stack)
-  * Proporciona autenticación completa out-of-the-box
-  * Tiene un ecosistema de plugins para funcionalidades avanzadas
-  * Es framework-agnostic y funciona bien con Angular
+- Stack de autenticación actual:
+  * Backend: ASP.NET Core Identity + JWT (ya implementado)
+  * Frontend: Angular con AuthService (ya implementado)
+  * Base de datos: SQL Server con Entity Framework Core
+  * Sistema robusto y probado, compatible con nuestro stack
 

@@ -1,0 +1,26 @@
+<div class="order-status-tracker">
+  <div class="timeline-container">
+    @for (step of steps(); track step.key; let i = $index) {
+      <div class="step-wrapper">
+        <!-- Icono y nodo -->
+        <div class="step-node-wrapper">
+          <div class="step-icon {{ getStepColorClass(i) }}">
+            <span class="material-symbols-outlined">{{ step.icon }}</span>
+          </div>
+          <div class="step-node {{ getStepColorClass(i) }}"></div>
+        </div>
+
+        <!-- Etiqueta -->
+        <div class="step-label {{ getStepColorClass(i) }}">
+          {{ step.label }}
+        </div>
+
+        <!-- Línea conectora (excepto para el último paso) -->
+        @if (i < steps().length - 1) {
+          <div class="timeline-line {{ getLineColorClass(i) }}"></div>
+        }
+      </div>
+    }
+  </div>
+</div>
+

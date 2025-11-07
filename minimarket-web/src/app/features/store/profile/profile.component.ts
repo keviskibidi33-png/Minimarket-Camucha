@@ -6,13 +6,14 @@ import { AuthService, PaymentMethod, UserProfile, UserAddress } from '../../../c
 import { OrdersService, WebOrder } from '../../../core/services/orders.service';
 import { PaymentMethodSettingsService, PaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
+import { OrderStatusTrackerComponent } from '../../../shared/components/order-status-tracker/order-status-tracker.component';
 import { ToastService } from '../../../shared/services/toast.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule, OrderStatusTrackerComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -135,6 +136,26 @@ export class ProfileComponent implements OnInit {
     return this.activeSection() === section 
       ? `${baseClasses} ${activeClasses}` 
       : baseClasses;
+  }
+
+  shouldShowStatusTracker(status: string): boolean {
+    // Mostrar el tracker para estados en curso (confirmado, preparando, en camino, listo para retiro)
+    // También incluir variaciones que el admin pueda usar
+    const normalizedStatus = status?.toLowerCase().trim() || '';
+    const activeStates = [
+      'confirmed', 'preparing', 'shipped', 'ready_for_pickup',
+      'in_progress', 'processing', 'on_way', 'out_for_delivery',
+      'ready', 'available'
+    ];
+    
+    // No mostrar para estados finales o cancelados
+    const finalStates = ['delivered', 'cancelled', 'completed', 'finished', 'anulado'];
+    if (finalStates.some(s => normalizedStatus.includes(s))) {
+      return false;
+    }
+    
+    return activeStates.some(s => normalizedStatus.includes(s)) || 
+           (normalizedStatus && !finalStates.some(s => normalizedStatus.includes(s)));
   }
 
   getOrderStatusClass(status: string): string {

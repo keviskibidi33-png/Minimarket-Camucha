@@ -214,7 +214,7 @@
 
                     <!-- Estado del Pedido -->
                     <div class="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg p-4">
-                      <div class="flex items-center justify-between">
+                      <div class="flex items-center justify-between mb-4">
                         <div>
                           <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estado del Pedido</p>
                           <span class="inline-flex items-center text-sm font-medium px-3 py-1 rounded-full {{ getOrderStatusClass(selectedOrder()!.status) }}">
@@ -226,6 +226,16 @@
                           <p class="text-sm font-semibold text-text-light dark:text-text-dark">{{ formatDate(selectedOrder()!.createdAt) }}</p>
                         </div>
                       </div>
+                      
+                      <!-- Visualización del estado del pedido (solo para estados en curso) -->
+                      @if (shouldShowStatusTracker(selectedOrder()!.status)) {
+                        <div class="mt-4 pt-4 border-t border-primary/20">
+                          <app-order-status-tracker 
+                            [status]="selectedOrder()!.status" 
+                            [shippingMethod]="selectedOrder()!.shippingMethod">
+                          </app-order-status-tracker>
+                        </div>
+                      }
                     </div>
 
                     <!-- Información del Cliente y Envío -->

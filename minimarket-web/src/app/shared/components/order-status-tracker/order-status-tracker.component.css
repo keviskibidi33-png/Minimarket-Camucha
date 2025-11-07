@@ -1,0 +1,221 @@
+.order-status-tracker {
+  width: 100%;
+  padding: 2rem 1rem;
+}
+
+.timeline-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  gap: 0.5rem;
+}
+
+.step-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.step-node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0.5rem;
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  background: white;
+  border: 3px solid;
+}
+
+.step-icon .material-symbols-outlined {
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+/* Estados de color para iconos */
+.step-icon.completed {
+  background: rgb(59 130 246); /* blue-500 */
+  border-color: rgb(59 130 246);
+  color: white;
+}
+
+.step-icon.active {
+  background: rgb(59 130 246); /* blue-500 */
+  border-color: rgb(59 130 246);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.step-icon.pending {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+/* Nodo circular */
+.step-node {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.step-node.completed {
+  background: rgb(59 130 246); /* blue-500 */
+  border: 3px solid rgb(59 130 246);
+}
+
+.step-node.active {
+  background: rgb(59 130 246); /* blue-500 */
+  border: 3px solid rgb(59 130 246);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.step-node.pending {
+  background: #e5e7eb;
+  border: 3px solid #d1d5db;
+}
+
+/* Etiqueta */
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.step-label.completed {
+  color: rgb(59 130 246); /* blue-500 */
+}
+
+.step-label.active {
+  color: rgb(59 130 246); /* blue-500 */
+  font-weight: 700;
+}
+
+.step-label.pending {
+  color: #9ca3af;
+}
+
+/* Línea conectora */
+.timeline-line {
+  position: absolute;
+  top: 24px;
+  left: calc(50% + 32px);
+  right: calc(-50% + 32px);
+  height: 3px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.timeline-line.completed {
+  background: rgb(59 130 246); /* blue-500 */
+}
+
+.timeline-line.active {
+  background: linear-gradient(
+    to right,
+    rgb(59 130 246) 0%,
+    rgb(59 130 246) 50%,
+    #e5e7eb 50%,
+    #e5e7eb 100%
+  );
+}
+
+.timeline-line.pending {
+  background: #e5e7eb;
+}
+
+/* Animación de pulso para el estado activo */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .step-icon.pending {
+    background: #374151;
+    border-color: #4b5563;
+    color: #6b7280;
+  }
+
+  .step-node.pending {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .step-label.pending {
+    color: #6b7280;
+  }
+
+  .timeline-line.pending {
+    background: #4b5563;
+  }
+
+  .timeline-line.active {
+    background: linear-gradient(
+      to right,
+      rgb(59 130 246) 0%,
+      rgb(59 130 246) 50%,
+      #4b5563 50%,
+      #4b5563 100%
+    );
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .order-status-tracker {
+    padding: 1.5rem 0.5rem;
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .step-icon .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .step-label {
+    font-size: 10px;
+  }
+
+  .timeline-line {
+    top: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .step-label {
+    font-size: 9px;
+  }
+}
+

@@ -250,7 +250,7 @@ public class EmailService : IEmailService
         return await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
     }
 
-    public async Task<bool> SendWelcomeEmailAsync(string toEmail, string customerName, string username)
+    public async Task<bool> SendWelcomeEmailAsync(string toEmail, string customerName, string firstName, string lastName)
     {
         var subject = "¡Bienvenido a Minimarket Camucha!";
         
@@ -262,6 +262,11 @@ public class EmailService : IEmailService
         // Usar Content-ID para incrustar imágenes
         var logoCid = "logo@minimarket";
         var promotionCid = "promotion@minimarket";
+        
+        // Construir nombre completo
+        var fullName = string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName) 
+            ? customerName 
+            : $"{firstName} {lastName}".Trim();
         
         var body = $@"
             <html>
@@ -288,7 +293,7 @@ public class EmailService : IEmailService
                         <!-- Detalles de la Cuenta -->
                         <div style='background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;'>
                             <h3 style='margin-top: 0; margin-bottom: 15px; color: #333; font-size: 18px;'>Detalles de tu Cuenta</h3>
-                            <p style='margin: 10px 0; font-size: 15px; color: #666;'><strong style='color: #333;'>Usuario:</strong> {username}</p>
+                            <p style='margin: 10px 0; font-size: 15px; color: #666;'><strong style='color: #333;'>Nombre:</strong> {fullName}</p>
                             <p style='margin: 10px 0; font-size: 15px; color: #666;'><strong style='color: #333;'>Correo:</strong> {toEmail}</p>
                         </div>
                         

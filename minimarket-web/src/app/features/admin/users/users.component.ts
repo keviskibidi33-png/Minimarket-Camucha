@@ -6,7 +6,8 @@ import { FormsModule } from '@angular/forms';
 // TODO: Crear servicio de usuarios cuando esté disponible en el backend
 export interface User {
   id: string;
-  username: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   role: string;
   createdAt: string;
@@ -30,28 +31,32 @@ export class UsersComponent implements OnInit {
   mockUsers: User[] = [
     {
       id: '1',
-      username: 'Ana Torres',
+      firstName: 'Ana',
+      lastName: 'Torres',
       email: 'ana.torres@example.com',
       role: 'Gerente',
       createdAt: '15/08/2023'
     },
     {
       id: '2',
-      username: 'Carlos Gomez',
+      firstName: 'Carlos',
+      lastName: 'Gomez',
       email: 'carlos.gomez@example.com',
       role: 'Vendedor',
       createdAt: '12/07/2023'
     },
     {
       id: '3',
-      username: 'Luisa Fernandez',
+      firstName: 'Luisa',
+      lastName: 'Fernandez',
       email: 'luisa.fernandez@example.com',
       role: 'Vendedor',
       createdAt: '10/06/2023'
     },
     {
       id: '4',
-      username: 'Miguel Soto',
+      firstName: 'Miguel',
+      lastName: 'Soto',
       email: 'miguel.soto@example.com',
       role: 'Vendedor',
       createdAt: '05/05/2023'
@@ -82,10 +87,11 @@ export class UsersComponent implements OnInit {
     let filtered = this.users();
     
     if (search) {
-      filtered = filtered.filter(user => 
-        user.username.toLowerCase().includes(search) ||
-        user.email.toLowerCase().includes(search)
-      );
+      filtered = filtered.filter(user => {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
+        return fullName.includes(search) ||
+               user.email.toLowerCase().includes(search);
+      });
     }
     
     if (role !== 'all') {

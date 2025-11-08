@@ -1,5 +1,5 @@
 <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;' [@fadeSlide]>
-  <div class="w-full max-w-md p-6">
+  <div class="w-full max-w-4xl p-6">
     <div class="flex flex-col items-center rounded-xl border border-border-light/50 bg-card-light p-8 shadow-sm dark:border-border-dark/50 dark:bg-card-dark">
       <!-- Logo and Title -->
       <div class="mb-6 flex flex-col items-center">
@@ -17,173 +17,14 @@
       <!-- Form -->
       <form [formGroup]="completeProfileForm" (ngSubmit)="onSubmit()" class="w-full">
         <div class="flex w-full flex-col gap-4">
-          <!-- First Name Field -->
-          <div class="flex w-full flex-col">
-            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="firstName">Nombre <span class="text-red-500">*</span></label>
-            <div class="relative flex w-full items-center">
-              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">badge</span>
-              <input
-                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                id="firstName"
-                type="text"
-                placeholder="Juan"
-                formControlName="firstName"
-                [class.border-red-500]="completeProfileForm.get('firstName')?.invalid && completeProfileForm.get('firstName')?.touched">
+          <!-- Dirección de Envío (ahora es el formulario principal) -->
+          <div class="flex w-full flex-col gap-4">
+            <div class="mb-2">
+              <h3 class="text-lg font-semibold text-text-light dark:text-text-dark">Agrega tu dirección de envío</h3>
+              <p class="text-sm text-text-light/70 dark:text-text-dark/70">Completa los datos para recibir tus pedidos</p>
             </div>
-            @if (completeProfileForm.get('firstName')?.invalid && completeProfileForm.get('firstName')?.touched) {
-              <span class="mt-1 text-sm text-red-500">El nombre es requerido</span>
-            }
-          </div>
 
-          <!-- Last Name Field -->
-          <div class="flex w-full flex-col">
-            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="lastName">Apellido <span class="text-red-500">*</span></label>
-            <div class="relative flex w-full items-center">
-              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">badge</span>
-              <input
-                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                id="lastName"
-                type="text"
-                placeholder="Pérez"
-                formControlName="lastName"
-                [class.border-red-500]="completeProfileForm.get('lastName')?.invalid && completeProfileForm.get('lastName')?.touched">
-            </div>
-            @if (completeProfileForm.get('lastName')?.invalid && completeProfileForm.get('lastName')?.touched) {
-              <span class="mt-1 text-sm text-red-500">El apellido es requerido</span>
-            }
-          </div>
-
-          <!-- DNI Field -->
-          <div class="flex w-full flex-col">
-            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="dni">DNI <span class="text-red-500">*</span></label>
-            <div class="relative flex w-full items-center">
-              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">credit_card</span>
-              <input
-                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                id="dni"
-                type="text"
-                placeholder="12345678"
-                formControlName="dni"
-                maxlength="8"
-                [class.border-red-500]="completeProfileForm.get('dni')?.invalid && completeProfileForm.get('dni')?.touched">
-            </div>
-            @if (completeProfileForm.get('dni')?.invalid && completeProfileForm.get('dni')?.touched) {
-              <span class="mt-1 text-sm text-red-500">
-                @if (completeProfileForm.get('dni')?.errors?.['required']) {
-                  El DNI es requerido
-                } @else if (completeProfileForm.get('dni')?.errors?.['pattern']) {
-                  El DNI debe tener exactamente 8 dígitos
-                }
-              </span>
-            }
-          </div>
-
-          <!-- Phone Field -->
-          <div class="flex w-full flex-col">
-            <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="phone">Teléfono <span class="text-red-500">*</span></label>
-            <div class="relative flex w-full items-center">
-              <span class="material-symbols-outlined pointer-events-none absolute left-3 text-xl text-placeholder-light dark:text-placeholder-dark">phone</span>
-              <input
-                class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 pl-10 pr-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                id="phone"
-                type="tel"
-                placeholder="+51 999 999 999"
-                formControlName="phone"
-                [class.border-red-500]="completeProfileForm.get('phone')?.invalid && completeProfileForm.get('phone')?.touched">
-            </div>
-            @if (completeProfileForm.get('phone')?.invalid && completeProfileForm.get('phone')?.touched) {
-              <span class="mt-1 text-sm text-red-500">
-                @if (completeProfileForm.get('phone')?.errors?.['required']) {
-                  El teléfono es requerido
-                } @else if (completeProfileForm.get('phone')?.errors?.['pattern']) {
-                  Ingresa un teléfono válido
-                }
-              </span>
-            }
-          </div>
-
-          <!-- Método de Pago Opcional -->
-          <div class="flex w-full flex-col gap-4 pt-2 border-t border-border-light dark:border-border-dark">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox"
-                [checked]="includePaymentMethod()"
-                (change)="togglePaymentMethod()"
-                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
-              <span class="text-sm font-medium text-text-light dark:text-text-dark">Agregar método de pago (opcional)</span>
-            </label>
-
-            @if (includePaymentMethod()) {
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
-                <div class="md:col-span-2">
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="cardHolderName">Nombre del Titular <span class="text-red-500">*</span></label>
-                  <input
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                    id="cardHolderName"
-                    type="text"
-                    placeholder="Juan Pérez"
-                    formControlName="cardHolderName"
-                    [class.border-red-500]="completeProfileForm.get('cardHolderName')?.invalid && completeProfileForm.get('cardHolderName')?.touched">
-                  @if (completeProfileForm.get('cardHolderName')?.invalid && completeProfileForm.get('cardHolderName')?.touched) {
-                    <span class="mt-1 text-sm text-red-500">El nombre del titular es requerido</span>
-                  }
-                </div>
-
-                <div class="md:col-span-2">
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="cardNumber">Número de Tarjeta <span class="text-red-500">*</span></label>
-                  <input
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                    id="cardNumber"
-                    type="text"
-                    placeholder="1234 5678 9012 3456"
-                    formControlName="cardNumber"
-                    maxlength="19"
-                    [class.border-red-500]="completeProfileForm.get('cardNumber')?.invalid && completeProfileForm.get('cardNumber')?.touched">
-                  @if (completeProfileForm.get('cardNumber')?.invalid && completeProfileForm.get('cardNumber')?.touched) {
-                    <span class="mt-1 text-sm text-red-500">El número de tarjeta debe tener entre 13 y 19 dígitos</span>
-                  }
-                </div>
-
-                <div>
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="expiryMonth">Mes de Expiración</label>
-                  <select
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:focus:border-primary"
-                    id="expiryMonth"
-                    formControlName="expiryMonth">
-                    @for (month of [1,2,3,4,5,6,7,8,9,10,11,12]; track month) {
-                      <option [value]="month">{{ formatMonth(month) }}</option>
-                    }
-                  </select>
-                </div>
-
-                <div>
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="expiryYear">Año de Expiración</label>
-                  <select
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:focus:border-primary"
-                    id="expiryYear"
-                    formControlName="expiryYear">
-                    @for (year of getYears(); track year) {
-                      <option [value]="year">{{ year }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Dirección de Envío Opcional -->
-          <div class="flex w-full flex-col gap-4 pt-2 border-t border-border-light dark:border-border-dark">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox"
-                [checked]="includeAddress()"
-                (change)="toggleAddress()"
-                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
-              <span class="text-sm font-medium text-text-light dark:text-text-dark">Agregar dirección de envío (opcional)</span>
-            </label>
-
-            @if (includeAddress()) {
-              <div class="pl-6 flex flex-col gap-4">
+            <div class="flex flex-col gap-4">
                 <!-- Selector de direcciones existentes -->
                 @if (existingAddresses().length > 0 && !showNewAddressForm()) {
                   <div class="flex flex-col gap-3">
@@ -253,12 +94,16 @@
                     class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
                     id="addressFullName"
                     type="text"
-                    placeholder="Juan Pérez"
+                    placeholder="Se completará automáticamente desde tu perfil"
                     formControlName="addressFullName"
-                    [class.border-red-500]="completeProfileForm.get('addressFullName')?.invalid && completeProfileForm.get('addressFullName')?.touched">
+                    [readonly]="true"
+                    [class.border-red-500]="completeProfileForm.get('addressFullName')?.invalid && completeProfileForm.get('addressFullName')?.touched"
+                    [class.bg-gray-100]="true"
+                    [class.dark:bg-gray-800]="true">
                   @if (completeProfileForm.get('addressFullName')?.invalid && completeProfileForm.get('addressFullName')?.touched) {
                     <span class="mt-1 text-sm text-red-500">El nombre completo es requerido</span>
                   }
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se usa el nombre de tu perfil</p>
                 </div>
 
                 <div>
@@ -267,53 +112,67 @@
                     class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
                     id="addressPhone"
                     type="tel"
-                    placeholder="+51 999 999 999"
+                    placeholder="Se completará automáticamente desde tu perfil"
                     formControlName="addressPhone"
-                    [class.border-red-500]="completeProfileForm.get('addressPhone')?.invalid && completeProfileForm.get('addressPhone')?.touched">
+                    [readonly]="true"
+                    [class.border-red-500]="completeProfileForm.get('addressPhone')?.invalid && completeProfileForm.get('addressPhone')?.touched"
+                    [class.bg-gray-100]="true"
+                    [class.dark:bg-gray-800]="true">
                   @if (completeProfileForm.get('addressPhone')?.invalid && completeProfileForm.get('addressPhone')?.touched) {
                     <span class="mt-1 text-sm text-red-500">El teléfono es requerido</span>
                   }
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se usa el teléfono de tu perfil</p>
                 </div>
 
                 <div>
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressDistrict">Distrito <span class="text-red-500">*</span></label>
-                  <input
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                    id="addressDistrict"
-                    type="text"
-                    placeholder="San Isidro"
-                    formControlName="addressDistrict"
-                    [class.border-red-500]="completeProfileForm.get('addressDistrict')?.invalid && completeProfileForm.get('addressDistrict')?.touched">
-                  @if (completeProfileForm.get('addressDistrict')?.invalid && completeProfileForm.get('addressDistrict')?.touched) {
-                    <span class="mt-1 text-sm text-red-500">El distrito es requerido</span>
+                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressRegion">Región/Departamento <span class="text-red-500">*</span></label>
+                  <select 
+                    formControlName="addressRegion"
+                    (change)="onDepartmentChange()"
+                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:focus:border-primary"
+                    [class.border-red-500]="completeProfileForm.get('addressRegion')?.invalid && completeProfileForm.get('addressRegion')?.touched">
+                    <option value="">Seleccione un departamento</option>
+                    @for (dept of departments(); track dept) {
+                      <option [value]="dept">{{ dept }}</option>
+                    }
+                  </select>
+                  @if (completeProfileForm.get('addressRegion')?.invalid && completeProfileForm.get('addressRegion')?.touched) {
+                    <span class="mt-1 text-sm text-red-500">La región es requerida</span>
                   }
                 </div>
 
                 <div>
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressCity">Ciudad <span class="text-red-500">*</span></label>
-                  <input
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                    id="addressCity"
-                    type="text"
-                    placeholder="Lima"
+                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressCity">Ciudad/Provincia <span class="text-red-500">*</span></label>
+                  <select 
                     formControlName="addressCity"
+                    (change)="onProvinceChange()"
+                    [disabled]="provinces().length === 0"
+                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     [class.border-red-500]="completeProfileForm.get('addressCity')?.invalid && completeProfileForm.get('addressCity')?.touched">
+                    <option value="">Seleccione una provincia</option>
+                    @for (province of provinces(); track province) {
+                      <option [value]="province">{{ province }}</option>
+                    }
+                  </select>
                   @if (completeProfileForm.get('addressCity')?.invalid && completeProfileForm.get('addressCity')?.touched) {
                     <span class="mt-1 text-sm text-red-500">La ciudad es requerida</span>
                   }
                 </div>
 
                 <div>
-                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressRegion">Región/Departamento <span class="text-red-500">*</span></label>
-                  <input
-                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
-                    id="addressRegion"
-                    type="text"
-                    placeholder="Lima"
-                    formControlName="addressRegion"
-                    [class.border-red-500]="completeProfileForm.get('addressRegion')?.invalid && completeProfileForm.get('addressRegion')?.touched">
-                  @if (completeProfileForm.get('addressRegion')?.invalid && completeProfileForm.get('addressRegion')?.touched) {
-                    <span class="mt-1 text-sm text-red-500">La región es requerida</span>
+                  <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark" for="addressDistrict">Distrito <span class="text-red-500">*</span></label>
+                  <select 
+                    formControlName="addressDistrict"
+                    [disabled]="districts().length === 0"
+                    class="form-input h-12 w-full min-w-0 flex-1 rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class.border-red-500]="completeProfileForm.get('addressDistrict')?.invalid && completeProfileForm.get('addressDistrict')?.touched">
+                    <option value="">Seleccione un distrito</option>
+                    @for (district of districts(); track district) {
+                      <option [value]="district">{{ district }}</option>
+                    }
+                  </select>
+                  @if (completeProfileForm.get('addressDistrict')?.invalid && completeProfileForm.get('addressDistrict')?.touched) {
+                    <span class="mt-1 text-sm text-red-500">El distrito es requerido</span>
                   }
                 </div>
 
@@ -352,8 +211,7 @@
                 </div>
                   </div>
                 }
-              </div>
-            }
+            </div>
           </div>
 
           <!-- Error Message -->

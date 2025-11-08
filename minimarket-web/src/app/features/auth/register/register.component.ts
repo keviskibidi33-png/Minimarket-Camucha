@@ -28,7 +28,6 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   ) {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -49,7 +48,6 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
     const credentials = {
       email: this.registerForm.get('email')?.value,
-      username: this.registerForm.get('username')?.value,
       password: this.registerForm.get('password')?.value,
       firstName: this.registerForm.get('firstName')?.value,
       lastName: this.registerForm.get('lastName')?.value,

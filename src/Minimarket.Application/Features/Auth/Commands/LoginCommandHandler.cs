@@ -65,7 +65,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
 
-            // Verificar si el perfil está completo
+            // Verificar si el perfil está completo y obtener nombre y apellido
             var profile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
                 up => up.UserId == user.Id, cancellationToken);
             var profileCompleted = profile?.ProfileCompleted ?? false;
@@ -75,13 +75,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
                 Token = token,
                 Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes),
                 UserId = user.Id.ToString(),
-                Username = user.UserName ?? string.Empty,
+                FirstName = profile?.FirstName,
+                LastName = profile?.LastName,
                 Email = user.Email,
                 Roles = roles,
                 ProfileCompleted = profileCompleted
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log de error para debugging
             return Result<LoginResponse>.Failure("Ocurrió un error al procesar el inicio de sesión. Por favor, intente nuevamente.");

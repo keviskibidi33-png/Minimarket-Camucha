@@ -14,17 +14,20 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
     private readonly IEmailService _emailService;
     private readonly ILogger<ForgotPasswordCommandHandler> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IUnitOfWork _unitOfWork;
 
     public ForgotPasswordCommandHandler(
         UserManager<IdentityUser<Guid>> userManager,
         IEmailService emailService,
         ILogger<ForgotPasswordCommandHandler> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _emailService = emailService;
         _logger = logger;
         _configuration = configuration;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<string>> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
@@ -48,8 +51,16 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         // Crear URL de recuperación (debe apuntar al frontend, no al backend)
         var resetUrl = $"{frontendUrl}/auth/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(request.Email)}";
         
-        // Obtener el nombre del usuario (username o email)
-        var customerName = user.UserName ?? user.Email ?? "Usuario";
+        // Obtener el nombre del usuario (nombre y apellido o email)
+        var customerName = user.Email ?? "Usuario";
+        
+        // Intentar obtener nombre y apellido del perfil
+        var profile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
+            up => up.UserId == user.Id, cancellationToken);
+        if (profile != null && !string.IsNullOrWhiteSpace(profile.FirstName))
+        {
+            customerName = $"{profile.FirstName} {profile.LastName}".Trim();
+        }
         
         try
         {

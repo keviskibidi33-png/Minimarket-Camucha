@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Features.Auth.Commands;
 using Minimarket.Application.Features.Auth.DTOs;
 using Minimarket.Domain.Interfaces;
@@ -20,17 +22,20 @@ public class AuthController : ControllerBase
     private readonly SignInManager<IdentityUser<Guid>> _signInManager;
     private readonly UserManager<IdentityUser<Guid>> _userManager;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IMediator mediator,
         SignInManager<IdentityUser<Guid>> signInManager,
         UserManager<IdentityUser<Guid>> userManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<AuthController> logger)
     {
         _mediator = mediator;
         _signInManager = signInManager;
         _userManager = userManager;
         _configuration = configuration;
+        _logger = logger;
     }
 
     [HttpPost("login")]
@@ -55,29 +60,20 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command)
     {
-        try
-        {
-            var result = await _mediator.Send(command);
+        // Dejar que el GlobalExceptionHandlerMiddleware maneje todas las excepciones
+        // ValidationException será capturada y devuelta como 400 BadRequest
+        var result = await _mediator.Send(command);
 
-            if (!result.Succeeded)
-            {
-                return BadRequest(new { 
-                    succeeded = false,
-                    errors = result.Errors,
-                    message = result.Error
-                });
-            }
-
-            return Ok(result.Data);
-        }
-        catch (Exception ex)
+        if (!result.Succeeded)
         {
-            // Log del error para debugging
-            return StatusCode(500, new { 
-                message = "Error interno del servidor al registrar el usuario", 
-                error = ex.Message 
+            return BadRequest(new { 
+                succeeded = false,
+                errors = result.Errors,
+                message = result.Error
             });
         }
+
+        return Ok(result.Data);
     }
 
     [HttpPost("forgot-password")]
@@ -287,8 +283,13 @@ public class AuthController : ControllerBase
             var roles = await _userManager.GetRolesAsync(user);
             var token = GenerateJwtToken(user, roles);
 
-            // Verificar si el perfil está completo
+            // Verificar si el perfil está completo y obtener nombre y apellido
             var profileCompleted = await CheckProfileCompleted(user.Id);
+            
+            // Obtener perfil para nombre y apellido
+            using var scope = HttpContext.RequestServices.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var profile = await unitOfWork.UserProfiles.FirstOrDefaultAsync(up => up.UserId == user.Id);
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
@@ -298,7 +299,8 @@ public class AuthController : ControllerBase
                 Token = token,
                 Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes),
                 UserId = user.Id.ToString(),
-                Username = user.UserName ?? string.Empty,
+                FirstName = profile?.FirstName,
+                LastName = profile?.LastName,
                 Email = user.Email,
                 Roles = roles,
                 ProfileCompleted = profileCompleted

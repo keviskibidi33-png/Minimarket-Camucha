@@ -10,7 +10,6 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   email: string;
-  username: string;
   password: string;
   firstName?: string;
   lastName?: string;
@@ -26,7 +25,8 @@ export interface LoginResponse {
   token: string;
   expiration: string;
   userId: string;
-  username: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   roles: string[];
   profileCompleted?: boolean;
@@ -34,7 +34,8 @@ export interface LoginResponse {
 
 export interface User {
   id: string;
-  username: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   roles: string[];
 }
@@ -61,11 +62,17 @@ export class AuthService {
         this.storeAuth(response);
         this.currentUser.set({
           id: response.userId,
-          username: response.username,
+          firstName: response.firstName,
+          lastName: response.lastName,
           email: response.email,
           roles: response.roles
         });
         this.isAuthenticated.set(true);
+        
+        // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
+        if (!response.firstName || !response.lastName) {
+          this.loadUserProfile();
+        }
       })
     );
   }
@@ -105,11 +112,17 @@ export class AuthService {
               this.storeAuth(loginResponse);
               this.currentUser.set({
                 id: loginResponse.userId,
-                username: loginResponse.username,
+                firstName: loginResponse.firstName,
+                lastName: loginResponse.lastName,
                 email: loginResponse.email,
                 roles: loginResponse.roles
               });
               this.isAuthenticated.set(true);
+              
+              // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
+              if (!loginResponse.firstName || !loginResponse.lastName) {
+                this.loadUserProfile();
+              }
               
               // Redirigir según el estado del perfil
               if (loginResponse.profileCompleted === false) {
@@ -198,7 +211,8 @@ export class AuthService {
     localStorage.setItem(this.tokenKey, response.token);
       localStorage.setItem(this.userKey, JSON.stringify({
         id: response.userId,
-        username: response.username,
+        firstName: response.firstName,
+        lastName: response.lastName,
         email: response.email,
         roles: response.roles
       }));
@@ -217,7 +231,35 @@ export class AuthService {
   private loadStoredAuth(): void {
     if (this.hasToken() && this.currentUser()) {
       this.isAuthenticated.set(true);
+      // Cargar perfil completo si firstName o lastName no están disponibles
+      if (!this.currentUser()?.firstName || !this.currentUser()?.lastName) {
+        this.loadUserProfile();
+      }
     }
+  }
+
+  private loadUserProfile(): void {
+    this.getProfile().subscribe({
+      next: (profile) => {
+        const current = this.currentUser();
+        if (current && profile) {
+          this.currentUser.set({
+            ...current,
+            firstName: profile.firstName || current.firstName,
+            lastName: profile.lastName || current.lastName
+          });
+          // Actualizar también en localStorage
+          const updatedUser = this.currentUser();
+          if (updatedUser) {
+            localStorage.setItem(this.userKey, JSON.stringify(updatedUser));
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar perfil del usuario:', error);
+        // No hacer nada si falla, el usuario ya está autenticado
+      }
+    });
   }
 
   register(credentials: RegisterRequest): Observable<LoginResponse> {
@@ -226,11 +268,17 @@ export class AuthService {
         this.storeAuth(response);
         this.currentUser.set({
           id: response.userId,
-          username: response.username,
+          firstName: response.firstName,
+          lastName: response.lastName,
           email: response.email,
           roles: response.roles
         });
         this.isAuthenticated.set(true);
+        
+        // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
+        if (!response.firstName || !response.lastName) {
+          this.loadUserProfile();
+        }
       })
     );
   }
@@ -243,7 +291,8 @@ export class AuthService {
         token: token,
         expiration: new Date(payload.exp * 1000).toISOString(),
         userId: payload.sub || payload.nameid,
-        username: payload.name || payload.unique_name || '',
+        firstName: payload.firstName || payload.given_name,
+        lastName: payload.lastName || payload.family_name,
         email: payload.email,
         roles: Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : [],
         profileCompleted: payload.profileCompleted || false
@@ -252,7 +301,8 @@ export class AuthService {
       this.storeAuth(loginResponse);
       this.currentUser.set({
         id: loginResponse.userId,
-        username: loginResponse.username,
+        firstName: loginResponse.firstName,
+        lastName: loginResponse.lastName,
         email: loginResponse.email,
         roles: loginResponse.roles
       });
@@ -275,17 +325,8 @@ export class AuthService {
   }
 
   completeProfile(profileData: { 
-    firstName: string; 
-    lastName: string; 
-    dni: string; 
     phone: string;
-    paymentMethod?: {
-      cardHolderName: string;
-      cardNumber: string;
-      expiryMonth: number;
-      expiryYear: number;
-      isDefault?: boolean;
-    };
+    // firstName, lastName y dni ya están en el perfil desde el registro
     address?: {
       label: string;
       fullName: string;

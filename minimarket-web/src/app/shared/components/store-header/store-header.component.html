@@ -41,9 +41,9 @@
             <button 
               (click)="toggleUserMenu()"
               class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-transparent text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              @if (currentUser()?.username) {
+              @if (currentUser()?.firstName || currentUser()?.lastName) {
                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-sm font-bold">
-                  {{ currentUser()!.username.charAt(0).toUpperCase() }}
+                  {{ (currentUser()!.firstName?.charAt(0) || currentUser()!.lastName?.charAt(0) || 'U').toUpperCase() }}
                 </div>
               } @else {
                 <span class="material-symbols-outlined">person</span>
@@ -62,7 +62,9 @@
             <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-background-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
               @if (isAuthenticated()) {
                 <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <p class="text-sm font-semibold text-text-light dark:text-text-dark">{{ currentUser()?.username }}</p>
+                  <p class="text-sm font-semibold text-text-light dark:text-text-dark">
+                    {{ (currentUser()?.firstName && currentUser()?.lastName) ? (currentUser()!.firstName + ' ' + currentUser()!.lastName) : (currentUser()?.firstName || currentUser()?.lastName || 'Usuario') }}
+                  </p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">{{ currentUser()?.email || currentUser()?.id }}</p>
                 </div>
                 <button 

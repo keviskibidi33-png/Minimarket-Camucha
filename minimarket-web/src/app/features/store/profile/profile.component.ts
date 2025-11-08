@@ -280,8 +280,12 @@ export class ProfileComponent implements OnInit {
     if (profile?.firstName) {
       return `${profile.firstName} ${profile.lastName || ''}`.trim();
     }
-    const username = this.currentUser()?.username || 'Usuario';
-    return username.split(' ')[0];
+    const firstName = this.currentUser()?.firstName;
+    const lastName = this.currentUser()?.lastName;
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    return firstName || lastName || 'Usuario';
   }
 
   logout() {

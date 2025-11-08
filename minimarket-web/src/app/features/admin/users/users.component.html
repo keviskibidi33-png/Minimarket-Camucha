@@ -106,7 +106,9 @@
                 } @else {
                   @for (user of filteredUsers(); track user.id) {
                     <tr class="hover:bg-subtle-light/50 dark:hover:bg-subtle-dark/50">
-                      <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">{{ user.username }}</td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                        {{ (user.firstName && user.lastName) ? (user.firstName + ' ' + user.lastName) : (user.firstName || user.lastName || 'Usuario') }}
+                      </td>
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
                         <span [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>

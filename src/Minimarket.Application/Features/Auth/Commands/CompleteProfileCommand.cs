@@ -6,25 +6,11 @@ namespace Minimarket.Application.Features.Auth.Commands;
 public class CompleteProfileCommand : IRequest<Result<string>>
 {
     public Guid UserId { get; set; }
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Dni { get; set; } = string.Empty; // DNI peruano (8 dígitos)
     public string Phone { get; set; } = string.Empty;
-    
-    // Método de pago opcional (para completar perfil inicial)
-    public PaymentMethodDto? PaymentMethod { get; set; }
+    // Nombre, apellido y DNI ya están en el perfil desde el registro
     
     // Dirección de envío opcional (para completar perfil inicial)
     public AddressDto? Address { get; set; }
-}
-
-public class PaymentMethodDto
-{
-    public string CardHolderName { get; set; } = string.Empty;
-    public string CardNumber { get; set; } = string.Empty; // Se enmascarará antes de guardar
-    public int ExpiryMonth { get; set; }
-    public int ExpiryYear { get; set; }
-    public bool IsDefault { get; set; } = true; // Si es el primer método, será por defecto
 }
 
 public class AddressDto

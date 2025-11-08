@@ -44,33 +44,36 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Lo
         try
         {
             // Verificar si el usuario ya existe
-            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            var             existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
             {
                 return Result<LoginResponse>.Failure("El correo electrónico ya está registrado");
             }
 
-            existingUser = await _userManager.FindByNameAsync(request.Username);
+            // Verificar si el DNI ya está en uso (requerido)
+            if (string.IsNullOrWhiteSpace(request.Dni))
+            {
+                return Result<LoginResponse>.Failure("El DNI es requerido");
+            }
+
+            var existingProfile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
+                up => up.Dni == request.Dni, cancellationToken);
+            if (existingProfile != null)
+            {
+                return Result<LoginResponse>.Failure("El DNI ya está registrado");
+            }
+
+            // Verificar si el DNI ya se usa como username
+            existingUser = await _userManager.FindByNameAsync(request.Dni);
             if (existingUser != null)
             {
-                return Result<LoginResponse>.Failure("El nombre de usuario ya está en uso");
+                return Result<LoginResponse>.Failure("El DNI ya está en uso");
             }
 
-            // Verificar si el DNI ya está en uso (si se proporciona)
-            if (!string.IsNullOrWhiteSpace(request.Dni))
-            {
-                var existingProfile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
-                    up => up.Dni == request.Dni, cancellationToken);
-                if (existingProfile != null)
-                {
-                    return Result<LoginResponse>.Failure("El DNI ya está registrado");
-                }
-            }
-
-            // Crear nuevo usuario
+            // Crear nuevo usuario usando el DNI como username
             var user = new IdentityUser<Guid>
             {
-                UserName = request.Username,
+                UserName = request.Dni, // Usar DNI como username
                 Email = request.Email,
                 EmailConfirmed = false // Se confirmará por correo
             };
@@ -152,13 +155,19 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Lo
             {
                 try
                 {
+                    // Construir nombre completo para el correo
+                    var customerName = string.IsNullOrWhiteSpace(request.FirstName) && string.IsNullOrWhiteSpace(request.LastName)
+                        ? user.Email?.Split('@')[0] ?? "Usuario"
+                        : $"{request.FirstName} {request.LastName}".Trim();
+                    
                     await _emailService.SendWelcomeEmailAsync(
                         user.Email ?? string.Empty,
-                        request.Username,
-                        request.Username
+                        customerName,
+                        request.FirstName ?? string.Empty,
+                        request.LastName ?? string.Empty
                     );
-                    _logger.LogInformation("Welcome email sent. Email: {Email}, Username: {Username}", 
-                        user.Email, request.Username);
+                    _logger.LogInformation("Welcome email sent. Email: {Email}, Name: {FirstName} {LastName}", 
+                        user.Email, request.FirstName, request.LastName);
                 }
                 catch (Exception ex)
                 {
@@ -170,13 +179,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Lo
 
                 // Para el registro inicial, el perfil siempre se considera incompleto hasta que el usuario lo complete explícitamente
                 var profileCompleted = false;
+                
+                // Obtener el perfil recién creado para obtener nombre y apellido
+                var createdProfile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
+                    up => up.UserId == user.Id, cancellationToken);
 
                 return Result<LoginResponse>.Success(new LoginResponse
                 {
                     Token = token,
                     Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes),
                     UserId = user.Id.ToString(),
-                    Username = user.UserName ?? string.Empty,
+                    FirstName = createdProfile?.FirstName,
+                    LastName = createdProfile?.LastName,
                     Email = user.Email,
                     Roles = roles,
                     ProfileCompleted = profileCompleted
@@ -184,8 +198,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Lo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error inesperado al registrar usuario. Email: {Email}, Username: {Username}", 
-                request.Email, request.Username);
+            _logger.LogError(ex, "Error inesperado al registrar usuario. Email: {Email}, DNI: {Dni}", 
+                request.Email, request.Dni);
             return Result<LoginResponse>.Failure("Ocurrió un error al registrar el usuario. Por favor, intenta nuevamente.");
         }
     }

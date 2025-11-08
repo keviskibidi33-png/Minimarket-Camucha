@@ -11,7 +11,7 @@
     <span class="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">Caja 01</span>
   </div>
   <div class="flex items-center gap-4">
-    <span class="text-sm text-gray-600 dark:text-gray-300">Usuario: {{ authService.currentUser()?.username }}</span>
+    <span class="text-sm text-gray-600 dark:text-gray-300">{{ (authService.currentUser()?.firstName && authService.currentUser()?.lastName) ? (authService.currentUser()!.firstName + ' ' + authService.currentUser()!.lastName) : (authService.currentUser()?.firstName || authService.currentUser()?.lastName || 'Usuario') }}</span>
     <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" 
          style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzj00K22jvV9gfRXmUkPBZ9DXXy5vpjyoCDRFuOm3c8FDewvZ8pcTrCalOneosWGlCMlL9e2p6ZHzGU8KsqNpSggFmZLeHKjGP--Ffa0mur3KSnkq0PfkisB3ijiFRrJdgn62PjMRxv4okkzBAJlmaBGPYVV22DiFAYd6zuY4oUGqUSgI7-jBvhVp5ltSbE-NF-ia3es20-HLLgMqkw37y_lauHy6msLzObilopS4fviDrJWDrmFzOj_MhqRvaKBZ8kA3gLt53WsYf');"></div>
     <button 

@@ -3,52 +3,38 @@
   <app-store-header></app-store-header>
 
   <!-- Main Content -->
-  <main class="w-full max-w-7xl mx-auto px-4 sm:px-10 py-8">
-    <div class="flex flex-col lg:flex-row gap-8">
+  <main class="w-full flex-grow">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col lg:flex-row gap-8">
       <!-- SideNavBar -->
-      <aside class="w-full lg:w-64 flex-shrink-0">
-        <div class="sticky top-28 flex h-full flex-col justify-between bg-white dark:bg-background-dark rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col gap-4">
-            <!-- User Info -->
-            <div class="flex gap-3 items-center">
-              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-base font-bold">
-                {{ (currentUser()?.username?.charAt(0) || 'U').toUpperCase() }}
-              </div>
-              <div class="flex flex-col">
-                <h1 class="text-base font-semibold text-text-light dark:text-text-dark">{{ currentUser()?.username || 'Usuario' }}</h1>
-                <p class="text-gray-500 dark:text-gray-400 text-sm font-normal">{{ currentUser()?.email || currentUser()?.id || '' }}</p>
-              </div>
-            </div>
-
-            <!-- Navigation Menu -->
-            <div class="flex flex-col gap-1 mt-4">
-              <button type="button" (click)="setActiveSection('dashboard')" [class]="getButtonClasses('dashboard')">
-                <span class="material-symbols-outlined" [class.fill]="activeSection() === 'dashboard'">dashboard</span>
-                <p class="text-sm font-medium">Dashboard / Resumen</p>
-              </button>
-              <button type="button" (click)="setActiveSection('personal')" [class]="getButtonClasses('personal')">
-                <span class="material-symbols-outlined">person</span>
-                <p class="text-sm font-medium">Mis Datos Personales</p>
-              </button>
-              <button type="button" (click)="setActiveSection('orders')" [class]="getButtonClasses('orders')">
-                <span class="material-symbols-outlined">receipt_long</span>
-                <p class="text-sm font-medium">Historial de Pedidos</p>
-              </button>
-              <button type="button" (click)="setActiveSection('addresses')" [class]="getButtonClasses('addresses')">
-                <span class="material-symbols-outlined">map</span>
-                <p class="text-sm font-medium">Direcciones de Envío</p>
-              </button>
-              <button type="button" (click)="setActiveSection('payment')" [class]="getButtonClasses('payment')">
-                <span class="material-symbols-outlined">credit_card</span>
-                <p class="text-sm font-medium">Métodos de Pago</p>
-              </button>
-              <button type="button" (click)="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors mt-4">
-                <span class="material-symbols-outlined text-red-500">logout</span>
-                <p class="text-sm font-medium text-red-500">Cerrar Sesión</p>
-              </button>
-            </div>
+      <aside class="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 flex-shrink-0 border-r border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-4 lg:flex lg:flex-col">
+        <div class="flex flex-col items-center py-4">
+          <div class="h-24 w-24 rounded-full bg-subtle-light dark:bg-subtle-dark flex items-center justify-center mb-2">
+            <span class="material-symbols-outlined text-5xl text-gray-400">person</span>
           </div>
+          <h3 class="font-bold text-lg text-text-light dark:text-text-dark">
+            Hola, {{ getUserDisplayName() }}
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ currentUser()?.email || currentUser()?.id || '' }}</p>
         </div>
+        <nav class="mt-6 flex flex-col gap-2">
+          <button type="button" (click)="setActiveSection('personal')" [class]="getButtonClasses('personal')">
+            <span class="material-symbols-outlined text-xl">account_circle</span>
+            <span>Mi Perfil</span>
+          </button>
+          <button type="button" (click)="setActiveSection('orders')" [class]="getButtonClasses('orders')">
+            <span class="material-symbols-outlined text-xl">receipt_long</span>
+            <span>Mis Pedidos</span>
+          </button>
+          <button type="button" (click)="setActiveSection('addresses')" [class]="getButtonClasses('addresses')">
+            <span class="material-symbols-outlined text-xl">location_on</span>
+            <span>Mis Direcciones</span>
+          </button>
+          <button type="button" (click)="logout()" class="flex items-center gap-3 rounded px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span>Cerrar Sesión</span>
+          </button>
+        </nav>
       </aside>
 
       <!-- Main Content Area -->
@@ -150,47 +136,137 @@
         <!-- Orders Section -->
         @if (activeSection() === 'orders') {
           <div data-section="orders" class="flex flex-col gap-6">
-            <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Historial de Pedidos</h2>
-            @if (isLoading()) {
-              <div class="flex items-center justify-center p-8">
-                <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+            <!-- Vista de Lista de Pedidos -->
+            @if (!showOrderDetails()) {
+              <div class="flex flex-col gap-2">
+                <h1 class="text-3xl font-black tracking-tight text-text-light dark:text-text-dark">Historial de Pedidos</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Consulta y gestiona todos tus pedidos realizados. Puedes filtrar por fecha y estado, y ver los detalles de cada pedido.</p>
               </div>
-            } @else if (orders().length === 0) {
-              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">receipt_long</span>
-                <p class="text-gray-500 dark:text-gray-400">No tienes pedidos aún</p>
-                <a routerLink="/tienda/productos" class="text-primary hover:underline mt-2 inline-block">Ir a comprar</a>
+              
+              <!-- Filtros -->
+              <div class="rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-4 shadow-sm">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-center">
+                  <div class="relative">
+                    <label class="sr-only" for="date-from">Desde</label>
+                    <input 
+                      class="form-input h-10 w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark pr-4 text-sm focus:border-primary focus:ring-primary" 
+                      id="date-from" 
+                      type="date"
+                      [ngModel]="filterDateFrom()"
+                      (ngModelChange)="filterDateFrom.set($event); applyFilters()"
+                    />
+                  </div>
+                  <div class="relative">
+                    <label class="sr-only" for="date-to">Hasta</label>
+                    <input 
+                      class="form-input h-10 w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark pr-4 text-sm focus:border-primary focus:ring-primary" 
+                      id="date-to" 
+                      type="date"
+                      [ngModel]="filterDateTo()"
+                      (ngModelChange)="filterDateTo.set($event); applyFilters()"
+                    />
+                  </div>
+                  <div class="relative">
+                    <label class="sr-only" for="status-filter">Estado</label>
+                    <select 
+                      class="form-select h-10 w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-sm focus:border-primary focus:ring-primary" 
+                      id="status-filter"
+                      [ngModel]="filterStatus()"
+                      (ngModelChange)="filterStatus.set($event); applyFilters()"
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="delivered">Entregado</option>
+                      <option value="shipped">En camino</option>
+                      <option value="cancelled">Cancelado</option>
+                      <option value="confirmed">Confirmado</option>
+                      <option value="preparing">Preparando</option>
+                      <option value="ready_for_pickup">Listo para retiro</option>
+                      <option value="pending">Pendiente</option>
+                    </select>
+                  </div>
+                  <button 
+                    (click)="applyFilters()"
+                    class="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary/90 lg:w-auto">
+                    <span class="material-symbols-outlined text-base">filter_alt</span>
+                    <span class="truncate">Filtrar</span>
+                  </button>
+                </div>
               </div>
-            } @else {
-              <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                  <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th class="px-6 py-3" scope="col">ID Pedido</th>
-                      <th class="px-6 py-3" scope="col">Fecha</th>
-                      <th class="px-6 py-3" scope="col">Estado</th>
-                      <th class="px-6 py-3 text-right" scope="col">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (order of orders(); track order.id) {
-                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-primary/5 cursor-pointer" (click)="viewOrderDetails(order.id)">
-                        <th class="px-6 py-4 font-medium whitespace-nowrap text-text-light dark:text-text-dark" scope="row">{{ order.orderNumber }}</th>
-                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ formatDate(order.createdAt) }}</td>
-                        <td class="px-6 py-4">
-                          <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full {{ getOrderStatusClass(order.status) }}">
-                            {{ getOrderStatusText(order.status) }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-4 text-right font-semibold text-text-light dark:text-text-dark">{{ formatPrice(order.total) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+
+              @if (isLoading()) {
+                <div class="flex items-center justify-center p-8">
+                  <span class="material-symbols-outlined animate-spin text-primary">refresh</span>
+                </div>
+              } @else if (filteredOrders().length === 0) {
+                <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                  @if (filterDateFrom() || filterDateTo() || filterStatus()) {
+                    <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">search_off</span>
+                    <p class="text-gray-500 dark:text-gray-400 mb-2">No se encontraron pedidos con los filtros aplicados</p>
+                    <button 
+                      (click)="clearFilters()"
+                      class="text-primary hover:underline mt-2 inline-block">
+                      Limpiar filtros
+                    </button>
+                  } @else {
+                    <span class="material-symbols-outlined text-6xl text-gray-400 mb-4">receipt_long</span>
+                    <p class="text-gray-500 dark:text-gray-400">No tienes pedidos aún</p>
+                    <a routerLink="/tienda/productos" class="text-primary hover:underline mt-2 inline-block">Ir a comprar</a>
+                  }
+                </div>
+              } @else {
+                <div class="overflow-hidden rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark shadow-sm">
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border-light dark:divide-border-dark">
+                      <thead class="bg-subtle-light dark:bg-subtle-dark/50">
+                        <tr>
+                          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">N° Pedido</th>
+                          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">Fecha</th>
+                          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">Monto Total</th>
+                          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">Método de Envío</th>
+                          <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">Estado</th>
+                          <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-light dark:text-text-dark" scope="col">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-border-light dark:divide-border-dark bg-card-light dark:bg-card-dark">
+                        @for (order of paginatedOrders(); track order.id) {
+                          <tr>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-text-light dark:text-text-dark">#{{ order.orderNumber }}</td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ formatDate(order.createdAt) }}</td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-text-light dark:text-text-dark">{{ formatPrice(order.total) }}</td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm">
+                              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ getShippingMethodClass(order.shippingMethod) }}">
+                                {{ getShippingMethodText(order.shippingMethod) }}
+                              </span>
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm">
+                              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ getOrderStatusClass(order.status) }}">
+                                {{ getOrderStatusText(order.status) }}
+                              </span>
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                              <button 
+                                (click)="viewOrderDetails(order.id)"
+                                class="flex h-9 items-center justify-center gap-2 rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-3 text-sm font-medium shadow-sm hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                                Ver Detalles
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- Paginación -->
+                  <app-pagination
+                    [currentPage]="currentPage()"
+                    [totalItems]="filteredOrders().length"
+                    [itemsPerPage]="itemsPerPage"
+                    (pageChange)="currentPage.set($event)">
+                  </app-pagination>
+                </div>
+              }
             }
 
-            <!-- Detalles del Pedido -->
+            <!-- Vista de Detalle del Pedido -->
             @if (showOrderDetails()) {
               <div class="bg-white dark:bg-background-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 @if (isLoadingOrderDetails()) {
@@ -199,15 +275,24 @@
                   </div>
                 } @else if (selectedOrder()) {
                   <div class="flex flex-col gap-6">
+                    <!-- Botón Volver - Prominente en móvil -->
+                    <button 
+                      (click)="closeOrderDetails()"
+                      class="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-3 mb-2 rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark font-medium shadow-sm hover:bg-subtle-light dark:hover:bg-subtle-dark transition-colors">
+                      <span class="material-symbols-outlined text-base">arrow_back</span>
+                      <span>Volver a la Lista</span>
+                    </button>
+
                     <!-- Header -->
                     <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
                       <div>
                         <h3 class="text-2xl font-bold text-text-light dark:text-text-dark">Detalles del Pedido</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pedido: {{ selectedOrder()!.orderNumber }}</p>
                       </div>
+                      <!-- Botón cerrar solo en desktop -->
                       <button 
                         (click)="closeOrderDetails()"
-                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        class="hidden sm:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                         <span class="material-symbols-outlined text-text-light dark:text-text-dark">close</span>
                       </button>
                     </div>
@@ -337,8 +422,9 @@
         <!-- Personal Data Section -->
         @if (activeSection() === 'personal') {
           <div class="flex flex-col gap-6">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-2">
               <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Mis Datos Personales</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Actualiza tu información personal como nombre, apellido y teléfono. Tu correo electrónico y DNI no se pueden modificar por seguridad.</p>
             </div>
 
             @if (isLoadingProfile()) {
@@ -425,16 +511,21 @@
         <!-- Addresses Section -->
         @if (activeSection() === 'addresses') {
           <div class="flex flex-col gap-6">
-            <div class="flex items-center justify-between">
-              <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Direcciones de Envío</h2>
-              @if (!showAddressForm()) {
-                <button 
-                  (click)="showAddAddressForm()"
-                  class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                  <span class="material-symbols-outlined text-lg">add</span>
-                  <span>Agregar Dirección</span>
-                </button>
-              }
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <div class="flex flex-col gap-2">
+                  <h2 class="text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">Direcciones de Envío</h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Gestiona tus direcciones de entrega. Puedes agregar, editar o eliminar direcciones y establecer una como predeterminada para agilizar tus compras.</p>
+                </div>
+                @if (!showAddressForm()) {
+                  <button 
+                    (click)="showAddAddressForm()"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors h-fit">
+                    <span class="material-symbols-outlined text-lg">add</span>
+                    <span>Agregar Dirección</span>
+                  </button>
+                }
+              </div>
             </div>
 
             @if (showAddressForm()) {
@@ -546,38 +637,54 @@
                   }
 
                   <div>
-                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Distrito <span class="text-red-500">*</span></label>
-                    <input 
-                      type="text"
-                      formControlName="district"
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Región/Departamento <span class="text-red-500">*</span></label>
+                    <select 
+                      formControlName="region"
+                      (change)="onDepartmentChange()"
                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
-                      [class.border-red-500]="addressForm.get('district')?.invalid && addressForm.get('district')?.touched">
-                    @if (addressForm.get('district')?.invalid && addressForm.get('district')?.touched) {
-                      <p class="text-sm text-red-500 mt-1">El distrito es requerido</p>
+                      [class.border-red-500]="addressForm.get('region')?.invalid && addressForm.get('region')?.touched">
+                      <option value="">Seleccione un departamento</option>
+                      @for (dept of departments(); track dept) {
+                        <option [value]="dept">{{ dept }}</option>
+                      }
+                    </select>
+                    @if (addressForm.get('region')?.invalid && addressForm.get('region')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">La región es requerida</p>
                     }
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Ciudad <span class="text-red-500">*</span></label>
-                    <input 
-                      type="text"
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Ciudad/Provincia <span class="text-red-500">*</span></label>
+                    <select 
                       formControlName="city"
-                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                      (change)="onProvinceChange()"
+                      [disabled]="provinces().length === 0"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       [class.border-red-500]="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+                      <option value="">Seleccione una provincia</option>
+                      @for (province of provinces(); track province) {
+                        <option [value]="province">{{ province }}</option>
+                      }
+                    </select>
                     @if (addressForm.get('city')?.invalid && addressForm.get('city')?.touched) {
                       <p class="text-sm text-red-500 mt-1">La ciudad es requerida</p>
                     }
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Región/Departamento <span class="text-red-500">*</span></label>
-                    <input 
-                      type="text"
-                      formControlName="region"
-                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
-                      [class.border-red-500]="addressForm.get('region')?.invalid && addressForm.get('region')?.touched">
-                    @if (addressForm.get('region')?.invalid && addressForm.get('region')?.touched) {
-                      <p class="text-sm text-red-500 mt-1">La región es requerida</p>
+                    <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">Distrito <span class="text-red-500">*</span></label>
+                    <select 
+                      formControlName="district"
+                      [disabled]="districts().length === 0"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      [class.border-red-500]="addressForm.get('district')?.invalid && addressForm.get('district')?.touched">
+                      <option value="">Seleccione un distrito</option>
+                      @for (district of districts(); track district) {
+                        <option [value]="district">{{ district }}</option>
+                      }
+                    </select>
+                    @if (addressForm.get('district')?.invalid && addressForm.get('district')?.touched) {
+                      <p class="text-sm text-red-500 mt-1">El distrito es requerido</p>
                     }
                   </div>
 
@@ -712,6 +819,7 @@
           </div>
         }
       </div>
+    </div>
     </div>
   </main>
 </div>

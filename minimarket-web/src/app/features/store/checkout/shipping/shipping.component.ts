@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { ShippingService } from '../../../../core/services/shipping.service';
 import { SedesService, Sede } from '../../../../core/services/sedes.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService, UserAddress } from '../../../../core/services/auth.service';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../../shared/components/store-footer/store-footer.component';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -40,6 +41,13 @@ export class ShippingComponent implements OnInit {
   address = signal('');
   city = signal('');
   region = signal('');
+  district = signal('');
+  
+  // User addresses
+  userAddresses = signal<UserAddress[]>([]);
+  selectedAddress = signal<UserAddress | null>(null);
+  showAddressForm = signal(false);
+  showAddressSelector = signal(false);
   
   // Store locations (sedes)
   sedes = signal<Sede[]>([]);
@@ -72,13 +80,14 @@ export class ShippingComponent implements OnInit {
     private sedesService: SedesService,
     private authService: AuthService,
     private router: Router,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private toastService: ToastService
   ) {
     // Inicializar cartItems después del constructor
     this.cartItems = this.cartService.getCartItems();
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     // Verificar que el carrito no esté vacío
     if (this.cartItems().length === 0) {
       this.router.navigate(['/carrito']);
@@ -93,13 +102,19 @@ export class ShippingComponent implements OnInit {
     // Cargar sedes primero para que estén disponibles cuando se carguen los datos guardados
     this.loadSedes();
     
+    // Cargar direcciones del usuario y dirección predeterminada
+    await this.loadUserAddresses();
+    
     // Cargar datos del perfil del usuario si está autenticado
-    this.loadUserProfile();
+    await this.loadUserProfile();
     
     // Cargar datos guardados desde localStorage (persistencia incluso después de recargar la página)
     // Esto protege contra pérdida de datos por errores de red o recargas accidentales
     // La sede ya se carga dentro de loadSedes(), así que solo cargamos los demás datos aquí
-    this.loadShippingDataFromStorage();
+    // Solo cargar si no hay dirección seleccionada ya cargada
+    if (!this.selectedAddress() || !this.address()) {
+      this.loadShippingDataFromStorage();
+    }
 
     // Calcular shipping inicial después de que el componente esté inicializado
     // Usar NgZone.run para asegurar que se ejecute dentro de la zona de Angular
@@ -220,12 +235,14 @@ export class ShippingComponent implements OnInit {
   onShippingMethodChange(method: 'delivery' | 'pickup') {
     this.shippingMethod.set(method);
     if (method === 'delivery') {
-      // Si ya hay un costo guardado y hay dirección, usarlo; si no, recalcular
-      if (this.shippingCost() > 0 && this.address()) {
+      // Si hay dirección seleccionada y no se está usando el formulario, cargarla
+      if (this.selectedAddress() && !this.showAddressForm() && !this.address()) {
+        this.loadAddressData(this.selectedAddress()!);
+      } else if (this.shippingCost() > 0 && this.address()) {
         // Ya hay costo guardado, solo guardar el cambio de método
         this.onFieldChange();
-      } else {
-        // Recalcular el costo
+      } else if (this.address()) {
+        // Recalcular el costo si hay dirección
         this.calculateShippingCost();
       }
     } else {
@@ -250,6 +267,12 @@ export class ShippingComponent implements OnInit {
   }
 
   onAddressChange() {
+    // Cuando el usuario cambia la dirección manualmente, marcar que no se está usando una dirección guardada
+    if (this.address() && this.selectedAddress()) {
+      this.selectedAddress.set(null);
+      this.showAddressForm.set(true);
+    }
+    
     // Cuando el usuario cambia la dirección, recalcular distancia
     // Nota: En producción, usarías un servicio de geocoding para obtener coordenadas
     // Por ahora, usamos una distancia estimada basada en la ciudad
@@ -258,6 +281,91 @@ export class ShippingComponent implements OnInit {
     }
     // Guardar cambios automáticamente
     this.onFieldChange();
+  }
+
+  async loadUserAddresses() {
+    if (this.authService.isAuthenticated()) {
+      try {
+        const addresses = await firstValueFrom(this.authService.getAddresses());
+        this.userAddresses.set(addresses);
+        
+        // Buscar dirección predeterminada o la primera disponible
+        const defaultAddr = addresses.find(addr => addr.isDefault) || addresses[0];
+        if (defaultAddr) {
+          this.selectedAddress.set(defaultAddr);
+          // Cargar datos de la dirección seleccionada si no hay datos guardados
+          if (!this.address() && !this.city() && !this.region()) {
+            this.loadAddressData(defaultAddr);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user addresses:', error);
+        this.userAddresses.set([]);
+      }
+    }
+  }
+  
+  loadAddressData(address: UserAddress) {
+    this.selectedAddress.set(address);
+    this.address.set(address.address);
+    this.city.set(address.city);
+    this.region.set(address.region);
+    this.district.set(address.district);
+    this.recipientPhone.set(address.phone);
+    
+    // Si es diferente destinatario, cargar datos del destinatario
+    if (address.isDifferentRecipient) {
+      this.isDifferentRecipient.set(true);
+      this.recipientFirstName.set(address.firstName || '');
+      this.recipientLastName.set(address.lastName || '');
+      this.recipientDni.set(address.dni || '');
+    } else {
+      this.isDifferentRecipient.set(false);
+    }
+    
+    // Calcular costo de envío con la dirección seleccionada
+    if (this.shippingMethod() === 'delivery') {
+      this.calculateShippingCost();
+    }
+    
+    this.showAddressForm.set(false);
+    this.showAddressSelector.set(false);
+    this.onFieldChange();
+  }
+  
+  selectAddress(address: UserAddress) {
+    this.loadAddressData(address);
+  }
+  
+  changeAddress() {
+    // Si hay varias direcciones, mostrar selector; si no, mostrar formulario
+    if (this.userAddresses().length > 1) {
+      this.showAddressSelector.set(true);
+    } else {
+      this.showAddressForm.set(true);
+      this.selectedAddress.set(null);
+    }
+  }
+  
+  cancelAddressChange() {
+    this.showAddressForm.set(false);
+    this.showAddressSelector.set(false);
+    // Restaurar dirección seleccionada si existe
+    const selected = this.selectedAddress();
+    if (selected) {
+      this.loadAddressData(selected);
+    }
+  }
+  
+  useNewAddress() {
+    this.showAddressSelector.set(false);
+    this.showAddressForm.set(true);
+    this.selectedAddress.set(null);
+    // Limpiar campos para nueva dirección
+    this.address.set('');
+    this.city.set('');
+    this.region.set('');
+    this.district.set('');
   }
 
   async loadUserProfile() {
@@ -292,23 +400,71 @@ export class ShippingComponent implements OnInit {
 
   continueToPayment() {
     // Validar que los datos requeridos estén completos según el método seleccionado
-    if (!this.email() || !this.firstName() || !this.lastName()) {
-      // Mostrar mensaje de error o validar en el formulario
+    if (!this.email()) {
+      this.toastService.error('Por favor, ingresa tu correo electrónico');
+      return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.email())) {
+      this.toastService.error('Por favor, ingresa un correo electrónico válido');
+      return;
+    }
+    
+    if (!this.firstName()) {
+      this.toastService.error('Por favor, ingresa tu nombre');
+      return;
+    }
+    
+    if (!this.lastName()) {
+      this.toastService.error('Por favor, ingresa tu apellido');
       return;
     }
 
     // Si es diferente destinatario, validar campos del destinatario
     if (this.isDifferentRecipient()) {
-      if (!this.recipientFirstName() || !this.recipientLastName() || !this.recipientDni() || !this.recipientPhone()) {
-        // Mostrar mensaje de error
+      if (!this.recipientFirstName()) {
+        this.toastService.error('Por favor, ingresa el nombre del destinatario');
+        return;
+      }
+      if (!this.recipientLastName()) {
+        this.toastService.error('Por favor, ingresa el apellido del destinatario');
+        return;
+      }
+      if (!this.recipientDni()) {
+        this.toastService.error('Por favor, ingresa el DNI del destinatario');
+        return;
+      }
+      if (!this.recipientPhone()) {
+        this.toastService.error('Por favor, ingresa el teléfono del destinatario');
         return;
       }
     }
 
     if (this.shippingMethod() === 'delivery') {
-      // Para delivery, también se requiere dirección completa
-      if (!this.address() || !this.city() || !this.region()) {
-        // Mostrar mensaje de error o validar en el formulario
+      // Para delivery, validar dirección completa solo si no hay dirección seleccionada o se está usando el formulario
+      if (!this.selectedAddress() || this.showAddressForm()) {
+        if (!this.address()) {
+          this.toastService.error('Por favor, ingresa la dirección de envío');
+          return;
+        }
+        if (!this.city()) {
+          this.toastService.error('Por favor, ingresa la ciudad');
+          return;
+        }
+        if (!this.region()) {
+          this.toastService.error('Por favor, ingresa la región o departamento');
+          return;
+        }
+      } else if (this.selectedAddress() && !this.address()) {
+        // Si hay dirección seleccionada pero no se cargó, cargarla ahora
+        this.loadAddressData(this.selectedAddress()!);
+      }
+    } else if (this.shippingMethod() === 'pickup') {
+      // Para pickup, validar que se haya seleccionado una sede
+      if (!this.selectedSede()) {
+        this.toastService.error('Por favor, selecciona una sede para retirar tu pedido');
         return;
       }
     }
@@ -326,6 +482,7 @@ export class ShippingComponent implements OnInit {
       address: this.address(),
       city: this.city(),
       region: this.region(),
+      district: this.district(),
       shippingMethod: this.shippingMethod() as 'delivery' | 'pickup',
       shippingCost: this.shippingCost(),
       shippingCalculationDetails: this.shippingCalculationDetails(),
@@ -351,17 +508,30 @@ export class ShippingComponent implements OnInit {
         const shippingData = JSON.parse(savedShipping);
         // Validar que los datos sean válidos antes de cargar
         if (shippingData && typeof shippingData === 'object') {
-          this.email.set(shippingData.email || '');
-          this.firstName.set(shippingData.firstName || '');
-          this.lastName.set(shippingData.lastName || '');
-          this.isDifferentRecipient.set(shippingData.isDifferentRecipient || false);
-          this.recipientFirstName.set(shippingData.recipientFirstName || '');
-          this.recipientLastName.set(shippingData.recipientLastName || '');
-          this.recipientDni.set(shippingData.recipientDni || '');
-          this.recipientPhone.set(shippingData.recipientPhone || '');
-          this.address.set(shippingData.address || '');
-          this.city.set(shippingData.city || '');
-          this.region.set(shippingData.region || '');
+          // Solo cargar email y nombre si no están ya cargados
+          if (!this.email()) {
+            this.email.set(shippingData.email || '');
+          }
+          if (!this.firstName()) {
+            this.firstName.set(shippingData.firstName || '');
+          }
+          if (!this.lastName()) {
+            this.lastName.set(shippingData.lastName || '');
+          }
+          
+          // Solo cargar dirección si no hay dirección seleccionada ya cargada
+          if (!this.selectedAddress() || !this.address()) {
+            this.isDifferentRecipient.set(shippingData.isDifferentRecipient || false);
+            this.recipientFirstName.set(shippingData.recipientFirstName || '');
+            this.recipientLastName.set(shippingData.recipientLastName || '');
+            this.recipientDni.set(shippingData.recipientDni || '');
+            this.recipientPhone.set(shippingData.recipientPhone || '');
+            this.address.set(shippingData.address || '');
+            this.city.set(shippingData.city || '');
+            this.region.set(shippingData.region || '');
+            this.district.set(shippingData.district || '');
+          }
+          
           this.shippingMethod.set(shippingData.shippingMethod || 'delivery');
           this.shippingCost.set(shippingData.shippingCost || 0);
           this.shippingCalculationDetails.set(shippingData.shippingCalculationDetails || '');
@@ -395,6 +565,7 @@ export class ShippingComponent implements OnInit {
         address: this.address(),
         city: this.city(),
         region: this.region(),
+        district: this.district(),
         shippingMethod: this.shippingMethod() as 'delivery' | 'pickup',
         shippingCost: this.shippingCost(),
         shippingCalculationDetails: this.shippingCalculationDetails(),

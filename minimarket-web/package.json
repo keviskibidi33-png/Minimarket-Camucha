@@ -12,7 +12,9 @@
     "cy:run:chrome": "cypress run --browser chrome",
     "cy:run:firefox": "cypress run --browser firefox",
     "cy:run:mobile": "cypress run --config viewportWidth=375,viewportHeight=667",
-    "test:e2e": "start-server-and-test 'ng serve' http://localhost:4200 cy:run"
+    "test:e2e": "start-server-and-test 'ng serve' http://localhost:4200 cy:run",
+    "validate:templates": "node scripts/validate-templates.js",
+    "fix:pagination": "node scripts/fix-pagination.js"
   },
   "private": true,
   "dependencies": {

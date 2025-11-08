@@ -50,9 +50,13 @@ module.exports = {
           light: '#F3F4F6',
           dark: '#374151',
         },
-        // Success and danger
+        'subtle-light': '#F3F4F6',
+        'subtle-dark': '#374151',
+        // Success, danger, warning, info
         success: '#10B981',
         danger: '#EF4444',
+        warning: '#F59E0B',
+        info: '#3B82F6',
       },
       fontFamily: {
         display: ['Inter', 'sans-serif'],

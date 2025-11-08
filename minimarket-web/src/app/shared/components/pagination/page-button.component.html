@@ -1,0 +1,11 @@
+<button 
+  type="button" 
+  (click)="onClick()" 
+  [ngClass]="{
+    'bg-primary/20': isActive,
+    'text-primary': isActive,
+    'ring-primary': isActive
+  }"
+  class="relative z-10 inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20">
+  {{ pageNumber }}
+</button>

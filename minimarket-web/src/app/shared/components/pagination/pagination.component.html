@@ -1,0 +1,47 @@
+<div class="flex items-center justify-between border-t border-border-light dark:border-border-dark px-4 py-3 sm:px-6">
+  <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+    <div>
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        Mostrando <span class="font-medium">{{ startIndex() }}</span> a <span class="font-medium">{{ endIndex() }}</span> de <span class="font-medium">{{ totalItems }}</span> resultados
+      </p>
+    </div>
+    <div>
+      <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+        <button 
+          type="button" 
+          (click)="previousPage()" 
+          [disabled]="currentPage === 1" 
+          class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-base">chevron_left</span>
+        </button>
+        <app-page-button 
+          *ngIf="pageNumbers()[0] !== 1"
+          [pageNumber]="1"
+          [isActive]="currentPage === 1"
+          (pageClick)="goToPage($event)">
+        </app-page-button>
+        <span *ngIf="hasEllipsisBefore()" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-border-light dark:ring-border-dark">...</span>
+        <app-page-button 
+          *ngFor="let page of pageNumbers(); trackBy: trackByIndex"
+          [pageNumber]="page"
+          [isActive]="currentPage === page"
+          (pageClick)="goToPage($event)">
+        </app-page-button>
+        <span *ngIf="hasEllipsisAfter()" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-border-light dark:ring-border-dark">...</span>
+        <app-page-button 
+          *ngIf="pageNumbers()[pageNumbers().length - 1] !== totalPages()"
+          [pageNumber]="totalPages()"
+          [isActive]="currentPage === totalPages()"
+          (pageClick)="goToPage($event)">
+        </app-page-button>
+        <button 
+          type="button" 
+          (click)="nextPage()" 
+          [disabled]="currentPage === totalPages()" 
+          class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-base">chevron_right</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>

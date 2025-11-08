@@ -196,41 +196,143 @@
             @if (shippingMethod() === 'delivery') {
               <section class="animate-fade-in">
                 <h2 class="text-[#0d141c] dark:text-text-primary-dark text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Dirección de Envío</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label class="flex flex-col min-w-40 flex-1 md:col-span-2">
-                    <p class="text-base font-medium leading-normal pb-2">Dirección</p>
-                    <input 
-                      type="text"
-                      [ngModel]="address()"
-                      (ngModelChange)="address.set($event); onAddressChange(); onFieldChange()"
-                      name="address"
-                      [required]="shippingMethod() === 'delivery'"
-                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                      placeholder="Av. Siempre Viva 123"/>
-                  </label>
-                  <label class="flex flex-col min-w-40 flex-1">
-                    <p class="text-base font-medium leading-normal pb-2">Ciudad</p>
-                    <input 
-                      type="text"
-                      [ngModel]="city()"
-                      (ngModelChange)="city.set($event); onAddressChange(); onFieldChange()"
-                      name="city"
-                      [required]="shippingMethod() === 'delivery'"
-                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                      placeholder="Lima"/>
-                  </label>
-                  <label class="flex flex-col min-w-40 flex-1">
-                    <p class="text-base font-medium leading-normal pb-2">Región</p>
-                    <input 
-                      type="text"
-                      [ngModel]="region()"
-                      (ngModelChange)="region.set($event); onFieldChange()"
-                      name="region"
-                      [required]="shippingMethod() === 'delivery'"
-                      class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
-                      placeholder="Metropolitana"/>
-                  </label>
-                </div>
+                
+                <!-- Selector de direcciones guardadas (minimalista) -->
+                @if (showAddressSelector() && userAddresses().length > 0) {
+                  <div class="mb-4 space-y-2">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecciona una dirección guardada:</p>
+                    @for (addr of userAddresses(); track addr.id) {
+                      <button
+                        type="button"
+                        (click)="selectAddress(addr)"
+                        class="w-full text-left p-3 rounded-lg border-2 transition-all hover:border-primary/50
+                          {{ selectedAddress()?.id === addr.id ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }}">
+                        <div class="flex items-start justify-between">
+                          <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                              <span class="material-symbols-outlined text-base text-gray-600 dark:text-gray-400">
+                                {{ addr.label === 'Casa' ? 'home' : addr.label === 'Trabajo' ? 'work' : 'location_on' }}
+                              </span>
+                              <span class="font-medium text-text-light dark:text-text-dark">{{ addr.label }}</span>
+                              @if (addr.isDefault) {
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/20 text-primary">Predeterminada</span>
+                              }
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ addr.address }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">{{ addr.district }}, {{ addr.city }}</p>
+                          </div>
+                          @if (selectedAddress()?.id === addr.id) {
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                          }
+                        </div>
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      (click)="useNewAddress()"
+                      class="w-full p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <span class="material-symbols-outlined text-base align-middle mr-2">add</span>
+                      Agregar nueva dirección
+                    </button>
+                    <button
+                      type="button"
+                      (click)="cancelAddressChange()"
+                      class="w-full mt-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+                      Cancelar
+                    </button>
+                  </div>
+                }
+                
+                <!-- Mostrar dirección seleccionada si existe y no se está editando -->
+                @if (selectedAddress() && !showAddressForm() && !showAddressSelector()) {
+                  <div class="bg-primary/5 dark:bg-primary/10 border-2 border-primary/30 rounded-lg p-4 mb-4">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="material-symbols-outlined text-primary text-lg">
+                            {{ selectedAddress()!.label === 'Casa' ? 'home' : selectedAddress()!.label === 'Trabajo' ? 'work' : 'location_on' }}
+                          </span>
+                          <h3 class="text-base font-semibold text-text-light dark:text-text-dark">{{ selectedAddress()!.label }}</h3>
+                          @if (selectedAddress()!.isDefault) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/20 text-primary">Predeterminada</span>
+                          }
+                        </div>
+                        <div class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                          <p class="font-medium">{{ selectedAddress()!.fullName }}</p>
+                          <p>{{ selectedAddress()!.address }}</p>
+                          <p>{{ selectedAddress()!.district }}, {{ selectedAddress()!.city }}, {{ selectedAddress()!.region }}</p>
+                          @if (selectedAddress()!.phone) {
+                            <p class="flex items-center gap-1">
+                              <span class="material-symbols-outlined text-base">phone</span>
+                              {{ selectedAddress()!.phone }}
+                            </p>
+                          }
+                          @if (selectedAddress()!.reference) {
+                            <p class="text-gray-500 dark:text-gray-400 italic text-xs">Ref: {{ selectedAddress()!.reference }}</p>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      (click)="changeAddress()"
+                      class="mt-3 flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors border border-primary/30">
+                      <span class="material-symbols-outlined text-base">edit</span>
+                      Cambiar Dirección
+                    </button>
+                  </div>
+                }
+                
+                <!-- Formulario de dirección (solo si no hay dirección seleccionada o se quiere agregar nueva) -->
+                @if (!selectedAddress() || showAddressForm()) {
+                  @if (selectedAddress() && showAddressForm()) {
+                    <div class="mb-4 flex items-center justify-between">
+                      <p class="text-sm text-gray-600 dark:text-gray-400">Ingresa una nueva dirección de envío</p>
+                      <button 
+                        type="button"
+                        (click)="cancelAddressChange()"
+                        class="text-sm text-primary hover:underline">
+                        Cancelar
+                      </button>
+                    </div>
+                  }
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="flex flex-col min-w-40 flex-1 md:col-span-2">
+                      <p class="text-base font-medium leading-normal pb-2">Dirección</p>
+                      <input 
+                        type="text"
+                        [ngModel]="address()"
+                        (ngModelChange)="address.set($event); onAddressChange(); onFieldChange()"
+                        name="address"
+                        [required]="shippingMethod() === 'delivery'"
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="Av. Siempre Viva 123"/>
+                    </label>
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">Ciudad</p>
+                      <input 
+                        type="text"
+                        [ngModel]="city()"
+                        (ngModelChange)="city.set($event); onAddressChange(); onFieldChange()"
+                        name="city"
+                        [required]="shippingMethod() === 'delivery'"
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="Lima"/>
+                    </label>
+                    <label class="flex flex-col min-w-40 flex-1">
+                      <p class="text-base font-medium leading-normal pb-2">Región</p>
+                      <input 
+                        type="text"
+                        [ngModel]="region()"
+                        (ngModelChange)="region.set($event); onFieldChange()"
+                        name="region"
+                        [required]="shippingMethod() === 'delivery'"
+                        class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal" 
+                        placeholder="Metropolitana"/>
+                    </label>
+                  </div>
+                }
               </section>
             }
 

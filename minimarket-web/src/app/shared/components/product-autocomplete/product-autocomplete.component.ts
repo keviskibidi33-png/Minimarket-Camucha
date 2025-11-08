@@ -31,9 +31,6 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
   private maxResults = 8; // Máximo de resultados a mostrar
 
   constructor(private productsService: ProductsService) {
-    // Log de inicialización - debe aparecer cuando se carga la página
-    console.log('🔍🔍🔍 ProductAutocompleteComponent CONSTRUCTOR - Component initialized!');
-    console.log('🔍 ProductsService:', this.productsService);
     
     // Debounce para evitar demasiadas búsquedas
     this.searchSubject.pipe(
@@ -41,7 +38,6 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(term => {
-      console.log('🔍 SearchSubject received term:', term);
       if (term && term.trim().length >= 2) {
         this.searchProducts(term.trim());
       } else {
@@ -53,7 +49,6 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🔍🔍🔍 ProductAutocompleteComponent ngOnInit - Component ready!');
   }
 
   @HostListener('document:click', ['$event'])
@@ -73,18 +68,14 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
   }
 
   onInputChange(value: string): void {
-    console.log('🔍 INPUT CHANGED:', value);
     this.searchTerm.set(value);
     const trimmed = value?.trim() || '';
-    console.log('🔍 Trimmed length:', trimmed.length);
     
     if (trimmed.length >= 2) {
-      console.log('🔍 Triggering search for:', trimmed);
       this.showDropdown.set(true);
       this.isLoading.set(true);
       this.searchSubject.next(trimmed);
     } else {
-      console.log('🔍 Clearing - text too short');
       this.suggestions.set([]);
       this.showDropdown.set(false);
       this.isLoading.set(false);
@@ -152,10 +143,8 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
   }
 
   private searchProducts(term: string): void {
-    console.log('🔍 searchProducts called with term:', term);
     this.isLoading.set(true);
     this.showDropdown.set(true);
-    console.log('🔍 Making API call...');
     
     this.productsService.getAll({
       searchTerm: term,
@@ -164,28 +153,14 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
       pageSize: this.maxResults
     }).subscribe({
       next: (result) => {
-        console.log('✅ API Response received:', result);
-        console.log('✅ Response type:', typeof result);
-        console.log('✅ Is array?', Array.isArray(result));
-        
         // Manejar diferentes formatos de respuesta
         let products: Product[] = [];
         if (result && typeof result === 'object') {
           if (Array.isArray(result)) {
             products = result;
-            console.log('✅ Response is array, products:', products.length);
           } else if (result.items && Array.isArray(result.items)) {
             products = result.items;
-            console.log('✅ Response has items property, products:', products.length);
-          } else {
-            console.warn('⚠️ Unknown response format:', Object.keys(result));
-            console.warn('⚠️ Result:', result);
           }
-        }
-        
-        console.log('✅ Products found:', products.length, 'for term:', term);
-        if (products.length > 0) {
-          console.log('✅ First product:', products[0]);
         }
         
         // Ordenar por relevancia: coincidencias exactas primero, luego por nombre
@@ -196,27 +171,14 @@ export class ProductAutocompleteComponent implements OnInit, OnDestroy {
         
         // Mostrar dropdown si hay resultados
         const hasResults = sorted.length > 0;
-        console.log('✅ Has results:', hasResults);
-        console.log('✅ Suggestions count:', this.suggestions().length);
-        console.log('✅ Setting showDropdown to:', hasResults);
-        
-        // Forzar actualización del dropdown
         if (hasResults) {
           this.showDropdown.set(true);
         } else {
           this.showDropdown.set(false);
         }
-        
-        console.log('✅ showDropdown after set:', this.showDropdown());
-        
-        // Forzar detección de cambios
-        setTimeout(() => {
-          console.log('✅ After timeout - showDropdown:', this.showDropdown(), 'suggestions:', this.suggestions().length);
-        }, 50);
       },
       error: (error) => {
-        console.error('❌ Error searching products:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        console.error('Error searching products:', error);
         this.suggestions.set([]);
         this.showDropdown.set(false);
         this.isLoading.set(false);

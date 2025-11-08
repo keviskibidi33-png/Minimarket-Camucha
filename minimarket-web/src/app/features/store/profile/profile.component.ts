@@ -1,19 +1,22 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { AuthService, PaymentMethod, UserProfile, UserAddress } from '../../../core/services/auth.service';
 import { OrdersService, WebOrder } from '../../../core/services/orders.service';
 import { PaymentMethodSettingsService, PaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { OrderStatusTrackerComponent } from '../../../shared/components/order-status-tracker/order-status-tracker.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { getOrderStatusClass, getOrderStatusText, formatDate, formatPrice, getShippingMethodText, getShippingMethodClass } from '../../../shared/utils/order.utils';
+import { getDepartments, getProvincesByDepartment, getDistrictsByProvince } from '../../../shared/data/peru-locations.data';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule, OrderStatusTrackerComponent],
+  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule, FormsModule, OrderStatusTrackerComponent, PaginationComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -21,11 +24,20 @@ export class ProfileComponent implements OnInit {
   currentUser = computed(() => this.authService.currentUser());
   orders = signal<WebOrder[]>([]);
   isLoading = signal(false);
-  activeSection = signal<'dashboard' | 'orders' | 'personal' | 'addresses' | 'payment'>('dashboard');
+  activeSection = signal<'dashboard' | 'orders' | 'personal' | 'addresses' | 'payment'>('orders');
   recentOrder = signal<WebOrder | null>(null);
   selectedOrder = signal<WebOrder | null>(null);
   isLoadingOrderDetails = signal(false);
   showOrderDetails = signal(false);
+  
+  // Filtros
+  filterDateFrom = signal<string>('');
+  filterDateTo = signal<string>('');
+  filterStatus = signal<string>('');
+  
+  // Paginación
+  currentPage = signal(1);
+  itemsPerPage = 4;
   
   // Datos personales
   profileForm: FormGroup;
@@ -50,6 +62,11 @@ export class ProfileComponent implements OnInit {
   isEditingAddress = signal<string | null>(null);
   addressForm: FormGroup;
   showAddressForm = signal(false);
+  
+  // Ubicaciones de Perú
+  departments = signal<string[]>([]);
+  provinces = signal<string[]>([]);
+  districts = signal<string[]>([]);
 
   constructor(
     private authService: AuthService,
@@ -101,6 +118,9 @@ export class ProfileComponent implements OnInit {
       return;
     }
 
+    // Cargar departamentos de Perú
+    this.departments.set(getDepartments());
+
     this.loadUserOrders();
     this.loadUserProfile();
     this.loadAddresses();
@@ -130,12 +150,96 @@ export class ProfileComponent implements OnInit {
     this.activeSection.set(section);
   }
 
+  onDepartmentChange(): void {
+    const department = this.addressForm.get('region')?.value;
+    if (department) {
+      this.provinces.set(getProvincesByDepartment(department));
+      // Limpiar ciudad y distrito cuando cambia el departamento
+      this.addressForm.patchValue({ city: '', district: '' });
+      this.districts.set([]);
+    } else {
+      this.provinces.set([]);
+      this.districts.set([]);
+    }
+  }
+
+  onProvinceChange(): void {
+    const department = this.addressForm.get('region')?.value;
+    const province = this.addressForm.get('city')?.value;
+    if (department && province) {
+      this.districts.set(getDistrictsByProvince(department, province));
+      // Limpiar distrito cuando cambia la provincia
+      this.addressForm.patchValue({ district: '' });
+    } else {
+      this.districts.set([]);
+    }
+  }
+
   getButtonClasses(section: 'dashboard' | 'orders' | 'personal' | 'addresses' | 'payment'): string {
-    const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 transition-colors';
-    const activeClasses = 'bg-primary/20 text-primary';
+    const baseClasses = 'flex items-center gap-3 rounded px-3 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark';
+    const activeClasses = 'bg-primary/10 text-primary dark:bg-primary/20';
     return this.activeSection() === section 
       ? `${baseClasses} ${activeClasses}` 
       : baseClasses;
+  }
+  
+  // Filtrado de pedidos
+  filteredOrders = computed(() => {
+    let filtered = [...this.orders()];
+    
+    // Filtrar por estado
+    const statusFilter = this.filterStatus();
+    if (statusFilter) {
+      filtered = filtered.filter(order => {
+        const orderStatus = order.status?.toLowerCase().trim() || '';
+        const filterStatusLower = statusFilter.toLowerCase().trim();
+        return orderStatus === filterStatusLower || orderStatus.includes(filterStatusLower);
+      });
+    }
+    
+    // Filtrar por fecha
+    const dateFrom = this.filterDateFrom();
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom);
+      fromDate.setHours(0, 0, 0, 0); // Iniciar desde el inicio del día
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        orderDate.setHours(0, 0, 0, 0);
+        return orderDate >= fromDate;
+      });
+    }
+    
+    const dateTo = this.filterDateTo();
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999); // Incluir todo el día
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate <= toDate;
+      });
+    }
+    
+    return filtered;
+  });
+  
+  // Pedidos paginados
+  paginatedOrders = computed(() => {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return this.filteredOrders().slice(start, end);
+  });
+  
+  applyFilters(): void {
+    // Resetear a la primera página cuando se aplican filtros
+    this.currentPage.set(1);
+    // El computed se actualizará automáticamente porque los filtros son signals
+  }
+  
+  clearFilters(): void {
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+    this.filterStatus.set('');
+    this.currentPage.set(1);
   }
 
   shouldShowStatusTracker(status: string): boolean {
@@ -163,39 +267,21 @@ export class ProfileComponent implements OnInit {
     return isActiveState || (normalizedStatus.length > 0 && !finalStates.some(s => normalizedStatus.includes(s)));
   }
 
-  getOrderStatusClass(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-      'confirmed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'preparing': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-      'shipped': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'delivered': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'ready_for_pickup': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-    };
-    return statusMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-  }
+  // Usar utilidades compartidas
+  getOrderStatusClass = getOrderStatusClass;
+  getOrderStatusText = getOrderStatusText;
+  formatDate = formatDate;
+  formatPrice = formatPrice;
+  getShippingMethodText = getShippingMethodText;
+  getShippingMethodClass = getShippingMethodClass;
 
-  getOrderStatusText(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      'pending': 'Pendiente',
-      'confirmed': 'Confirmado',
-      'preparing': 'Preparando',
-      'shipped': 'En Camino',
-      'delivered': 'Entregado',
-      'ready_for_pickup': 'Listo para Retiro',
-      'cancelled': 'Cancelado'
-    };
-    return statusMap[status] || status;
-  }
-
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-
-  formatPrice(price: number): string {
-    return `S/ ${price.toFixed(2)}`;
+  getUserDisplayName(): string {
+    const profile = this.userProfile();
+    if (profile?.firstName) {
+      return `${profile.firstName} ${profile.lastName || ''}`.trim();
+    }
+    const username = this.currentUser()?.username || 'Usuario';
+    return username.split(' ')[0];
   }
 
   logout() {
@@ -478,6 +564,10 @@ export class ProfileComponent implements OnInit {
 
   showAddAddressForm() {
     const profile = this.userProfile();
+    // Limpiar provincias y distritos al agregar nueva dirección
+    this.provinces.set([]);
+    this.districts.set([]);
+    
     this.addressForm.reset({
       isDifferentRecipient: false,
       fullName: profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() : '',
@@ -601,6 +691,19 @@ export class ProfileComponent implements OnInit {
   }
 
   editAddress(address: UserAddress) {
+    // Cargar provincias y distritos si hay región y ciudad
+    if (address.region) {
+      this.provinces.set(getProvincesByDepartment(address.region));
+      if (address.city) {
+        this.districts.set(getDistrictsByProvince(address.region, address.city));
+      } else {
+        this.districts.set([]);
+      }
+    } else {
+      this.provinces.set([]);
+      this.districts.set([]);
+    }
+    
     this.addressForm.patchValue({
       label: address.label,
       isDifferentRecipient: address.isDifferentRecipient,

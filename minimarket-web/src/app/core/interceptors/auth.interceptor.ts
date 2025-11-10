@@ -12,7 +12,19 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = this.authService.getToken();
+    // Verificar que el servicio esté disponible y tenga el método
+    let token: string | null = null;
+    try {
+      if (this.authService && typeof this.authService.getToken === 'function') {
+        token = this.authService.getToken();
+      } else {
+        // Fallback: obtener token directamente del localStorage
+        token = localStorage.getItem('auth_token');
+      }
+    } catch (error) {
+      // Si hay error, intentar obtener el token directamente
+      token = localStorage.getItem('auth_token');
+    }
 
     // Headers base para todas las peticiones
     const headers: { [key: string]: string } = {

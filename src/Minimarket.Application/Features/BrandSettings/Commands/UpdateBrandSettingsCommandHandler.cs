@@ -39,6 +39,24 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
                 Email = request.BrandSettings.Email,
                 Address = request.BrandSettings.Address,
                 Ruc = request.BrandSettings.Ruc,
+                YapePhone = request.BrandSettings.YapePhone,
+                PlinPhone = request.BrandSettings.PlinPhone,
+                YapeQRUrl = request.BrandSettings.YapeQRUrl,
+                PlinQRUrl = request.BrandSettings.PlinQRUrl,
+                YapeEnabled = request.BrandSettings.YapeEnabled,
+                PlinEnabled = request.BrandSettings.PlinEnabled,
+                BankName = request.BrandSettings.BankName,
+                BankAccountType = request.BrandSettings.BankAccountType,
+                BankAccountNumber = request.BrandSettings.BankAccountNumber,
+                BankCCI = request.BrandSettings.BankCCI,
+                BankAccountVisible = request.BrandSettings.BankAccountVisible,
+                DeliveryType = request.BrandSettings.DeliveryType ?? "Ambos",
+                DeliveryCost = request.BrandSettings.DeliveryCost,
+                DeliveryZones = request.BrandSettings.DeliveryZones,
+                HomeTitle = request.BrandSettings.HomeTitle,
+                HomeSubtitle = request.BrandSettings.HomeSubtitle,
+                HomeDescription = request.BrandSettings.HomeDescription,
+                HomeBannerImageUrl = request.BrandSettings.HomeBannerImageUrl,
                 UpdatedBy = request.UpdatedBy
             };
 
@@ -61,6 +79,24 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             brandSettings.Email = request.BrandSettings.Email;
             brandSettings.Address = request.BrandSettings.Address;
             brandSettings.Ruc = request.BrandSettings.Ruc;
+            brandSettings.YapePhone = request.BrandSettings.YapePhone;
+            brandSettings.PlinPhone = request.BrandSettings.PlinPhone;
+            brandSettings.YapeQRUrl = request.BrandSettings.YapeQRUrl;
+            brandSettings.PlinQRUrl = request.BrandSettings.PlinQRUrl;
+            brandSettings.YapeEnabled = request.BrandSettings.YapeEnabled;
+            brandSettings.PlinEnabled = request.BrandSettings.PlinEnabled;
+            brandSettings.BankName = request.BrandSettings.BankName;
+            brandSettings.BankAccountType = request.BrandSettings.BankAccountType;
+            brandSettings.BankAccountNumber = request.BrandSettings.BankAccountNumber;
+            brandSettings.BankCCI = request.BrandSettings.BankCCI;
+            brandSettings.BankAccountVisible = request.BrandSettings.BankAccountVisible;
+            brandSettings.DeliveryType = request.BrandSettings.DeliveryType ?? "Ambos";
+            brandSettings.DeliveryCost = request.BrandSettings.DeliveryCost;
+            brandSettings.DeliveryZones = request.BrandSettings.DeliveryZones;
+            brandSettings.HomeTitle = request.BrandSettings.HomeTitle;
+            brandSettings.HomeSubtitle = request.BrandSettings.HomeSubtitle;
+            brandSettings.HomeDescription = request.BrandSettings.HomeDescription;
+            brandSettings.HomeBannerImageUrl = request.BrandSettings.HomeBannerImageUrl;
             brandSettings.UpdatedBy = request.UpdatedBy;
 
             await _unitOfWork.BrandSettings.UpdateAsync(brandSettings, cancellationToken);
@@ -85,6 +121,24 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             Email = brandSettings.Email,
             Address = brandSettings.Address,
             Ruc = brandSettings.Ruc,
+            YapePhone = brandSettings.YapePhone,
+            PlinPhone = brandSettings.PlinPhone,
+            YapeQRUrl = brandSettings.YapeQRUrl,
+            PlinQRUrl = brandSettings.PlinQRUrl,
+            YapeEnabled = brandSettings.YapeEnabled,
+            PlinEnabled = brandSettings.PlinEnabled,
+            BankName = brandSettings.BankName,
+            BankAccountType = brandSettings.BankAccountType,
+            BankAccountNumber = brandSettings.BankAccountNumber,
+            BankCCI = brandSettings.BankCCI,
+            BankAccountVisible = brandSettings.BankAccountVisible,
+            DeliveryType = brandSettings.DeliveryType,
+            DeliveryCost = brandSettings.DeliveryCost,
+            DeliveryZones = brandSettings.DeliveryZones,
+            HomeTitle = brandSettings.HomeTitle,
+            HomeSubtitle = brandSettings.HomeSubtitle,
+            HomeDescription = brandSettings.HomeDescription,
+            HomeBannerImageUrl = brandSettings.HomeBannerImageUrl,
             CreatedAt = brandSettings.CreatedAt,
             UpdatedAt = brandSettings.UpdatedAt
         };

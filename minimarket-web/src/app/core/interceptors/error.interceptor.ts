@@ -33,7 +33,15 @@ export class ErrorInterceptor implements HttpInterceptor {
     } else if (error.status === 403) {
       this.toastr.error(error.error?.message || 'No tienes permiso para acceder a este recurso', 'Acceso Denegado');
     } else if (error.status === 404) {
-      this.toastr.error(error.error?.message || 'Recurso no encontrado', 'Error');
+      // Ignorar errores 404 para endpoints opcionales que pueden no existir aún
+      const url = req.url.toLowerCase();
+      const isOptionalEndpoint = url.includes('/email-templates/') || 
+                                 url.includes('/payment-method-settings');
+      
+      if (!isOptionalEndpoint) {
+        this.toastr.error(error.error?.message || 'Recurso no encontrado', 'Error');
+      }
+      // Silenciar el error para endpoints opcionales
     } else if (error.status === 422) {
       this.toastr.warning(error.error?.message || 'Regla de negocio violada', 'Regla de Negocio');
     } else if (error.status === 500) {

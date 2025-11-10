@@ -8,12 +8,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
 import { SendReceiptDialogComponent } from '../../shared/components/send-receipt-dialog/send-receipt-dialog.component';
-import { PosHeaderComponent } from './pos-header/pos-header.component';
+import { ConcentrationModeService } from '../../core/services/concentration-mode.service';
 
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, PosHeaderComponent, SendReceiptDialogComponent],
+  imports: [CommonModule, FormsModule, SendReceiptDialogComponent],
   templateUrl: './pos.component.html',
   styleUrl: './pos.component.css'
 })
@@ -42,6 +42,7 @@ export class PosComponent implements OnInit {
   showCustomerSearch = signal(false);
   showSendReceiptDialog = signal(false);
   lastSale = signal<Sale | null>(null);
+  activeService = signal<'ventas' | 'consultas' | 'reportes'>('ventas');
 
   // Computed values
   subtotal = computed(() => {
@@ -73,13 +74,20 @@ export class PosComponent implements OnInit {
     private salesService: SalesService,
     private authService: AuthService,
     private toastService: ToastService,
-    private router: Router
+    private router: Router,
+    public concentrationModeService: ConcentrationModeService
   ) {}
 
   // Helper methods for template
   parseFloat = parseFloat;
 
   ngOnInit(): void {
+    // Cargar el servicio activo desde localStorage
+    const savedService = localStorage.getItem('pos_active_service');
+    if (savedService && ['ventas', 'consultas', 'reportes'].includes(savedService)) {
+      this.activeService.set(savedService as 'ventas' | 'consultas' | 'reportes');
+    }
+
     this.loadProducts();
     this.loadCustomers();
     
@@ -100,10 +108,15 @@ export class PosComponent implements OnInit {
       }, { allowSignalWrites: true });
     });
 
-    // Limpiar el effect cuando el componente se destruya
+    // Limpiar los effects cuando el componente se destruya
     this.destroyRef.onDestroy(() => {
       this.paymentEffectCleanup?.destroy();
     });
+  }
+
+  setActiveService(service: 'ventas' | 'consultas' | 'reportes'): void {
+    this.activeService.set(service);
+    localStorage.setItem('pos_active_service', service);
   }
 
   loadProducts(): void {

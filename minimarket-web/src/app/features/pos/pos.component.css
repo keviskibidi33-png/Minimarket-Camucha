@@ -1,2 +1,63 @@
-/* Component-specific styles */
+/* Animaciones personalizadas para el POS */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
 
+.bounce {
+  animation: bounce-subtle 0.6s ease-in-out;
+}
+
+/* Mejora de scroll para productos */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Estilos personalizados para scrollbars */
+:host ::ng-deep {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgb(156 163 175);
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgb(107 114 128);
+  }
+
+  /* Dark mode scrollbar */
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgb(75 85 99);
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgb(107 114 128);
+  }
+}
+
+/* Asegurar que los contenedores con scroll tengan altura definida */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}

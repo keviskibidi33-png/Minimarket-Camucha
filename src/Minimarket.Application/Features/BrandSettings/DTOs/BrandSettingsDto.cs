@@ -17,6 +17,27 @@ public class BrandSettingsDto
     public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Ruc { get; set; }
+    public string? YapePhone { get; set; }
+    public string? PlinPhone { get; set; }
+    public string? YapeQRUrl { get; set; }
+    public string? PlinQRUrl { get; set; }
+    public bool YapeEnabled { get; set; }
+    public bool PlinEnabled { get; set; }
+    // Cuenta bancaria
+    public string? BankName { get; set; }
+    public string? BankAccountType { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankCCI { get; set; }
+    public bool BankAccountVisible { get; set; }
+    // Opciones de envío
+    public string DeliveryType { get; set; } = "Ambos";
+    public decimal? DeliveryCost { get; set; }
+    public string? DeliveryZones { get; set; }
+    // Personalización de página principal
+    public string? HomeTitle { get; set; }
+    public string? HomeSubtitle { get; set; }
+    public string? HomeDescription { get; set; }
+    public string? HomeBannerImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

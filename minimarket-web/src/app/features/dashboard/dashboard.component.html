@@ -9,6 +9,29 @@
         <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
       </div>
     } @else if (stats()) {
+      <!-- Quick Actions - Compacta arriba de las métricas -->
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4 mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Acciones Rápidas</h3>
+        <div class="grid grid-cols-4 gap-3">
+          <a routerLink="/admin/pos" class="flex flex-col items-center p-3 bg-primary-admin/10 rounded-lg hover:bg-primary-admin/20 transition-colors">
+            <span class="material-symbols-outlined text-primary-admin text-2xl mb-1">point_of_sale</span>
+            <span class="text-xs font-medium text-gray-900 dark:text-white text-center">Nueva Venta</span>
+          </a>
+          <a routerLink="/admin/productos/nuevo" class="flex flex-col items-center p-3 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">
+            <span class="material-symbols-outlined text-green-500 text-2xl mb-1">add_shopping_cart</span>
+            <span class="text-xs font-medium text-gray-900 dark:text-white text-center">Nuevo Producto</span>
+          </a>
+          <a routerLink="/admin/clientes/nuevo" class="flex flex-col items-center p-3 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-colors">
+            <span class="material-symbols-outlined text-blue-500 text-2xl mb-1">person_add</span>
+            <span class="text-xs font-medium text-gray-900 dark:text-white text-center">Nuevo Cliente</span>
+          </a>
+          <a routerLink="/admin/ventas" class="flex flex-col items-center p-3 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors">
+            <span class="material-symbols-outlined text-purple-500 text-2xl mb-1">receipt_long</span>
+            <span class="text-xs font-medium text-gray-900 dark:text-white text-center">Ver Ventas</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Ventas Hoy -->
@@ -94,29 +117,6 @@
               <p class="text-sm text-gray-500 text-center py-4">No hay datos disponibles</p>
             }
           </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a routerLink="/pos" class="flex flex-col items-center p-4 bg-primary-admin/10 rounded-lg hover:bg-primary-admin/20 transition-colors">
-            <span class="material-symbols-outlined text-primary-admin text-3xl mb-2">point_of_sale</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">Nueva Venta</span>
-          </a>
-          <a routerLink="/productos/nuevo" class="flex flex-col items-center p-4 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">
-            <span class="material-symbols-outlined text-green-500 text-3xl mb-2">add_shopping_cart</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">Nuevo Producto</span>
-          </a>
-          <a routerLink="/clientes/nuevo" class="flex flex-col items-center p-4 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-colors">
-            <span class="material-symbols-outlined text-blue-500 text-3xl mb-2">person_add</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">Nuevo Cliente</span>
-          </a>
-          <a routerLink="/ventas" class="flex flex-col items-center p-4 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors">
-            <span class="material-symbols-outlined text-purple-500 text-3xl mb-2">receipt_long</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">Ver Ventas</span>
-          </a>
         </div>
       </div>
     }

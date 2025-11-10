@@ -1,7 +1,10 @@
 <div class="flex-1 p-6 lg:p-8">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-7xl mx-auto">
     <!-- Page Heading -->
-    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuración de Marca</h1>
+    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuraciones del Sistema</h1>
+
+    <!-- Navbar de pestañas -->
+    <app-settings-navbar></app-settings-navbar>
 
     <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
       <form (ngSubmit)="saveSettings()">
@@ -205,6 +208,214 @@
                 placeholder="20123456789"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
             </div>
+          </div>
+        </div>
+
+        <!-- Métodos de Pago -->
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Métodos de Pago Digital</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Configura los métodos de pago y elige cuáles serán visibles en la tienda</p>
+          
+          <div class="space-y-6">
+            <!-- Yape -->
+            <div class="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <h4 class="text-base font-semibold text-gray-900 dark:text-white">Yape</h4>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="yapeEnabled"
+                      name="yapeEnabled"
+                      class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {{ yapeEnabled() ? 'Visible en tienda' : 'Oculto' }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Número de teléfono</label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="yapePhone"
+                    name="yapePhone"
+                    placeholder="999 888 777"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">QR Code</label>
+                  <div class="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      (change)="onYapeQRUpload($event)"
+                      class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+                    @if (previewYapeQRUrl()) {
+                      <img [src]="previewYapeQRUrl()" alt="Yape QR" class="w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg object-contain">
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plin -->
+            <div class="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <h4 class="text-base font-semibold text-gray-900 dark:text-white">Plin</h4>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="plinEnabled"
+                      name="plinEnabled"
+                      class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {{ plinEnabled() ? 'Visible en tienda' : 'Oculto' }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Número de teléfono</label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="plinPhone"
+                    name="plinPhone"
+                    placeholder="999 888 666"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">QR Code</label>
+                  <div class="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      (change)="onPlinQRUpload($event)"
+                      class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+                    @if (previewPlinQRUrl()) {
+                      <img [src]="previewPlinQRUrl()" alt="Plin QR" class="w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg object-contain">
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cuenta Bancaria -->
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Cuenta Bancaria</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Información de cuenta bancaria para transferencias</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                [(ngModel)]="bankAccountVisible"
+                name="bankAccountVisible"
+                class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+              <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ bankAccountVisible() ? 'Visible en tienda' : 'Oculto' }}
+              </span>
+            </label>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banco</label>
+              <input
+                type="text"
+                [(ngModel)]="bankName"
+                name="bankName"
+                placeholder="Ej: BCP, BBVA, Interbank"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Cuenta</label>
+              <select
+                [(ngModel)]="bankAccountType"
+                name="bankAccountType"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <option value="">Seleccione</option>
+                <option value="Ahorros">Ahorros</option>
+                <option value="Corriente">Corriente</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Número de Cuenta</label>
+              <input
+                type="text"
+                [(ngModel)]="bankAccountNumber"
+                name="bankAccountNumber"
+                placeholder="1234567890123456"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CCI (Opcional)</label>
+              <input
+                type="text"
+                [(ngModel)]="bankCCI"
+                name="bankCCI"
+                placeholder="00000000000000000000"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+            </div>
+          </div>
+        </div>
+
+        <!-- Opciones de Envío -->
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Opciones de Entrega</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Configura cómo los clientes recibirán sus pedidos</p>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Entrega</label>
+              <select
+                [(ngModel)]="deliveryType"
+                name="deliveryType"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <option value="Ambos">Ambos (Recogida en tienda y envío a domicilio)</option>
+                <option value="SoloRecogida">Solo recogida en tienda</option>
+                <option value="SoloEnvio">Solo envío a domicilio</option>
+              </select>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Esta configuración afectará las opciones disponibles en el carrito de compras</p>
+            </div>
+
+            @if (deliveryType() !== 'SoloRecogida') {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Costo de Envío (S/)</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="deliveryCost"
+                    name="deliveryCost"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Deja en 0 para envío gratis</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zonas de Envío</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="deliveryZones"
+                    name="deliveryZones"
+                    placeholder="Ej: Lima, Callao, San Isidro"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Separa las zonas con comas</p>
+                </div>
+              </div>
+            }
           </div>
         </div>
 

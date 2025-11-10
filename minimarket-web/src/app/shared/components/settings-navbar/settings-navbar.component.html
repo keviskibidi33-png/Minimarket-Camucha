@@ -1,0 +1,74 @@
+<!-- Tabs -->
+<div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+  <nav class="-mb-px flex space-x-8">
+    <a
+      routerLink="/admin/configuraciones/marca"
+      routerLinkActive="border-primary-admin text-primary-admin"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Marca
+    </a>
+    <a
+      routerLink="/admin/configuraciones/permisos"
+      routerLinkActive="border-primary-admin text-primary-admin"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Permisos
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'cart' }"
+      [class.border-primary-admin]="isActiveTab('cart')"
+      [class.text-primary-admin]="isActiveTab('cart')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Carrito
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'shipping' }"
+      [class.border-primary-admin]="isActiveTab('shipping')"
+      [class.text-primary-admin]="isActiveTab('shipping')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Envíos
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'shipping-rates' }"
+      [class.border-primary-admin]="isActiveTab('shipping-rates')"
+      [class.text-primary-admin]="isActiveTab('shipping-rates')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Tarifas de Envío
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'email-templates' }"
+      [class.border-primary-admin]="isActiveTab('email-templates')"
+      [class.text-primary-admin]="isActiveTab('email-templates')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Templates de Email
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'banners' }"
+      [class.border-primary-admin]="isActiveTab('banners')"
+      [class.text-primary-admin]="isActiveTab('banners')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Banners
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'categories' }"
+      [class.border-primary-admin]="isActiveTab('categories')"
+      [class.text-primary-admin]="isActiveTab('categories')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Categorías
+    </a>
+    <a
+      routerLink="/admin/configuraciones"
+      [queryParams]="{ tab: 'payment-methods' }"
+      [class.border-primary-admin]="isActiveTab('payment-methods')"
+      [class.text-primary-admin]="isActiveTab('payment-methods')"
+      class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+      Métodos de Pago
+    </a>
+  </nav>
+</div>
+

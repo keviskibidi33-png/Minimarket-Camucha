@@ -1,7 +1,17 @@
-<div class="flex min-h-screen w-full bg-background-light dark:bg-background-dark">
+<div class="flex min-h-screen w-full bg-background-light dark:bg-background-dark" 
+     [class.relative]="!concentrationModeService.isConcentrationMode()"
+     [class.fixed]="concentrationModeService.isConcentrationMode()"
+     [class.inset-0]="concentrationModeService.isConcentrationMode()"
+     [class.z-40]="concentrationModeService.isConcentrationMode()">
   <!-- Sidebar -->
-  <aside [class.w-64]="sidebarOpen" [class.w-0]="!sidebarOpen" 
-         class="flex-shrink-0 bg-white dark:bg-gray-900/50 p-4 flex flex-col justify-between border-r border-gray-200 dark:border-gray-800 transition-all duration-300 overflow-hidden">
+  @if (!concentrationModeService.isConcentrationMode()) {
+    <aside [class.w-64]="sidebarOpen" 
+           [class.w-0]="!sidebarOpen" 
+           [class.opacity-100]="sidebarOpen"
+           [class.opacity-0]="!sidebarOpen"
+           [class.translate-x-0]="sidebarOpen"
+           [class.-translate-x-full]="!sidebarOpen"
+           class="flex-shrink-0 bg-white dark:bg-gray-900/50 p-4 flex flex-col justify-between border-r border-gray-200 dark:border-gray-800 transition-all duration-500 ease-in-out overflow-hidden transform">
     <div>
       <!-- Logo -->
       <div class="flex items-center gap-3 p-2 mb-6">
@@ -23,7 +33,7 @@
           </a>
         }
         @if (permissions.canUsePOS()) {
-          <a routerLink="/pos" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+          <a routerLink="/admin/pos" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">point_of_sale</span>
             <p class="text-sm font-medium leading-normal">Punto de Venta</p>
@@ -110,40 +120,42 @@
         <p class="text-sm font-medium leading-normal">Cerrar Sesión</p>
       </a>
     </div>
-  </aside>
+    </aside>
+  }
 
   <!-- Main Content -->
-  <main class="flex-1 flex flex-col overflow-hidden">
+  <main class="flex-1 flex flex-col overflow-hidden" [class.fixed]="concentrationModeService.isConcentrationMode()" 
+        [class.inset-0]="concentrationModeService.isConcentrationMode()" 
+        [class.z-50]="concentrationModeService.isConcentrationMode()"
+        [class.bg-background-light]="concentrationModeService.isConcentrationMode()"
+        [class.dark:bg-background-dark]="concentrationModeService.isConcentrationMode()">
     <!-- Header -->
-    <header class="flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-gray-700 px-6 py-3 bg-white dark:bg-background-dark/50 flex-shrink-0">
-      <div class="flex items-center gap-4 text-gray-900 dark:text-white">
-        <button (click)="toggleSidebar()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-          <span class="material-symbols-outlined">menu</span>
-        </button>
-        <div class="size-6 text-primary-admin">
-          <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-            <path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
-          </svg>
+    @if (!concentrationModeService.isConcentrationMode()) {
+      <header class="flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-gray-700 px-6 py-3 bg-white dark:bg-background-dark/50 flex-shrink-0">
+        <div class="flex items-center gap-4 text-gray-900 dark:text-white">
+          <button (click)="toggleSidebar()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
         </div>
-        <h2 class="text-lg font-bold tracking-tight">Minimarket Camucha</h2>
-        <span class="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">Caja 01</span>
-      </div>
-      <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-600 dark:text-gray-300" data-cy="user-menu">
-          {{ (authService.currentUser()?.firstName && authService.currentUser()?.lastName) ? (authService.currentUser()!.firstName + ' ' + authService.currentUser()!.lastName) : (authService.currentUser()?.firstName || authService.currentUser()?.lastName || 'Usuario') }}
-        </span>
-        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" 
-             style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzj00K22jvV9gfRXmUkPBZ9DXXy5vpjyoCDRFuOm3c8FDewvZ8pcTrCalOneosWGlCMlL9e2p6ZHzGU8KsqNpSggFmZLeHKjGP--Ffa0mur3KSnkq0PfkisB3ijiFRrJdgn62PjMRxv4okkzBAJlmaBGPYVV22DiFAYd6zuY4oUGqUSgI7-jBvhVp5ltSbE-NF-ia3es20-HLLgMqkw37y_lauHy6msLzObilopS4fviDrJWDrmFzOj_MhqRvaKBZ8kA3gLt53WsYf');"></div>
-        <button (click)="logout()" 
-                data-cy="logout-button"
-                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-bold leading-normal tracking-wide hover:bg-gray-200 dark:hover:bg-gray-600">
-          <span class="truncate">Cerrar Sesión</span>
-        </button>
-      </div>
-    </header>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-600 dark:text-gray-300" data-cy="user-menu">
+            {{ (authService.currentUser()?.firstName && authService.currentUser()?.lastName) ? (authService.currentUser()!.firstName + ' ' + authService.currentUser()!.lastName) : (authService.currentUser()?.firstName || authService.currentUser()?.lastName || 'Usuario') }}
+          </span>
+          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" 
+               style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzj00K22jvV9gfRXmUkPBZ9DXXy5vpjyoCDRFuOm3c8FDewvZ8pcTrCalOneosWGlCMlL9e2p6ZHzGU8KsqNpSggFmZLeHKjGP--Ffa0mur3KSnkq0PfkisB3ijiFRrJdgn62PjMRxv4okkzBAJlmaBGPYVV22DiFAYd6zuY4oUGqUSgI7-jBvhVp5ltSbE-NF-ia3es20-HLLgMqkw37y_lauHy6msLzObilopS4fviDrJWDrmFzOj_MhqRvaKBZ8kA3gLt53WsYf');"></div>
+          <button (click)="logout()" 
+                  data-cy="logout-button"
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-bold leading-normal tracking-wide hover:bg-gray-200 dark:hover:bg-gray-600">
+            <span class="truncate">Cerrar Sesión</span>
+          </button>
+        </div>
+      </header>
+    }
 
     <!-- Content Area -->
-    <div class="flex-1 overflow-y-auto p-6">
+    <div class="flex-1 overflow-hidden flex flex-col min-h-0" 
+         [class.p-6]="!concentrationModeService.isConcentrationMode()" 
+         [class.h-full]="concentrationModeService.isConcentrationMode()">
       <router-outlet></router-outlet>
     </div>
   </main>

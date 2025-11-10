@@ -5,6 +5,7 @@ import { PermissionsGranularService, Module, RolePermission, UpdateRolePermissio
 import { ToastService } from '../../../shared/services/toast.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 
 interface Role {
   id: string;
@@ -14,7 +15,7 @@ interface Role {
 @Component({
   selector: 'app-permissions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SettingsNavbarComponent],
   templateUrl: './permissions.component.html',
   styleUrl: './permissions.component.css'
 })

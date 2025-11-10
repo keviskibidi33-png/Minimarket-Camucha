@@ -358,7 +358,7 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  async loadPaymentMethodSettings() {
+  async loadPaymentMethodSettings(): Promise<void> {
     this.isLoadingPaymentMethodSettings.set(true);
     try {
       const settings = await firstValueFrom(this.paymentMethodSettingsService.getAll(true)); // Solo habilitados

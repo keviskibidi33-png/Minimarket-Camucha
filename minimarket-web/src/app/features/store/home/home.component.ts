@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductsService, Product } from '../../../core/services/products.service';
 import { CategoriesService, CategoryDto } from '../../../core/services/categories.service';
+import { BrandSettingsService, BrandSettings } from '../../../core/services/brand-settings.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -24,15 +25,29 @@ export class HomeComponent implements OnInit {
   featuredProducts = signal<Product[]>([]);
   categories = signal<CategoryDto[]>([]);
   isLoading = signal(true);
+  brandSettings = signal<BrandSettings | null>(null);
 
   constructor(
     private productsService: ProductsService,
-    private categoriesService: CategoriesService
+    private categoriesService: CategoriesService,
+    private brandSettingsService: BrandSettingsService
   ) {}
 
   ngOnInit() {
+    this.loadBrandSettings();
     this.loadFeaturedProducts();
     this.loadCategories();
+  }
+
+  loadBrandSettings() {
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        this.brandSettings.set(settings);
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+      }
+    });
   }
 
   loadFeaturedProducts() {

@@ -71,7 +71,7 @@ export class AuthService {
         
         // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
         if (!response.firstName || !response.lastName) {
-          this.loadUserProfile();
+          this.loadUserProfilePrivate();
         }
       })
     );
@@ -121,14 +121,23 @@ export class AuthService {
               
               // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
               if (!loginResponse.firstName || !loginResponse.lastName) {
-                this.loadUserProfile();
+                this.loadUserProfilePrivate();
               }
               
-              // Redirigir según el estado del perfil
+              // Redirigir según el estado del perfil y rol
+              const isAdmin = loginResponse.roles?.includes('Administrador');
               if (loginResponse.profileCompleted === false) {
-                window.location.href = '/auth/complete-profile';
+                if (isAdmin) {
+                  window.location.href = '/auth/admin-setup';
+                } else {
+                  window.location.href = '/auth/complete-profile';
+                }
               } else {
-                window.location.href = '/';
+                if (isAdmin) {
+                  window.location.href = '/admin';
+                } else {
+                  window.location.href = '/';
+                }
               }
             },
             error: (error) => {
@@ -233,12 +242,29 @@ export class AuthService {
       this.isAuthenticated.set(true);
       // Cargar perfil completo si firstName o lastName no están disponibles
       if (!this.currentUser()?.firstName || !this.currentUser()?.lastName) {
-        this.loadUserProfile();
+        this.loadUserProfilePrivate();
       }
     }
   }
 
-  private loadUserProfile(): void {
+  loadUserProfile(): Observable<UserProfile> {
+    return this.getProfile().pipe(
+      tap(profile => {
+        const current = this.currentUser();
+        if (current && profile) {
+          this.currentUser.set({
+            ...current,
+            firstName: profile.firstName || current.firstName,
+            lastName: profile.lastName || current.lastName
+          });
+          // Actualizar localStorage
+          localStorage.setItem(this.userKey, JSON.stringify(this.currentUser()));
+        }
+      })
+    );
+  }
+
+  private loadUserProfilePrivate(): void {
     this.getProfile().subscribe({
       next: (profile) => {
         const current = this.currentUser();
@@ -277,7 +303,7 @@ export class AuthService {
         
         // Cargar perfil completo para obtener firstName y lastName si no están en la respuesta
         if (!response.firstName || !response.lastName) {
-          this.loadUserProfile();
+          this.loadUserProfilePrivate();
         }
       })
     );
@@ -465,4 +491,5 @@ export interface UserAddress {
   longitude?: number;
   isDefault: boolean;
 }
+
 

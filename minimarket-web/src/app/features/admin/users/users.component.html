@@ -1,33 +1,13 @@
 <div class="relative flex h-auto min-h-screen w-full flex-col">
-  <header class="sticky top-0 z-10 w-full border-b border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark/80 backdrop-blur-sm">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 items-center justify-between">
-        <div class="flex items-center gap-4">
-          <span class="material-symbols-outlined text-primary-admin text-3xl">store</span>
-          <h2 class="text-lg font-bold text-text-light dark:text-text-dark">Minimarket Camucha</h2>
-        </div>
-        <nav class="hidden md:flex items-center gap-8">
-          <a routerLink="/admin/dashboard" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Inicio</a>
-          <a routerLink="/admin/ventas" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Ventas</a>
-          <a routerLink="/admin/productos" class="text-sm font-medium text-text-light dark:text-text-dark hover:text-primary-admin">Inventario</a>
-          <a routerLink="/admin/usuarios" class="text-sm font-bold text-primary-admin">Usuarios</a>
-        </nav>
-        <div class="flex items-center gap-4">
-          <button class="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-subtle-light dark:bg-subtle-dark">
-            <span class="material-symbols-outlined">person</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <main class="flex-grow">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="flex flex-col gap-6">
         <!-- Page Header -->
         <div class="flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-3xl font-black tracking-tight">Administración de Usuarios</h1>
-          <button class="flex h-10 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-primary-admin px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-admin/90">
+          <button 
+            (click)="openCreateModal()"
+            class="flex h-10 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-primary-admin px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-admin/90">
             <span class="material-symbols-outlined text-base">add_circle</span>
             <span class="truncate">Crear Nuevo Usuario</span>
           </button>
@@ -59,20 +39,15 @@
                 class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
                 <p class="text-sm font-medium">Todos</p>
               </button>
-              <button 
-                (click)="onRoleFilterChange('Gerente')"
-                [class.bg-subtle-light]="selectedRole() === 'Gerente'"
-                [class.dark:bg-subtle-dark]="selectedRole() === 'Gerente'"
-                class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
-                <p class="text-sm font-medium">Gerente</p>
-              </button>
-              <button 
-                (click)="onRoleFilterChange('Vendedor')"
-                [class.bg-subtle-light]="selectedRole() === 'Vendedor'"
-                [class.dark:bg-subtle-dark]="selectedRole() === 'Vendedor'"
-                class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
-                <p class="text-sm font-medium">Vendedor</p>
-              </button>
+              @for (role of availableRoles; track role) {
+                <button 
+                  (click)="onRoleFilterChange(role)"
+                  [class.bg-subtle-light]="selectedRole() === role"
+                  [class.dark:bg-subtle-dark]="selectedRole() === role"
+                  class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg border border-border-light dark:border-border-dark px-4 hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                  <p class="text-sm font-medium">{{ role }}</p>
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -111,18 +86,27 @@
                       </td>
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
-                        <span [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+                        <span [class]="getRoleBadgeClass(user.roles)">{{ getRolesDisplay(user.roles) }}</span>
                       </td>
-                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.createdAt }}</td>
+                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ formatDate(user.createdAt) }}</td>
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                         <div class="flex items-center gap-2">
                           <button 
-                            class="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-subtle-light dark:hover:bg-subtle-dark">
+                            (click)="openEditModal(user)"
+                            class="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-subtle-light dark:hover:bg-subtle-dark"
+                            title="Editar usuario">
                             <span class="material-symbols-outlined text-lg">edit</span>
                           </button>
                           <button 
-                            (click)="deleteUser(user.id)"
-                            class="flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-danger/10">
+                            (click)="openResetPasswordModal(user)"
+                            class="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-subtle-light dark:hover:bg-subtle-dark text-blue-600 dark:text-blue-400"
+                            title="Restablecer contraseña">
+                            <span class="material-symbols-outlined text-lg">lock_reset</span>
+                          </button>
+                          <button 
+                            (click)="openDeleteModal(user)"
+                            class="flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-danger/10"
+                            title="Eliminar usuario">
                             <span class="material-symbols-outlined text-lg">delete</span>
                           </button>
                         </div>
@@ -135,33 +119,291 @@
           </div>
 
           <!-- Pagination -->
-          <div class="flex items-center justify-between border-t border-border-light dark:border-border-dark px-4 py-3 sm:px-6">
-            <div class="flex flex-1 justify-between sm:hidden">
-              <button class="relative inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark">Previous</button>
-              <button class="relative ml-3 inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark">Next</button>
-            </div>
-            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p class="text-sm text-gray-700 dark:text-gray-300">
-                  Mostrando <span class="font-medium">1</span> a <span class="font-medium">{{ filteredUsers().length }}</span> de <span class="font-medium">{{ filteredUsers().length }}</span> resultados
-                </p>
+          @if (totalPages() > 1) {
+            <div class="flex items-center justify-between border-t border-border-light dark:border-border-dark px-4 py-3 sm:px-6">
+              <div class="flex flex-1 justify-between sm:hidden">
+                <button 
+                  (click)="onPageChange(currentPage() - 1)"
+                  [disabled]="currentPage() === 1"
+                  [class.opacity-50]="currentPage() === 1"
+                  [class.cursor-not-allowed]="currentPage() === 1"
+                  class="relative inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark disabled:hover:bg-transparent">Anterior</button>
+                <button 
+                  (click)="onPageChange(currentPage() + 1)"
+                  [disabled]="currentPage() === totalPages()"
+                  [class.opacity-50]="currentPage() === totalPages()"
+                  [class.cursor-not-allowed]="currentPage() === totalPages()"
+                  class="relative ml-3 inline-flex items-center rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark px-4 py-2 text-sm font-medium hover:bg-subtle-light dark:hover:bg-subtle-dark disabled:hover:bg-transparent">Siguiente</button>
               </div>
-              <div>
-                <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                  <button class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0">
-                    <span class="material-symbols-outlined text-base">chevron_left</span>
-                  </button>
-                  <button aria-current="page" class="relative z-10 inline-flex items-center bg-primary-admin/20 px-4 py-2 text-sm font-semibold text-primary-admin focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-admin">1</button>
-                  <button class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0">
-                    <span class="material-symbols-outlined text-base">chevron_right</span>
-                  </button>
-                </nav>
+              <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    Mostrando <span class="font-medium">{{ ((currentPage() - 1) * pageSize) + 1 }}</span> a 
+                    <span class="font-medium">{{ Math.min(currentPage() * pageSize, totalCount()) }}</span> de 
+                    <span class="font-medium">{{ totalCount() }}</span> resultados
+                  </p>
+                </div>
+                <div>
+                  <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                    <button 
+                      (click)="onPageChange(currentPage() - 1)"
+                      [disabled]="currentPage() === 1"
+                      [class.opacity-50]="currentPage() === 1"
+                      [class.cursor-not-allowed]="currentPage() === 1"
+                      class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0 disabled:hover:bg-transparent">
+                      <span class="material-symbols-outlined text-base">chevron_left</span>
+                    </button>
+                    @for (pageNum of pagesArray(); track pageNum) {
+                      <button 
+                        (click)="onPageChange(pageNum)"
+                        [ngClass]="{
+                          'bg-primary-admin/20 text-primary-admin font-semibold': currentPage() === pageNum
+                        }"
+                        class="relative inline-flex items-center px-4 py-2 text-sm ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-admin">
+                        {{ pageNum }}
+                      </button>
+                    }
+                    <button 
+                      (click)="onPageChange(currentPage() + 1)"
+                      [disabled]="currentPage() === totalPages()"
+                      [class.opacity-50]="currentPage() === totalPages()"
+                      [class.cursor-not-allowed]="currentPage() === totalPages()"
+                      class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-border-light dark:ring-border-dark hover:bg-subtle-light dark:hover:bg-subtle-dark focus:z-20 focus:outline-offset-0 disabled:hover:bg-transparent">
+                      <span class="material-symbols-outlined text-base">chevron_right</span>
+                    </button>
+                  </nav>
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
       </div>
     </div>
   </main>
+
+  <!-- Modal Crear Usuario -->
+  @if (showCreateModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeCreateModal()">
+      <div class="relative w-full max-w-2xl rounded-lg bg-card-light dark:bg-card-dark shadow-xl" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between border-b border-border-light dark:border-border-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-text-light dark:text-text-dark">Crear Nuevo Usuario</h2>
+          <button (click)="closeCreateModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="createUserForm" (ngSubmit)="onCreateUser()" class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Nombre <span class="text-red-500">*</span></label>
+              <input formControlName="firstName" type="text" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="Nombre">
+              @if (createUserForm.get('firstName')?.invalid && createUserForm.get('firstName')?.touched) {
+                <p class="mt-1 text-xs text-red-500">El nombre es requerido</p>
+              }
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Apellido <span class="text-red-500">*</span></label>
+              <input formControlName="lastName" type="text" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="Apellido">
+              @if (createUserForm.get('lastName')?.invalid && createUserForm.get('lastName')?.touched) {
+                <p class="mt-1 text-xs text-red-500">El apellido es requerido</p>
+              }
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Email <span class="text-red-500">*</span></label>
+              <input formControlName="email" type="email" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="email@ejemplo.com">
+              @if (createUserForm.get('email')?.invalid && createUserForm.get('email')?.touched) {
+                <p class="mt-1 text-xs text-red-500">Email inválido</p>
+              }
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">DNI <span class="text-red-500">*</span></label>
+              <input formControlName="dni" type="text" maxlength="8" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="12345678">
+              @if (createUserForm.get('dni')?.invalid && createUserForm.get('dni')?.touched) {
+                <p class="mt-1 text-xs text-red-500">DNI debe tener 8 dígitos</p>
+              }
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Teléfono</label>
+              <input formControlName="phone" type="tel" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="999 888 777">
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Contraseña <span class="text-red-500">*</span></label>
+              <input formControlName="password" type="password" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="Mínimo 6 caracteres">
+              @if (createUserForm.get('password')?.invalid && createUserForm.get('password')?.touched) {
+                <p class="mt-1 text-xs text-red-500">La contraseña debe tener al menos 6 caracteres</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Roles <span class="text-red-500">*</span></label>
+              <div class="flex flex-wrap gap-2">
+                @for (role of availableRoles; track role) {
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isRoleSelected(role, 'create')"
+                      (change)="toggleRole(role, 'create')"
+                      class="h-4 w-4 rounded border-border-light text-primary-admin focus:ring-2 focus:ring-primary-admin/50 dark:border-border-dark accent-primary-admin">
+                    <span class="text-sm text-text-light dark:text-text-dark">{{ role }}</span>
+                  </label>
+                }
+              </div>
+              @if (createUserForm.get('roles')?.invalid && createUserForm.get('roles')?.touched) {
+                <p class="mt-1 text-xs text-red-500">Selecciona al menos un rol</p>
+              }
+            </div>
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" formControlName="emailConfirmed" class="h-4 w-4 rounded border-border-light text-primary-admin focus:ring-2 focus:ring-primary-admin/50 dark:border-border-dark accent-primary-admin">
+                <span class="text-sm text-text-light dark:text-text-dark">Email confirmado</span>
+              </label>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-border-light dark:border-border-dark">
+            <button type="button" (click)="closeCreateModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="createUserForm.invalid" class="px-4 py-2 text-sm font-medium text-white bg-primary-admin rounded-lg hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              Crear Usuario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Editar Usuario -->
+  @if (showEditModal() && selectedUser()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeEditModal()">
+      <div class="relative w-full max-w-2xl rounded-lg bg-card-light dark:bg-card-dark shadow-xl" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between border-b border-border-light dark:border-border-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-text-light dark:text-text-dark">Editar Usuario</h2>
+          <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="editUserForm" (ngSubmit)="onUpdateUser()" class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Nombre <span class="text-red-500">*</span></label>
+              <input formControlName="firstName" type="text" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm">
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Apellido <span class="text-red-500">*</span></label>
+              <input formControlName="lastName" type="text" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm">
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Email <span class="text-red-500">*</span></label>
+              <input formControlName="email" type="email" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm">
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Teléfono</label>
+              <input formControlName="phone" type="tel" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Roles <span class="text-red-500">*</span></label>
+              <div class="flex flex-wrap gap-2">
+                @for (role of availableRoles; track role) {
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isRoleSelected(role, 'edit')"
+                      (change)="toggleRole(role, 'edit')"
+                      class="h-4 w-4 rounded border-border-light text-primary-admin focus:ring-2 focus:ring-primary-admin/50 dark:border-border-dark accent-primary-admin">
+                    <span class="text-sm text-text-light dark:text-text-dark">{{ role }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" formControlName="emailConfirmed" class="h-4 w-4 rounded border-border-light text-primary-admin focus:ring-2 focus:ring-primary-admin/50 dark:border-border-dark accent-primary-admin">
+                <span class="text-sm text-text-light dark:text-text-dark">Email confirmado</span>
+              </label>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-border-light dark:border-border-dark">
+            <button type="button" (click)="closeEditModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="editUserForm.invalid" class="px-4 py-2 text-sm font-medium text-white bg-primary-admin rounded-lg hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Eliminar Usuario -->
+  @if (showDeleteModal() && selectedUser()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDeleteModal()">
+      <div class="relative w-full max-w-md rounded-lg bg-card-light dark:bg-card-dark shadow-xl" (click)="$event.stopPropagation()">
+        <div class="p-6">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+              <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">warning</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-text-light dark:text-text-dark">Eliminar Usuario</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Esta acción no se puede deshacer</p>
+            </div>
+          </div>
+          <p class="mb-6 text-sm text-text-light dark:text-text-dark">
+            ¿Estás seguro de que deseas eliminar al usuario 
+            <strong>{{ (selectedUser()?.firstName || '') + ' ' + (selectedUser()?.lastName || '') }}</strong>?
+            Se eliminarán todos sus datos asociados.
+          </p>
+          <div class="flex justify-end gap-3">
+            <button (click)="closeDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button (click)="onDeleteUser()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Restablecer Contraseña -->
+  @if (showResetPasswordModal() && selectedUser()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeResetPasswordModal()">
+      <div class="relative w-full max-w-md rounded-lg bg-card-light dark:bg-card-dark shadow-xl" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between border-b border-border-light dark:border-border-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-text-light dark:text-text-dark">Restablecer Contraseña</h2>
+          <button (click)="closeResetPasswordModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="resetPasswordForm" (ngSubmit)="onResetPassword()" class="p-6 space-y-4">
+          <p class="text-sm text-text-light dark:text-text-dark">
+            Nueva contraseña para <strong>{{ (selectedUser()?.firstName || '') + ' ' + (selectedUser()?.lastName || '') }}</strong>
+          </p>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Nueva Contraseña <span class="text-red-500">*</span></label>
+            <input formControlName="newPassword" type="password" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="Mínimo 6 caracteres">
+            @if (resetPasswordForm.get('newPassword')?.invalid && resetPasswordForm.get('newPassword')?.touched) {
+              <p class="mt-1 text-xs text-red-500">La contraseña debe tener al menos 6 caracteres</p>
+            }
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-text-light dark:text-text-dark">Confirmar Contraseña <span class="text-red-500">*</span></label>
+            <input formControlName="confirmPassword" type="password" class="form-input h-10 w-full rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-3 text-sm" placeholder="Confirma la contraseña">
+            @if (resetPasswordForm.get('confirmPassword')?.value && resetPasswordForm.get('newPassword')?.value !== resetPasswordForm.get('confirmPassword')?.value) {
+              <p class="mt-1 text-xs text-red-500">Las contraseñas no coinciden</p>
+            }
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-border-light dark:border-border-dark">
+            <button type="button" (click)="closeResetPasswordModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="resetPasswordForm.invalid || resetPasswordForm.get('newPassword')?.value !== resetPasswordForm.get('confirmPassword')?.value" class="px-4 py-2 text-sm font-medium text-white bg-primary-admin rounded-lg hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              Actualizar Contraseña
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>
 

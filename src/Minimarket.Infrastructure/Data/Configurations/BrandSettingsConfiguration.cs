@@ -61,9 +61,65 @@ public class BrandSettingsConfiguration : IEntityTypeConfiguration<BrandSettings
         builder.Property(b => b.Ruc)
             .HasMaxLength(20);
 
+        builder.Property(b => b.YapePhone)
+            .HasMaxLength(20);
+
+        builder.Property(b => b.PlinPhone)
+            .HasMaxLength(20);
+
+        builder.Property(b => b.YapeQRUrl)
+            .HasMaxLength(500);
+
+        builder.Property(b => b.PlinQRUrl)
+            .HasMaxLength(500);
+
+        builder.Property(b => b.YapeEnabled)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(b => b.PlinEnabled)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(b => b.BankName)
+            .HasMaxLength(100);
+
+        builder.Property(b => b.BankAccountType)
+            .HasMaxLength(20);
+
+        builder.Property(b => b.BankAccountNumber)
+            .HasMaxLength(50);
+
+        builder.Property(b => b.BankCCI)
+            .HasMaxLength(50);
+
+        builder.Property(b => b.BankAccountVisible)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(b => b.DeliveryType)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue("Ambos");
+
+        builder.Property(b => b.DeliveryCost)
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(b => b.DeliveryZones)
+            .HasMaxLength(1000);
+
+        // Personalización de página principal
+        builder.Property(b => b.HomeTitle)
+            .HasMaxLength(200);
+        builder.Property(b => b.HomeSubtitle)
+            .HasMaxLength(500);
+        builder.Property(b => b.HomeDescription)
+            .HasMaxLength(1000);
+        builder.Property(b => b.HomeBannerImageUrl)
+            .HasMaxLength(500);
+
         // Solo debe haber un registro de BrandSettings
         builder.HasIndex(b => b.Id)
             .IsUnique();
     }
 }
-

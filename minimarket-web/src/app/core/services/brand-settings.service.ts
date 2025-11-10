@@ -20,6 +20,28 @@ export interface BrandSettings {
   email?: string;
   address?: string;
   ruc?: string;
+  // Métodos de pago
+  yapePhone?: string;
+  plinPhone?: string;
+  yapeQRUrl?: string;
+  plinQRUrl?: string;
+  yapeEnabled: boolean;
+  plinEnabled: boolean;
+  // Cuenta bancaria
+  bankName?: string;
+  bankAccountType?: string;
+  bankAccountNumber?: string;
+  bankCCI?: string;
+  bankAccountVisible: boolean;
+  // Opciones de envío
+  deliveryType: string;
+  deliveryCost?: number;
+  deliveryZones?: string;
+  // Personalización de página principal
+  homeTitle?: string;
+  homeSubtitle?: string;
+  homeDescription?: string;
+  homeBannerImageUrl?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -39,6 +61,28 @@ export interface UpdateBrandSettings {
   email?: string;
   address?: string;
   ruc?: string;
+  // Métodos de pago
+  yapePhone?: string;
+  plinPhone?: string;
+  yapeQRUrl?: string;
+  plinQRUrl?: string;
+  yapeEnabled?: boolean;
+  plinEnabled?: boolean;
+  // Cuenta bancaria
+  bankName?: string;
+  bankAccountType?: string;
+  bankAccountNumber?: string;
+  bankCCI?: string;
+  bankAccountVisible?: boolean;
+  // Opciones de envío
+  deliveryType?: string;
+  deliveryCost?: number;
+  deliveryZones?: string;
+  // Personalización de página principal
+  homeTitle?: string;
+  homeSubtitle?: string;
+  homeDescription?: string;
+  homeBannerImageUrl?: string;
 }
 
 @Injectable({
@@ -50,8 +94,8 @@ export class BrandSettingsService {
   public settings$ = this.settingsSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // Cargar settings al inicializar el servicio
-    this.loadSettings();
+    // No cargar settings en el constructor para evitar problemas de inyección
+    // Se cargarán cuando se llame explícitamente a get()
   }
 
   get(): Observable<BrandSettings | null> {

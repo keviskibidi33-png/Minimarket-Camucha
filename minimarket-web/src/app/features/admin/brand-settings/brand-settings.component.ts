@@ -6,11 +6,12 @@ import { BrandSettingsService, UpdateBrandSettings } from '../../../core/service
 import { ToastService } from '../../../shared/services/toast.service';
 import { FilesService } from '../../../core/services/files.service';
 import { environment } from '../../../../environments/environment';
+import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 
 @Component({
   selector: 'app-brand-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent],
   templateUrl: './brand-settings.component.html',
   styleUrl: './brand-settings.component.css'
 })
@@ -33,10 +34,32 @@ export class BrandSettingsComponent implements OnInit {
   email = signal('');
   address = signal('');
   ruc = signal('');
+  
+  // Métodos de pago
+  yapePhone = signal('');
+  plinPhone = signal('');
+  yapeQRUrl = signal('');
+  plinQRUrl = signal('');
+  yapeEnabled = signal(false);
+  plinEnabled = signal(false);
+  
+  // Cuenta bancaria
+  bankName = signal('');
+  bankAccountType = signal('');
+  bankAccountNumber = signal('');
+  bankCCI = signal('');
+  bankAccountVisible = signal(false);
+  
+  // Opciones de envío
+  deliveryType = signal('Ambos');
+  deliveryCost = signal<number | null>(null);
+  deliveryZones = signal('');
 
   // Preview
   previewLogoUrl = signal('');
   previewFaviconUrl = signal('');
+  previewYapeQRUrl = signal('');
+  previewPlinQRUrl = signal('');
 
   constructor(
     private brandSettingsService: BrandSettingsService,
@@ -67,9 +90,31 @@ export class BrandSettingsComponent implements OnInit {
           this.email.set(settings.email || '');
           this.address.set(settings.address || '');
           this.ruc.set(settings.ruc || '');
+          
+          // Métodos de pago
+          this.yapePhone.set(settings.yapePhone || '');
+          this.plinPhone.set(settings.plinPhone || '');
+          this.yapeQRUrl.set(settings.yapeQRUrl || '');
+          this.plinQRUrl.set(settings.plinQRUrl || '');
+          this.yapeEnabled.set(settings.yapeEnabled ?? false);
+          this.plinEnabled.set(settings.plinEnabled ?? false);
+          
+          // Cuenta bancaria
+          this.bankName.set(settings.bankName || '');
+          this.bankAccountType.set(settings.bankAccountType || '');
+          this.bankAccountNumber.set(settings.bankAccountNumber || '');
+          this.bankCCI.set(settings.bankCCI || '');
+          this.bankAccountVisible.set(settings.bankAccountVisible ?? false);
+          
+          // Opciones de envío
+          this.deliveryType.set(settings.deliveryType || 'Ambos');
+          this.deliveryCost.set(settings.deliveryCost ?? null);
+          this.deliveryZones.set(settings.deliveryZones || '');
 
           this.previewLogoUrl.set(settings.logoUrl);
           this.previewFaviconUrl.set(settings.faviconUrl || '');
+          this.previewYapeQRUrl.set(settings.yapeQRUrl || '');
+          this.previewPlinQRUrl.set(settings.plinQRUrl || '');
         }
         this.isLoading.set(false);
       },
@@ -150,7 +195,24 @@ export class BrandSettingsComponent implements OnInit {
       phone: this.phone() || undefined,
       email: this.email() || undefined,
       address: this.address() || undefined,
-      ruc: this.ruc() || undefined
+      ruc: this.ruc() || undefined,
+      // Métodos de pago
+      yapePhone: this.yapePhone() || undefined,
+      plinPhone: this.plinPhone() || undefined,
+      yapeQRUrl: this.yapeQRUrl() || undefined,
+      plinQRUrl: this.plinQRUrl() || undefined,
+      yapeEnabled: this.yapeEnabled(),
+      plinEnabled: this.plinEnabled(),
+      // Cuenta bancaria
+      bankName: this.bankName() || undefined,
+      bankAccountType: this.bankAccountType() || undefined,
+      bankAccountNumber: this.bankAccountNumber() || undefined,
+      bankCCI: this.bankCCI() || undefined,
+      bankAccountVisible: this.bankAccountVisible(),
+      // Opciones de envío
+      deliveryType: this.deliveryType(),
+      deliveryCost: this.deliveryCost() ?? undefined,
+      deliveryZones: this.deliveryZones() || undefined
     };
 
     this.brandSettingsService.update(updateData).subscribe({
@@ -170,6 +232,44 @@ export class BrandSettingsComponent implements OnInit {
     // Actualizar preview cuando cambian los colores
     this.previewLogoUrl.set(this.logoUrl());
     this.previewFaviconUrl.set(this.faviconUrl());
+  }
+
+  onYapeQRUpload(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.isLoading.set(true);
+    this.filesService.uploadFile(file, 'payment-qr').subscribe({
+      next: (response) => {
+        this.yapeQRUrl.set(response.url);
+        this.previewYapeQRUrl.set(response.url);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error uploading Yape QR:', error);
+        this.toastService.error('Error al subir QR de Yape');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  onPlinQRUpload(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.isLoading.set(true);
+    this.filesService.uploadFile(file, 'payment-qr').subscribe({
+      next: (response) => {
+        this.plinQRUrl.set(response.url);
+        this.previewPlinQRUrl.set(response.url);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error uploading Plin QR:', error);
+        this.toastService.error('Error al subir QR de Plin');
+        this.isLoading.set(false);
+      }
+    });
   }
 }
 

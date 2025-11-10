@@ -1,17 +1,95 @@
-<div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark" (keydown)="onKeyDown($event)" tabindex="0">
-  <app-pos-header></app-pos-header>
-  <main class="flex-1 grid grid-cols-12 gap-6 p-6 overflow-y-auto">
+<div class="relative flex w-full h-full flex-col overflow-hidden bg-background-light dark:bg-background-dark" 
+     (keydown)="onKeyDown($event)" 
+     tabindex="0">
+  <!-- Barra superior con botón de modo concentración -->
+  <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 px-4 py-1.5 flex-shrink-0">
+    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Punto de Venta</h2>
+    <button
+      (click)="concentrationModeService.toggle()"
+      [class.bg-primary-admin]="concentrationModeService.isConcentrationMode()"
+      [class.text-white]="concentrationModeService.isConcentrationMode()"
+      [class.bg-gray-100]="!concentrationModeService.isConcentrationMode()"
+      [class.text-gray-700]="!concentrationModeService.isConcentrationMode()"
+      class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors hover:bg-primary-admin/90 hover:text-white">
+      <span class="material-symbols-outlined text-base">
+        {{ concentrationModeService.isConcentrationMode() ? 'fullscreen_exit' : 'fullscreen' }}
+      </span>
+      <span>{{ concentrationModeService.isConcentrationMode() ? 'Salir Modo Concentración' : 'Modo Concentración' }}</span>
+    </button>
+  </div>
+
+  <!-- Tabs para cambiar entre servicios - Diseño moderno -->
+  <div class="bg-gradient-to-r from-white to-gray-50 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-700 shadow-sm px-4 flex-shrink-0">
+    <nav class="flex gap-1.5 -mb-px">
+      <button
+        (click)="setActiveService('ventas')"
+        [class.bg-primary-admin]="activeService() === 'ventas'"
+        [class.text-white]="activeService() === 'ventas'"
+        [class.shadow-md]="activeService() === 'ventas'"
+        [class.bg-white]="activeService() !== 'ventas'"
+        [class.dark:bg-gray-800]="activeService() !== 'ventas'"
+        [class.text-gray-600]="activeService() !== 'ventas'"
+        [class.dark:text-gray-400]="activeService() !== 'ventas'"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg font-medium text-xs transition-all duration-300 hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20 hover:text-primary-admin dark:hover:text-primary-admin relative overflow-hidden group">
+        <span class="material-symbols-outlined text-sm transition-transform duration-300" 
+              [class.rotate-12]="activeService() === 'ventas'">point_of_sale</span>
+        <span class="relative z-10">Ventas</span>
+        @if (activeService() === 'ventas') {
+          <div class="absolute inset-0 bg-gradient-to-r from-primary-admin/20 to-transparent opacity-50"></div>
+        }
+      </button>
+      <button
+        (click)="setActiveService('consultas')"
+        [class.bg-primary-admin]="activeService() === 'consultas'"
+        [class.text-white]="activeService() === 'consultas'"
+        [class.shadow-md]="activeService() === 'consultas'"
+        [class.bg-white]="activeService() !== 'consultas'"
+        [class.dark:bg-gray-800]="activeService() !== 'consultas'"
+        [class.text-gray-600]="activeService() !== 'consultas'"
+        [class.dark:text-gray-400]="activeService() !== 'consultas'"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg font-medium text-xs transition-all duration-300 hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20 hover:text-primary-admin dark:hover:text-primary-admin relative overflow-hidden group">
+        <span class="material-symbols-outlined text-sm transition-transform duration-300"
+              [class.scale-110]="activeService() === 'consultas'">search</span>
+        <span class="relative z-10">Consultas</span>
+        @if (activeService() === 'consultas') {
+          <div class="absolute inset-0 bg-gradient-to-r from-primary-admin/20 to-transparent opacity-50"></div>
+        }
+      </button>
+      <button
+        (click)="setActiveService('reportes')"
+        [class.bg-primary-admin]="activeService() === 'reportes'"
+        [class.text-white]="activeService() === 'reportes'"
+        [class.shadow-md]="activeService() === 'reportes'"
+        [class.bg-white]="activeService() !== 'reportes'"
+        [class.dark:bg-gray-800]="activeService() !== 'reportes'"
+        [class.text-gray-600]="activeService() !== 'reportes'"
+        [class.dark:text-gray-400]="activeService() !== 'reportes'"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg font-medium text-xs transition-all duration-300 hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20 hover:text-primary-admin dark:hover:text-primary-admin relative overflow-hidden group">
+        <span class="material-symbols-outlined text-sm transition-transform duration-300"
+              [class.bounce]="activeService() === 'reportes'">assessment</span>
+        <span class="relative z-10">Reportes</span>
+        @if (activeService() === 'reportes') {
+          <div class="absolute inset-0 bg-gradient-to-r from-primary-admin/20 to-transparent opacity-50"></div>
+        }
+      </button>
+    </nav>
+  </div>
+
+  <!-- Contenido según el servicio activo -->
+  <div class="flex-1 overflow-hidden flex flex-col min-h-0">
+  @if (activeService() === 'ventas') {
+    <main class="flex-1 grid grid-cols-12 gap-3 p-3 overflow-hidden min-h-0">
     <!-- Left Column: Product Search and Results -->
-    <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+    <div class="col-span-12 lg:col-span-7 flex flex-col gap-2 min-h-0 overflow-hidden">
       <!-- SearchBar -->
       <div class="flex-shrink-0">
-        <label class="flex flex-col min-w-40 h-14 w-full">
-          <div class="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
-            <div class="text-gray-500 dark:text-gray-400 flex border-r-0 bg-white dark:bg-gray-800 items-center justify-center pl-4 rounded-l-xl">
-              <span class="material-symbols-outlined">search</span>
+        <label class="flex flex-col min-w-40 h-10 w-full">
+          <div class="flex w-full flex-1 items-stretch rounded-lg h-full shadow-sm">
+            <div class="text-gray-500 dark:text-gray-400 flex border-r-0 bg-white dark:bg-gray-800 items-center justify-center pl-3 rounded-l-lg">
+              <span class="material-symbols-outlined text-sm">search</span>
             </div>
               <input 
-              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary-admin border-none bg-white dark:bg-gray-800 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary-admin border-none bg-white dark:bg-gray-800 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500 px-3 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal"
               placeholder="Buscar por nombre o escanear código de barras..."
               [value]="searchTerm()"
               (input)="searchTerm.set($any($event.target).value); onSearch()"
@@ -24,40 +102,44 @@
       </div>
 
       <!-- Product List -->
-      <div class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+      <div class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm min-h-0" style="scrollbar-width: thin; scrollbar-color: rgb(156 163 175) transparent;">
         @if (isLoading()) {
-          <div class="flex items-center justify-center h-full">
+          <div class="flex items-center justify-center h-full min-h-[400px]">
             <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
           </div>
         } @else if (filteredProducts().length === 0) {
-          <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-            No se encontraron productos
+          <div class="text-center text-gray-500 dark:text-gray-400 py-12">
+            <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4 block">inventory_2</span>
+            <p class="text-lg font-medium">No se encontraron productos</p>
+            <p class="text-sm mt-2">Intenta con otro término de búsqueda</p>
           </div>
         } @else {
-          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div class="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 pb-2">
             @for (product of filteredProducts(); track product.id) {
-              <div class="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center transition-shadow hover:shadow-md">
+              <div class="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center transition-all duration-300 hover:shadow-md hover:border-primary-admin/50 hover:-translate-y-0.5 bg-white dark:bg-gray-700/50">
                 @if (product.imageUrl) {
-                  <div class="bg-center bg-no-repeat aspect-square bg-contain w-24 h-24 mb-2" 
+                  <div class="bg-center bg-no-repeat aspect-square bg-contain w-full max-w-[80px] h-16 mb-1.5 rounded overflow-hidden" 
                        [style.background-image]="'url(' + product.imageUrl + ')'"></div>
                 } @else {
-                  <div class="bg-gray-200 dark:bg-gray-700 aspect-square w-24 h-24 mb-2 rounded flex items-center justify-center">
-                    <span class="material-symbols-outlined text-gray-400">inventory_2</span>
+                  <div class="bg-gray-200 dark:bg-gray-600 aspect-square w-full max-w-[80px] h-16 mb-1.5 rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl">inventory_2</span>
                   </div>
                 }
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 flex-grow">{{ product.name }}</p>
-                <p class="text-base font-bold text-gray-900 dark:text-white mt-1">S/ {{ product.salePrice.toFixed(2) }}</p>
+                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1 line-clamp-2 min-h-[2rem] leading-tight">{{ product.name }}</p>
+                <p class="text-sm font-bold text-primary-admin dark:text-blue-400 mb-1">S/ {{ product.salePrice.toFixed(2) }}</p>
                 @if (product.stock === 0) {
-                  <p class="text-xs text-red-500 mt-1">Sin stock</p>
+                  <p class="text-[10px] text-red-500 font-medium mb-1 px-1.5 py-0.5 bg-red-50 dark:bg-red-900/20 rounded-full">Sin stock</p>
                 } @else if (product.stock <= product.minimumStock) {
-                  <p class="text-xs text-yellow-500 mt-1">Stock: {{ product.stock }}</p>
+                  <p class="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium mb-1 px-1.5 py-0.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-full">Stock: {{ product.stock }}</p>
+                } @else {
+                  <div class="mb-1 h-4"></div>
                 }
                 <button 
                   (click)="addToCart(product)"
                   [disabled]="product.stock === 0"
-                  class="mt-2 w-full flex items-center justify-center rounded-lg h-9 px-3 bg-primary-admin/20 dark:bg-primary-admin/30 text-primary-admin dark:text-blue-300 text-sm font-bold hover:bg-primary-admin/30 dark:hover:bg-primary-admin/40 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span class="material-symbols-outlined mr-1 text-base">add_shopping_cart</span>
-                  Agregar
+                  class="w-full flex items-center justify-center rounded h-7 px-2 bg-primary-admin/20 dark:bg-primary-admin/30 text-primary-admin dark:text-blue-300 text-xs font-bold hover:bg-primary-admin hover:text-white dark:hover:bg-primary-admin transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-admin/20 disabled:hover:text-primary-admin">
+                  <span class="material-symbols-outlined mr-0.5 text-xs">add_shopping_cart</span>
+                  <span class="text-[10px]">Agregar</span>
                 </button>
               </div>
             }
@@ -67,10 +149,10 @@
     </div>
 
     <!-- Right Column: Sales Cart and Actions -->
-    <div class="col-span-12 lg:col-span-5 flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+    <div class="col-span-12 lg:col-span-5 flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm min-h-0 overflow-hidden">
       <!-- PageHeading -->
-      <div class="flex flex-wrap justify-between gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
-        <p class="text-gray-900 dark:text-white text-2xl font-bold tracking-tight">
+      <div class="flex flex-wrap justify-between gap-2 p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <p class="text-gray-900 dark:text-white text-lg font-bold tracking-tight">
           {{ documentType() === 'Boleta' ? 'Boleta' : 'Factura' }} de Venta
         </p>
         <div class="flex gap-2">
@@ -87,7 +169,7 @@
 
       <!-- Customer Selection (for Factura) -->
       @if (documentType() === 'Factura') {
-        <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             @if (selectedCustomer()) {
             <div class="flex items-center justify-between bg-primary-admin/10 rounded-lg p-3" data-cy="selected-customer">
               <div>
@@ -134,53 +216,53 @@
       }
 
       <!-- Table -->
-      <div class="flex-1 px-2 py-3 overflow-y-auto">
+      <div class="flex-1 px-2 py-2 overflow-y-auto min-h-0" style="scrollbar-width: thin; scrollbar-color: rgb(156 163 175) transparent;">
         @if (cartItems().length === 0) {
           <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
             <div class="text-center">
-              <span class="material-symbols-outlined text-6xl mb-4 opacity-50">shopping_cart</span>
-              <p>El carrito está vacío</p>
+              <span class="material-symbols-outlined text-5xl mb-3 opacity-50">shopping_cart</span>
+              <p class="text-sm">El carrito está vacío</p>
             </div>
           </div>
         } @else {
-          <div class="flex overflow-hidden">
-            <table class="flex-1" data-cy="cart-items">
-              <thead>
+          <div class="overflow-x-auto">
+            <table class="w-full" data-cy="cart-items">
+              <thead class="sticky top-0 bg-white dark:bg-gray-800 z-10">
                 <tr>
-                  <th class="px-4 py-3 text-left text-gray-600 dark:text-gray-400 w-[45%] text-sm font-medium">Producto</th>
-                  <th class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 w-[20%] text-sm font-medium">Cantidad</th>
-                  <th class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 w-[15%] text-sm font-medium">P. Unit</th>
-                  <th class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 w-[15%] text-sm font-medium">Subtotal</th>
-                  <th class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 w-[5%] text-sm font-medium"></th>
+                  <th class="px-2 py-1.5 text-left text-gray-600 dark:text-gray-400 w-[45%] text-xs font-medium">Producto</th>
+                  <th class="px-2 py-1.5 text-center text-gray-600 dark:text-gray-400 w-[20%] text-xs font-medium">Cantidad</th>
+                  <th class="px-2 py-1.5 text-right text-gray-600 dark:text-gray-400 w-[15%] text-xs font-medium">P. Unit</th>
+                  <th class="px-2 py-1.5 text-right text-gray-600 dark:text-gray-400 w-[15%] text-xs font-medium">Subtotal</th>
+                  <th class="px-2 py-1.5 text-center text-gray-600 dark:text-gray-400 w-[5%] text-xs font-medium"></th>
                 </tr>
               </thead>
               <tbody>
                 @for (item of cartItems(); track item.productId; let i = $index) {
-                  <tr class="border-t border-gray-200 dark:border-gray-700" [attr.data-cy]="'cart-item-' + (i + 1)">
-                    <td class="h-[72px] px-4 py-2 w-[45%] text-gray-800 dark:text-gray-200 text-sm font-normal">{{ item.productName }}</td>
-                    <td class="h-[72px] px-4 py-2 w-[20%] text-gray-600 dark:text-gray-300 text-sm font-normal">
-                      <div class="flex items-center justify-center gap-2">
+                  <tr [class]="(i % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700/30' : 'bg-white dark:bg-gray-800/50') + ' border-t border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50'" [attr.data-cy]="'cart-item-' + (i + 1)">
+                    <td class="h-[50px] px-2 py-1 w-[45%] text-gray-800 dark:text-gray-200 text-xs font-normal">{{ item.productName }}</td>
+                    <td class="h-[50px] px-2 py-1 w-[20%] text-gray-600 dark:text-gray-300 text-xs font-normal">
+                      <div class="flex items-center justify-center gap-1.5">
                         <button 
                           (click)="updateCartItemQuantity(item.productId, item.quantity - 1)"
-                          class="size-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
-                          <span class="material-symbols-outlined text-sm">remove</span>
+                          class="size-5 rounded flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                          <span class="material-symbols-outlined text-xs">remove</span>
                         </button>
-                        <span class="min-w-[2rem] text-center">{{ item.quantity }}</span>
+                        <span class="min-w-[1.5rem] text-center text-xs">{{ item.quantity }}</span>
                         <button 
                           (click)="updateCartItemQuantity(item.productId, item.quantity + 1)"
-                          class="size-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
-                          <span class="material-symbols-outlined text-sm">add</span>
+                          class="size-5 rounded flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                          <span class="material-symbols-outlined text-xs">add</span>
                         </button>
                       </div>
                     </td>
-                    <td class="h-[72px] px-4 py-2 w-[15%] text-gray-600 dark:text-gray-300 text-sm font-normal text-right">S/ {{ item.unitPrice.toFixed(2) }}</td>
-                    <td class="h-[72px] px-4 py-2 w-[15%] text-gray-800 dark:text-gray-200 text-sm font-medium text-right">S/ {{ item.subtotal.toFixed(2) }}</td>
-                    <td class="h-[72px] px-4 py-2 w-[5%] text-center">
+                    <td class="h-[50px] px-2 py-1 w-[15%] text-gray-600 dark:text-gray-300 text-xs font-normal text-right">S/ {{ item.unitPrice.toFixed(2) }}</td>
+                    <td class="h-[50px] px-2 py-1 w-[15%] text-gray-800 dark:text-gray-200 text-xs font-medium text-right">S/ {{ item.subtotal.toFixed(2) }}</td>
+                    <td class="h-[50px] px-2 py-1 w-[5%] text-center">
                       <button 
                         (click)="removeFromCart(item.productId)"
                         [attr.data-cy]="'remove-item-' + (i + 1)"
                         class="text-red-500 hover:text-red-700 dark:hover:text-red-400">
-                        <span class="material-symbols-outlined text-xl">delete</span>
+                        <span class="material-symbols-outlined text-base">delete</span>
                       </button>
                     </td>
                   </tr>
@@ -192,18 +274,18 @@
       </div>
 
       <!-- DescriptionList & Actions -->
-      <div class="p-6 border-t border-gray-200 dark:border-gray-700">
-        <div class="flex justify-between gap-x-6 py-1.5">
-          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">Subtotal</p>
-          <p class="text-gray-800 dark:text-gray-200 text-sm font-medium text-right" data-cy="subtotal">S/ {{ subtotal().toFixed(2) }}</p>
+      <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex justify-between gap-x-4 py-1">
+          <p class="text-gray-600 dark:text-gray-400 text-xs font-normal">Subtotal</p>
+          <p class="text-gray-800 dark:text-gray-200 text-xs font-medium text-right" data-cy="subtotal">S/ {{ subtotal().toFixed(2) }}</p>
         </div>
-        <div class="flex justify-between gap-x-6 py-1.5">
-          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">IGV (18%)</p>
-          <p class="text-gray-800 dark:text-gray-200 text-sm font-medium text-right" data-cy="igv">S/ {{ tax().toFixed(2) }}</p>
+        <div class="flex justify-between gap-x-4 py-1">
+          <p class="text-gray-600 dark:text-gray-400 text-xs font-normal">IGV (18%)</p>
+          <p class="text-gray-800 dark:text-gray-200 text-xs font-medium text-right" data-cy="igv">S/ {{ tax().toFixed(2) }}</p>
         </div>
-        <div class="flex justify-between gap-x-6 py-1.5">
-          <p class="text-gray-600 dark:text-gray-400 text-sm font-normal">Descuento</p>
-          <div class="flex items-center gap-2">
+        <div class="flex justify-between gap-x-4 py-1">
+          <p class="text-gray-600 dark:text-gray-400 text-xs font-normal">Descuento</p>
+          <div class="flex items-center gap-1.5">
             <input
               type="number"
               step="0.01"
@@ -211,23 +293,23 @@
               [value]="discount()"
               (input)="discount.set($any($event.target).value || 0)"
               data-cy="discount-percentage"
-              class="w-24 px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right">
-            <span class="text-gray-800 dark:text-gray-200 text-sm font-medium">S/ {{ discount().toFixed(2) }}</span>
+              class="w-20 px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs text-right">
+            <span class="text-gray-800 dark:text-gray-200 text-xs font-medium">S/ {{ discount().toFixed(2) }}</span>
           </div>
         </div>
-        <div class="flex justify-between items-center gap-x-6 py-4">
-          <p class="text-gray-900 dark:text-white text-lg font-bold">TOTAL</p>
-          <p class="text-gray-900 dark:text-white text-2xl font-black text-right" data-cy="total">S/ {{ total().toFixed(2) }}</p>
+        <div class="flex justify-between items-center gap-x-4 py-2 border-t border-gray-200 dark:border-gray-700 mt-1">
+          <p class="text-gray-900 dark:text-white text-sm font-bold">TOTAL</p>
+          <p class="text-gray-900 dark:text-white text-lg font-black text-right" data-cy="total">S/ {{ total().toFixed(2) }}</p>
         </div>
 
         <!-- Payment Method -->
-        <div class="py-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Método de Pago</label>
+        <div class="py-2">
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Método de Pago</label>
           <select
             [value]="paymentMethod()"
             (change)="paymentMethod.set($any($event.target).value); onPaymentMethodChange()"
             data-cy="payment-method-select"
-            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin">
+            class="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-admin">
             <option value="Efectivo" data-cy="payment-Efectivo">Efectivo</option>
             <option value="Tarjeta" data-cy="payment-Tarjeta">Tarjeta</option>
             <option value="YapePlin" data-cy="payment-YapePlin">Yape/Plin</option>
@@ -236,14 +318,14 @@
         </div>
 
         <!-- Amount Paid -->
-        <div class="py-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div class="py-2">
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Monto Pagado
             @if (paymentMethod() === 'Efectivo' && change() > 0) {
-              <span class="text-green-600 dark:text-green-400 font-medium" data-cy="change-amount">(Vuelto: S/ {{ change().toFixed(2) }})</span>
+              <span class="text-green-600 dark:text-green-400 font-medium text-[10px]" data-cy="change-amount">(Vuelto: S/ {{ change().toFixed(2) }})</span>
             }
             @if (paymentMethod() !== 'Efectivo') {
-              <span class="text-gray-500 dark:text-gray-400 text-xs block mt-1">Para otros métodos, el monto debe ser igual al total</span>
+              <span class="text-gray-500 dark:text-gray-400 text-[10px] block mt-0.5">Para otros métodos, el monto debe ser igual al total</span>
             }
           </label>
           <input
@@ -254,13 +336,13 @@
             (input)="amountPaid.set(parseFloat($any($event.target).value) || 0)"
             [readonly]="paymentMethod() !== 'Efectivo'"
             data-cy="amount-paid"
-            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin"
+            class="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-admin"
             [class.border-red-500]="amountPaid() < total()"
             [class.bg-gray-100]="paymentMethod() !== 'Efectivo'"
             [class.dark:bg-gray-800]="paymentMethod() !== 'Efectivo'"
             [attr.readonly]="paymentMethod() !== 'Efectivo' ? '' : null">
           @if (amountPaid() < total()) {
-            <p class="mt-1 text-sm text-red-500">El monto pagado debe ser mayor o igual al total</p>
+            <p class="mt-0.5 text-xs text-red-500">El monto pagado debe ser mayor o igual al total</p>
           }
           @if (paymentMethod() !== 'Efectivo') {
             <input type="hidden" [value]="total()">
@@ -268,54 +350,74 @@
         </div>
 
         <!-- Actions -->
-        <div class="grid grid-cols-2 gap-4 mt-4">
+        <div class="grid grid-cols-2 gap-2 mt-2">
           <button 
             (click)="clearCart()"
             data-cy="clear-cart"
-            class="flex w-full items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-red-500/10 text-red-500 text-base font-bold tracking-wide hover:bg-red-500/20">
+            class="flex w-full items-center justify-center overflow-hidden rounded h-8 px-2 bg-red-500/10 text-red-500 text-xs font-bold tracking-wide hover:bg-red-500/20">
             Cancelar
           </button>
           <button 
             (click)="processSale()"
             [disabled]="cartItems().length === 0 || amountPaid() < total() || isLoading()"
             data-cy="complete-sale-button"
-            class="flex w-full items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-primary-admin text-white text-base font-bold tracking-wide hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="flex w-full items-center justify-center overflow-hidden rounded h-8 px-2 bg-primary-admin text-white text-xs font-bold tracking-wide hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
             @if (isLoading()) {
-              <span class="material-symbols-outlined animate-spin mr-2">refresh</span>
+              <span class="material-symbols-outlined animate-spin mr-1 text-xs">refresh</span>
             }
             Cobrar
           </button>
         </div>
       </div>
     </div>
-  </main>
+    </main>
 
-  <!-- Send Receipt Dialog -->
-  <app-send-receipt-dialog
-    [isOpen]="showSendReceiptDialog()"
-    [saleNumber]="lastSale()?.documentNumber || ''"
-    [documentType]="lastSale()?.documentType || 'Boleta'"
-    [customerEmail]="selectedCustomer()?.email || null"
-    (onClose)="showSendReceiptDialog.set(false)"
-    (onSend)="onSendReceipt($event)">
-  </app-send-receipt-dialog>
+    <!-- Send Receipt Dialog (solo para ventas) -->
+    <app-send-receipt-dialog
+      [isOpen]="showSendReceiptDialog()"
+      [saleNumber]="lastSale()?.documentNumber || ''"
+      [documentType]="lastSale()?.documentType || 'Boleta'"
+      [customerEmail]="selectedCustomer()?.email || null"
+      (onClose)="showSendReceiptDialog.set(false)"
+      (onSend)="onSendReceipt($event)">
+    </app-send-receipt-dialog>
 
-  <!-- Success Actions (after sale) -->
-  @if (lastSale() && !showSendReceiptDialog()) {
-    <div class="fixed bottom-4 right-4 flex gap-2">
-      <button
-        (click)="downloadReceipt()"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 shadow-lg">
-        <span class="material-symbols-outlined">download</span>
-        Descargar PDF
-      </button>
-      <button
-        (click)="showSendReceiptDialog.set(true)"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-lg">
-        <span class="material-symbols-outlined">email</span>
-        Enviar por Email
-      </button>
-    </div>
+    <!-- Success Actions (after sale) -->
+    @if (lastSale() && !showSendReceiptDialog()) {
+      <div class="fixed bottom-4 right-4 flex gap-2">
+        <button
+          (click)="downloadReceipt()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 shadow-lg">
+          <span class="material-symbols-outlined">download</span>
+          Descargar PDF
+        </button>
+        <button
+          (click)="showSendReceiptDialog.set(true)"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-lg">
+          <span class="material-symbols-outlined">email</span>
+          Enviar por Email
+        </button>
+      </div>
+    }
+  } @else if (activeService() === 'consultas') {
+    <main class="flex-1 p-6 overflow-y-auto min-h-0">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Consultas</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <p class="text-gray-600 dark:text-gray-400">Funcionalidad de consultas próximamente...</p>
+        </div>
+      </div>
+    </main>
+  } @else if (activeService() === 'reportes') {
+    <main class="flex-1 p-6 overflow-y-auto min-h-0">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Reportes</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <p class="text-gray-600 dark:text-gray-400">Funcionalidad de reportes próximamente...</p>
+        </div>
+      </div>
+    </main>
   }
+  </div>
 </div>
 

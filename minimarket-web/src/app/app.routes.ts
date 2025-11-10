@@ -70,6 +70,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/auth/complete-profile/complete-profile.component').then(m => m.CompleteProfileComponent)
   },
+  {
+    path: 'auth/admin-setup',
+    canActivate: [authGuard, roleGuard(['Administrador'])],
+    loadComponent: () => import('./features/auth/admin-setup/admin-setup.component').then(m => m.AdminSetupComponent)
+  },
   // Rutas LEGALES (públicas)
   {
     path: 'legal/terms',
@@ -96,11 +101,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/store/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
-    path: 'pos',
-    canActivate: [authGuard, roleGuard(['Administrador', 'Cajero'])],
-    loadComponent: () => import('./features/pos/pos.component').then(m => m.PosComponent)
-  },
-  {
     path: 'admin',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
@@ -109,6 +109,11 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
+      },
+      {
+        path: 'pos',
+        canActivate: [roleGuard(['Administrador', 'Cajero'])],
+        loadComponent: () => import('./features/pos/pos.component').then(m => m.PosComponent)
       },
       {
         path: 'dashboard',

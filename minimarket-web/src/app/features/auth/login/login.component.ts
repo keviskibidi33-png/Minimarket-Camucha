@@ -57,11 +57,24 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
     this.authService.login(credentials).subscribe({
       next: (response) => {
-        // Si el perfil no está completo, redirigir a completar perfil
+        // Verificar si es administrador
+        const isAdmin = response.roles?.includes('Administrador');
+        
+        // Si el perfil no está completo
         if (response.profileCompleted === false) {
-          this.router.navigate(['/auth/complete-profile']);
+          // Si es admin, redirigir a admin-setup, sino a complete-profile
+          if (isAdmin) {
+            this.router.navigate(['/auth/admin-setup']);
+          } else {
+            this.router.navigate(['/auth/complete-profile']);
+          }
         } else {
-          this.router.navigate(['/']);
+          // Si el perfil está completo, redirigir según el rol
+          if (isAdmin) {
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/']);
+          }
         }
       },
       error: (error) => {

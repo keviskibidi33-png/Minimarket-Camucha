@@ -199,6 +199,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Authorization con permisos granulares
+builder.Services.AddAuthorization(options =>
+{
+    // Las políticas se crearán dinámicamente cuando se use RequirePermissionAttribute
+    // El handler PermissionAuthorizationHandler manejará los requirements
+});
+
+// Registrar el provider de políticas personalizado para permisos granulares
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Minimarket.Application.Common.Authorization.PermissionPolicyProvider>();
+
+// Registrar el handler de autorización de permisos
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Minimarket.Application.Common.Authorization.PermissionAuthorizationHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

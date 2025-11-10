@@ -8,11 +8,24 @@
       <div class="layout-content-container flex flex-col w-full max-w-7xl gap-8 md:gap-12">
         <!-- Hero Section / Carousel -->
         <section class="relative w-full h-96 rounded-xl overflow-hidden shadow-lg">
-          <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_oZYC5CocHKGYtVXfYtxEePo7EDEykSPB60TIEuaR7odvwcCuVUg_rL-7aYLmGdJWc-XyyyvYLJAwyXiPRbkPE_LVZCncRuVnT3cNFATUXmJhGZ7MxhrMdHMlmLYSJDT-10RVmiS_21s9DKkrEyzv9xaeo8xg9XqcOQ4vVVvB5F-PLxDq5qwYv48vk6DD7gRNRRfjwk1bVw-P2zHTlkAXTGwdiBvjURfPBm1Q5gspfHyGDC_9PU4OXZh9mVBDnfjQhlGPE3ss3kIa');"></div>
+          @if (brandSettings()?.homeBannerImageUrl) {
+            <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + brandSettings()!.homeBannerImageUrl + ')'"></div>
+          } @else {
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_oZYC5CocHKGYtVXfYtxEePo7EDEykSPB60TIEuaR7odvwcCuVUg_rL-7aYLmGdJWc-XyyyvYLJAwyXiPRbkPE_LVZCncRuVnT3cNFATUXmJhGZ7MxhrMdHMlmLYSJDT-10RVmiS_21s9DKkrEyzv9xaeo8xg9XqcOQ4vVVvB5F-PLxDq5qwYv48vk6DD7gRNRRfjwk1bVw-P2zHTlkAXTGwdiBvjURfPBm1Q5gspfHyGDC_9PU4OXZh9mVBDnfjQhlGPE3ss3kIa');"></div>
+          }
           <div class="absolute inset-0 bg-black/40"></div>
           <div class="relative h-full flex flex-col items-center justify-center text-center text-white p-6">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">¡Ofertas Semanales en Productos Frescos!</h1>
-            <p class="text-lg md:text-xl max-w-2xl mb-6 drop-shadow-sm">Obtén los mejores precios en frutas y verduras, entregadas frescas a tu puerta.</p>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">
+              {{ brandSettings()?.homeTitle || '¡Bienvenido a ' + (brandSettings()?.storeName || 'nuestra tienda') + '!' }}
+            </h1>
+            <p class="text-lg md:text-xl max-w-2xl mb-2 drop-shadow-sm">
+              {{ brandSettings()?.homeSubtitle || 'Los mejores productos al mejor precio' }}
+            </p>
+            @if (brandSettings()?.homeDescription) {
+              <p class="text-base max-w-2xl mb-6 drop-shadow-sm opacity-90">
+                {{ brandSettings()!.homeDescription }}
+              </p>
+            }
             <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
               <span class="truncate">Comprar Ahora</span>
             </a>

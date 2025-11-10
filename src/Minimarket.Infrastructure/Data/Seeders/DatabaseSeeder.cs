@@ -407,7 +407,7 @@ public static class DatabaseSeeder
 
         var brandSettings = new Domain.Entities.BrandSettings
         {
-            LogoUrl = "https://via.placeholder.com/200x60?text=Minimarket+Camucha",
+            LogoUrl = string.Empty,
             StoreName = "Minimarket Camucha",
             PrimaryColor = "#4CAF50",
             SecondaryColor = "#0d7ff2",

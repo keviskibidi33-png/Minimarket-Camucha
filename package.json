@@ -1,0 +1,14 @@
+{
+  "name": "minimarket-camucha",
+  "version": "1.0.0",
+  "description": "Pruebas E2E para Minimarket Camucha",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "playwright": "^1.56.1"
+  }
+}

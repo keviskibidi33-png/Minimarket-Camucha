@@ -3,72 +3,8 @@
     <!-- Page Heading -->
     <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuraciones del Sistema</h1>
 
-    <!-- Tabs -->
-    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-      <nav class="-mb-px flex space-x-8">
-        <a
-          routerLink="/admin/configuraciones/marca"
-          routerLinkActive="border-primary-admin text-primary-admin"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Marca
-        </a>
-        <a
-          routerLink="/admin/configuraciones/permisos"
-          routerLinkActive="border-primary-admin text-primary-admin"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Permisos
-        </a>
-        <button
-          (click)="setTab('cart')"
-          [class.border-primary-admin]="activeTab() === 'cart'"
-          [class.text-primary-admin]="activeTab() === 'cart'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Carrito
-        </button>
-        <button
-          (click)="setTab('shipping')"
-          [class.border-primary-admin]="activeTab() === 'shipping'"
-          [class.text-primary-admin]="activeTab() === 'shipping'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Envíos
-        </button>
-        <button
-          (click)="setTab('shipping-rates')"
-          [class.border-primary-admin]="activeTab() === 'shipping-rates'"
-          [class.text-primary-admin]="activeTab() === 'shipping-rates'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Tarifas de Envío
-        </button>
-        <button
-          (click)="setTab('email-templates')"
-          [class.border-primary-admin]="activeTab() === 'email-templates'"
-          [class.text-primary-admin]="activeTab() === 'email-templates'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Templates de Email
-        </button>
-        <button
-          (click)="setTab('banners')"
-          [class.border-primary-admin]="activeTab() === 'banners'"
-          [class.text-primary-admin]="activeTab() === 'banners'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Banners
-        </button>
-        <button
-          (click)="setTab('categories')"
-          [class.border-primary-admin]="activeTab() === 'categories'"
-          [class.text-primary-admin]="activeTab() === 'categories'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Categorías
-        </button>
-        <button
-          (click)="setTab('payment-methods')"
-          [class.border-primary-admin]="activeTab() === 'payment-methods'"
-          [class.text-primary-admin]="activeTab() === 'payment-methods'"
-          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-          Métodos de Pago
-        </button>
-      </nav>
-    </div>
+    <!-- Navbar de pestañas -->
+    <app-settings-navbar></app-settings-navbar>
 
     <!-- Tab Content -->
     <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
@@ -575,59 +511,151 @@
       }
 
       @if (activeTab() === 'categories') {
-        <!-- Categories Images Config -->
+        <!-- Categories Management -->
         <div class="space-y-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Imágenes de Categorías</h2>
-          
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Seleccionar Categoría
-              </label>
-              <select
-                [value]="selectedCategory() || ''"
-                (change)="onCategorySelected($any($event.target).value)"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                <option value="">Selecciona una categoría</option>
-                @for (category of categories(); track category.id) {
-                  <option [value]="category.id">{{ category.name }}</option>
-                }
-              </select>
-            </div>
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Categorías</h2>
+            <button
+              (click)="showNewCategoryForm.set(!showNewCategoryForm())"
+              class="px-4 py-2 bg-primary-admin text-white font-semibold rounded-lg hover:bg-primary-admin/90 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">add</span>
+              {{ showNewCategoryForm() ? 'Cancelar' : 'Nueva Categoría' }}
+            </button>
+          </div>
 
-            @if (selectedCategory()) {
+          <!-- Formulario para crear nueva categoría -->
+          @if (showNewCategoryForm()) {
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Crear Nueva Categoría</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre de la Categoría <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [value]="newCategoryName()"
+                    (input)="newCategoryName.set($any($event.target).value)"
+                    placeholder="Ej: Bebidas, Snacks, Limpieza"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Descripción (Opcional)
+                  </label>
+                  <textarea
+                    [value]="newCategoryDescription()"
+                    (input)="newCategoryDescription.set($any($event.target).value)"
+                    rows="3"
+                    placeholder="Descripción breve de la categoría"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"></textarea>
+                </div>
+                <div class="flex gap-4">
+                  <button
+                    (click)="createNewCategory()"
+                    [disabled]="!newCategoryName().trim()"
+                    class="px-4 py-2 bg-primary-admin text-white font-semibold rounded-lg hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Crear Categoría
+                  </button>
+                  <button
+                    (click)="showNewCategoryForm.set(false); newCategoryName.set(''); newCategoryDescription.set('')"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Lista de categorías existentes -->
+          <div class="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Categorías Existentes</h3>
+            <div class="space-y-2 mb-6">
+              @for (category of categories(); track category.id) {
+                <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <div class="flex items-center gap-3">
+                    @if (category.imageUrl) {
+                      <img [src]="category.imageUrl" [alt]="category.name" class="w-12 h-12 object-cover rounded">
+                    } @else {
+                      <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                        <span class="material-symbols-outlined text-gray-400">category</span>
+                      </div>
+                    }
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-white">{{ category.name }}</p>
+                      @if (category.description) {
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ category.description }}</p>
+                      }
+                    </div>
+                  </div>
+                  <span 
+                    class="px-2 py-1 text-xs font-medium rounded"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': category.isActive,
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300': !category.isActive
+                    }">
+                    {{ category.isActive ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </div>
+              } @empty {
+                <p class="text-gray-500 dark:text-gray-400 text-center py-4">No hay categorías creadas</p>
+              }
+            </div>
+          </div>
+
+          <!-- Asignar imágenes a categorías -->
+          <div class="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Asignar Imagen a Categoría</h3>
+            <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  URL de la Imagen
+                  Seleccionar Categoría
                 </label>
-                <input
-                  type="text"
-                  [value]="categoryImageUrl()"
-                  (input)="categoryImageUrl.set($any($event.target).value)"
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                <select
+                  [value]="selectedCategory() || ''"
+                  (change)="onCategorySelected($any($event.target).value)"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Ingresa la URL completa de la imagen para la categoría
-                </p>
+                  <option value="">Selecciona una categoría</option>
+                  @for (category of categories(); track category.id) {
+                    <option [value]="category.id">{{ category.name }}</option>
+                  }
+                </select>
               </div>
 
-              @if (categoryImageUrl()) {
-                <div class="mt-4">
-                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista Previa:</p>
-                  <img
-                    [src]="categoryImageUrl()"
-                    [alt]="selectedCategoryName()"
-                    class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-                    onerror="this.src='https://via.placeholder.com/200?text=Imagen+no+encontrada'">
+              @if (selectedCategory()) {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    URL de la Imagen
+                  </label>
+                  <input
+                    type="text"
+                    [value]="categoryImageUrl()"
+                    (input)="categoryImageUrl.set($any($event.target).value)"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Ingresa la URL completa de la imagen para la categoría
+                  </p>
                 </div>
-              }
 
-              <button
-                (click)="saveCategoryImage()"
-                class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
-                Guardar Imagen
-              </button>
-            }
+                @if (categoryImageUrl()) {
+                  <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista Previa:</p>
+                    <img
+                      [src]="categoryImageUrl()"
+                      [alt]="selectedCategoryName()"
+                      class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                      onerror="this.src='https://via.placeholder.com/200?text=Imagen+no+encontrada'">
+                  </div>
+                }
+
+                <button
+                  (click)="saveCategoryImage()"
+                  class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+                  Guardar Imagen
+                </button>
+              }
+            </div>
           </div>
         </div>
       }

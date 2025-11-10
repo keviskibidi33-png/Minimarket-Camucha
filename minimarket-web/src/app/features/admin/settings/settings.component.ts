@@ -1,7 +1,9 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, DestroyRef, inject, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
@@ -12,7 +14,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -21,6 +23,9 @@ export class SettingsComponent implements OnInit {
   categories = signal<any[]>([]);
   isLoading = signal(false);
   activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'>('cart');
+  
+  private readonly destroyRef = inject(DestroyRef);
+  private tabPersistenceEffect?: ReturnType<typeof effect>;
   
   // Configuraciones del carrito
   applyIgvToCart = signal(false);
@@ -37,6 +42,9 @@ export class SettingsComponent implements OnInit {
   // Configuraciones de categorías
   selectedCategory = signal<string | null>(null);
   categoryImageUrl = signal('');
+  showNewCategoryForm = signal(false);
+  newCategoryName = signal('');
+  newCategoryDescription = signal('');
   
   // Configuraciones de tarifas de envío
   shippingRates = signal<ShippingRate[]>([]);
@@ -77,15 +85,96 @@ export class SettingsComponent implements OnInit {
     private shippingService: ShippingService,
     private emailTemplatesService: EmailTemplatesService,
     private paymentMethodSettingsService: PaymentMethodSettingsService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    // Leer query param para activar el tab correspondiente
+    this.route.queryParams.subscribe(params => {
+      const tabParam = params['tab'];
+      if (tabParam) {
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+        if (validTabs.includes(tabParam as any)) {
+          this.activeTab.set(tabParam as any);
+        }
+      } else {
+        // Si no hay query param, cargar desde localStorage
+        this.initializeActiveTab();
+      }
+    });
+    
+    // Observar cambios de ruta para actualizar el tab activo
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateTabFromRoute();
+      });
+
+    // Actualizar tab según la ruta actual
+    this.updateTabFromRoute();
+
     this.loadSettings();
     this.loadCategories();
     this.loadShippingRates();
     this.loadEmailTemplateSettings();
     this.loadPaymentMethodSettings();
+
+    // Observar cambios en activeTab para persistir (dentro de afterNextRender para evitar NG0203)
+    afterNextRender(() => {
+      this.tabPersistenceEffect = effect(() => {
+        const tab = this.activeTab();
+        localStorage.setItem('settings_active_tab', tab);
+      });
+
+      // Limpiar el effect cuando el componente se destruya
+      this.destroyRef.onDestroy(() => {
+        this.tabPersistenceEffect?.destroy();
+      });
+    });
+  }
+
+  private initializeActiveTab(): void {
+    // Primero intentar detectar desde la ruta
+    const url = this.router.url;
+    if (url.includes('/configuraciones/marca')) {
+      // Marca y Permisos son rutas separadas, no necesitan persistencia de tab
+      return;
+    }
+    if (url.includes('/configuraciones/permisos')) {
+      return;
+    }
+
+    // Para las otras pestañas, cargar desde localStorage
+    const savedTab = localStorage.getItem('settings_active_tab');
+    const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
+      ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+    
+    if (savedTab && validTabs.includes(savedTab as any)) {
+      this.activeTab.set(savedTab as any);
+    }
+  }
+
+  private updateTabFromRoute(): void {
+    const url = this.router.url;
+    // Si estamos en una ruta específica (marca o permisos), no hacer nada
+    // porque esas son rutas separadas
+    if (url.includes('/configuraciones/marca') || url.includes('/configuraciones/permisos')) {
+      return;
+    }
+    
+    // Si estamos en /admin/configuraciones, restaurar el último tab guardado
+    if (url === '/admin/configuraciones' || url.endsWith('/configuraciones')) {
+      const savedTab = localStorage.getItem('settings_active_tab');
+      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
+        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+      
+      if (savedTab && validTabs.includes(savedTab as any)) {
+        this.activeTab.set(savedTab as any);
+      }
+    }
   }
 
   loadSettings(): void {
@@ -221,6 +310,32 @@ export class SettingsComponent implements OnInit {
     });
   }
 
+  createNewCategory(): void {
+    if (!this.newCategoryName().trim()) {
+      this.toastService.error('El nombre de la categoría es requerido');
+      return;
+    }
+
+    const newCategory = {
+      name: this.newCategoryName().trim(),
+      description: this.newCategoryDescription().trim() || undefined
+    };
+
+    this.categoriesService.create(newCategory).subscribe({
+      next: () => {
+        this.toastService.success('Categoría creada correctamente');
+        this.loadCategories();
+        this.newCategoryName.set('');
+        this.newCategoryDescription.set('');
+        this.showNewCategoryForm.set(false);
+      },
+      error: (error) => {
+        console.error('Error creating category:', error);
+        this.toastService.error('Error al crear categoría');
+      }
+    });
+  }
+
   saveShippingSettings(): void {
     const settingsToSave: UpdateSystemSettings[] = [
       {
@@ -271,6 +386,8 @@ export class SettingsComponent implements OnInit {
 
   setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'): void {
     this.activeTab.set(tab);
+    // Actualizar la URL con el query param para mantener consistencia
+    this.router.navigate(['/admin/configuraciones'], { queryParams: { tab } });
   }
   
   // Email Templates Management
@@ -280,8 +397,14 @@ export class SettingsComponent implements OnInit {
         this.emailLogoUrl.set(template.logoUrl);
         this.emailPromotionImageUrl.set(template.promotionImageUrl);
       },
-      error: (error) => {
-        console.error('Error loading email template settings:', error);
+      error: (error: any) => {
+        // Solo loguear si no es un 404 (endpoint no existe aún)
+        if (error.status !== 404) {
+          console.error('Error loading email template settings:', error);
+        }
+        // Establecer valores por defecto si el endpoint no existe
+        this.emailLogoUrl.set('');
+        this.emailPromotionImageUrl.set('');
       }
     });
   }
@@ -501,14 +624,19 @@ export class SettingsComponent implements OnInit {
   // Métodos de pago
   loadPaymentMethodSettings(): void {
     this.isLoadingPaymentMethods.set(true);
-    this.paymentMethodSettingsService.getAll().subscribe({
+    this.paymentMethodSettingsService.getAll(false).subscribe({
       next: (settings) => {
         this.paymentMethodSettings.set(settings);
         this.isLoadingPaymentMethods.set(false);
       },
-      error: (error) => {
-        console.error('Error loading payment method settings:', error);
-        this.toastService.error('Error al cargar métodos de pago');
+      error: (error: any) => {
+        // Solo loguear si no es un 404 (endpoint no existe aún)
+        if (error.status !== 404) {
+          console.error('Error loading payment method settings:', error);
+          this.toastService.error('Error al cargar métodos de pago');
+        }
+        // Establecer array vacío si el endpoint no existe
+        this.paymentMethodSettings.set([]);
         this.isLoadingPaymentMethods.set(false);
       }
     });

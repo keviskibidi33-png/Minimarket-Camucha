@@ -19,6 +19,7 @@ public class FilesController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
     [Authorize(Roles = "Administrador,Almacenero")]
     public async Task<IActionResult> Upload(IFormFile file, [FromQuery] string folder = "products")
     {

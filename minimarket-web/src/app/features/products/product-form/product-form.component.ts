@@ -15,11 +15,15 @@ import { ImageUploadComponent } from '../../../shared/components/image-upload/im
 })
 export class ProductFormComponent implements OnInit {
   productForm: FormGroup;
-  categories = signal<any[]>([]);
+  categories = signal<{id: string; name: string; productCount?: number}[]>([]);
   isLoading = signal(false);
   isEditMode = signal(false);
   productId = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
+  showCreateCategoryModal = signal(false);
+  newCategoryName = signal('');
+  newCategoryDescription = signal('');
+  isCreatingCategory = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -38,6 +42,7 @@ export class ProductFormComponent implements OnInit {
       minimumStock: [0, [Validators.required, Validators.min(0)]],
       categoryId: ['', [Validators.required]],
       imageUrl: ['', [Validators.maxLength(500)]],
+      expirationDate: [null], // Fecha de vencimiento (opcional)
       isActive: [true]
     });
   }
@@ -55,8 +60,28 @@ export class ProductFormComponent implements OnInit {
 
   loadCategories(): void {
     this.categoriesService.getAll().subscribe({
-      next: (categories) => this.categories.set(categories),
-      error: (error) => console.error('Error loading categories:', error)
+      next: (categories) => {
+        // Mapear categorías asegurando que productCount esté presente
+        const categoriesWithCount = categories.map(c => ({
+          id: c.id,
+          name: c.name,
+          productCount: c.productCount !== undefined ? c.productCount : 0
+        }));
+        this.categories.set(categoriesWithCount);
+        // Debug: verificar que productCount esté llegando
+        console.log('Categorías cargadas con conteo:', categoriesWithCount);
+        if (categoriesWithCount.length > 0) {
+          console.log('Primera categoría ejemplo:', categoriesWithCount[0]);
+          console.log('ProductCount de primera categoría:', categoriesWithCount[0].productCount);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        // En caso de error, mantener las categorías existentes o cargar vacío
+        if (this.categories().length === 0) {
+          this.categories.set([]);
+        }
+      }
     });
   }
 
@@ -74,6 +99,7 @@ export class ProductFormComponent implements OnInit {
           minimumStock: product.minimumStock,
           categoryId: product.categoryId,
           imageUrl: product.imageUrl || '',
+          expirationDate: product.expirationDate ? new Date(product.expirationDate).toISOString().split('T')[0] : null,
           isActive: product.isActive
         });
         this.isLoading.set(false);
@@ -100,10 +126,29 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
+    // Validar que la imagen URL no sea un data URL (base64)
+    const imageUrl = this.productForm.get('imageUrl')?.value;
+    if (imageUrl && imageUrl.startsWith('data:')) {
+      this.errorMessage.set('Por favor, espera a que la imagen se suba completamente antes de guardar');
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
     const formValue = this.productForm.value;
+    
+    // Asegurarse de que imageUrl no sea un data URL
+    if (formValue.imageUrl && formValue.imageUrl.startsWith('data:')) {
+      formValue.imageUrl = '';
+    }
+    
+    // Formatear expirationDate si existe
+    if (formValue.expirationDate) {
+      formValue.expirationDate = new Date(formValue.expirationDate).toISOString();
+    } else {
+      formValue.expirationDate = null;
+    }
 
     if (this.isEditMode()) {
       const updateDto: UpdateProductDto = {
@@ -176,6 +221,50 @@ export class ProductFormComponent implements OnInit {
       categoryId: 'Categoría'
     };
     return labels[fieldName] || fieldName;
+  }
+
+  openCreateCategoryModal(): void {
+    this.showCreateCategoryModal.set(true);
+    this.newCategoryName.set('');
+    this.newCategoryDescription.set('');
+  }
+
+  closeCreateCategoryModal(): void {
+    this.showCreateCategoryModal.set(false);
+    this.newCategoryName.set('');
+    this.newCategoryDescription.set('');
+  }
+
+  createCategory(): void {
+    const name = this.newCategoryName().trim();
+    if (!name) {
+      this.errorMessage.set('El nombre de la categoría es requerido');
+      return;
+    }
+
+    this.isCreatingCategory.set(true);
+    this.errorMessage.set(null);
+
+    this.categoriesService.create({
+      name: name,
+      description: this.newCategoryDescription().trim() || undefined
+    }).subscribe({
+      next: (newCategory) => {
+        // Recargar categorías desde el backend (incluye conteo actualizado)
+        this.loadCategories();
+        // Seleccionar la nueva categoría automáticamente
+        this.productForm.patchValue({ categoryId: newCategory.id });
+        // Cerrar modal
+        this.closeCreateCategoryModal();
+        this.isCreatingCategory.set(false);
+        // Nota: La categoría se reflejará en otros módulos cuando recarguen las categorías
+        // Todos los módulos usan el mismo servicio CategoriesService que consulta el backend
+      },
+      error: (error) => {
+        this.isCreatingCategory.set(false);
+        this.errorMessage.set(error.error?.errors?.[0] || 'Error al crear la categoría');
+      }
+    });
   }
 }
 

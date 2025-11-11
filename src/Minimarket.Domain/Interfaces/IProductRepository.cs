@@ -10,5 +10,6 @@ public interface IProductRepository : IRepository<Product>
     Task<IEnumerable<Product>> GetByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(string code, Guid? excludeId = null, CancellationToken cancellationToken = default);
     Task UpdateStockAsync(Guid productId, int quantity, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, int>> GetCountByCategoryIdsAsync(List<Guid> categoryIds, CancellationToken cancellationToken = default);
 }
 

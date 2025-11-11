@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using Minimarket.Domain.Interfaces;
 
 namespace Minimarket.Infrastructure.Services;
@@ -8,15 +9,30 @@ public class FileStorageService : IFileStorageService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<FileStorageService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly string _uploadsPath;
     private readonly string _baseUrl;
 
-    public FileStorageService(IConfiguration configuration, ILogger<FileStorageService> logger)
+    public FileStorageService(IConfiguration configuration, ILogger<FileStorageService> logger, IHttpContextAccessor httpContextAccessor)
     {
         _configuration = configuration;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
         _uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        _baseUrl = _configuration["FileStorage:BaseUrl"] ?? "https://localhost:5001";
+        
+        // Obtener la URL base desde configuración o usar BaseUrl del appsettings
+        var configuredBaseUrl = _configuration["FileStorage:BaseUrl"] ?? _configuration["BaseUrl"];
+        if (!string.IsNullOrEmpty(configuredBaseUrl))
+        {
+            _baseUrl = configuredBaseUrl;
+        }
+        else
+        {
+            // Fallback: usar localhost:5000 (puerto por defecto del backend)
+            _baseUrl = "http://localhost:5000";
+        }
+        
+        _logger.LogInformation("FileStorageService inicializado con BaseUrl: {BaseUrl}", _baseUrl);
         
         // Crear directorios si no existen
         if (!Directory.Exists(_uploadsPath))
@@ -99,8 +115,20 @@ public class FileStorageService : IFileStorageService
         if (filePath.StartsWith("http://") || filePath.StartsWith("https://"))
             return filePath;
 
+        // Normalizar la ruta (remover barras iniciales duplicadas)
+        var normalizedPath = filePath.Replace("\\", "/").TrimStart('/');
+        
+        // Intentar obtener la URL base del contexto HTTP actual si está disponible
+        string baseUrl = _baseUrl;
+        if (_httpContextAccessor?.HttpContext != null)
+        {
+            var request = _httpContextAccessor.HttpContext.Request;
+            baseUrl = $"{request.Scheme}://{request.Host}";
+        }
+        
         // Construir URL relativa
-        return $"{_baseUrl}/{filePath.Replace("\\", "/")}";
+        var url = $"{baseUrl.TrimEnd('/')}/{normalizedPath}";
+        return url;
     }
 }
 

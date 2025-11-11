@@ -28,6 +28,7 @@ public class GetBrandSettingsQueryHandler : IRequestHandler<GetBrandSettingsQuer
         {
             Id = brandSettings.Id,
             LogoUrl = brandSettings.LogoUrl,
+            LogoEmoji = brandSettings.LogoEmoji,
             StoreName = brandSettings.StoreName,
             FaviconUrl = brandSettings.FaviconUrl,
             PrimaryColor = brandSettings.PrimaryColor,
@@ -38,6 +39,7 @@ public class GetBrandSettingsQueryHandler : IRequestHandler<GetBrandSettingsQuer
             Description = brandSettings.Description,
             Slogan = brandSettings.Slogan,
             Phone = brandSettings.Phone,
+            WhatsAppPhone = brandSettings.WhatsAppPhone,
             Email = brandSettings.Email,
             Address = brandSettings.Address,
             Ruc = brandSettings.Ruc,

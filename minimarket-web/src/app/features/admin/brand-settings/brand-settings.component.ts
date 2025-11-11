@@ -7,11 +7,12 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { FilesService } from '../../../core/services/files.service';
 import { environment } from '../../../../environments/environment';
 import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
+import { LogoSelectorComponent } from '../../../shared/components/logo-selector/logo-selector.component';
 
 @Component({
   selector: 'app-brand-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent, LogoSelectorComponent],
   templateUrl: './brand-settings.component.html',
   styleUrl: './brand-settings.component.css'
 })
@@ -21,6 +22,7 @@ export class BrandSettingsComponent implements OnInit {
   
   // Form data
   logoUrl = signal('');
+  logoEmoji = signal('');
   storeName = signal('');
   faviconUrl = signal('');
   primaryColor = signal('#4CAF50');
@@ -31,6 +33,7 @@ export class BrandSettingsComponent implements OnInit {
   description = signal('');
   slogan = signal('');
   phone = signal('');
+  whatsAppPhone = signal('');
   email = signal('');
   address = signal('');
   ruc = signal('');
@@ -76,7 +79,8 @@ export class BrandSettingsComponent implements OnInit {
     this.brandSettingsService.get().subscribe({
       next: (settings) => {
         if (settings) {
-          this.logoUrl.set(settings.logoUrl);
+          this.logoUrl.set(settings.logoUrl || '');
+          this.logoEmoji.set(settings.logoEmoji || '');
           this.storeName.set(settings.storeName);
           this.faviconUrl.set(settings.faviconUrl || '');
           this.primaryColor.set(settings.primaryColor);
@@ -86,14 +90,15 @@ export class BrandSettingsComponent implements OnInit {
           this.hoverColor.set(settings.hoverColor);
           this.description.set(settings.description || '');
           this.slogan.set(settings.slogan || '');
-          this.phone.set(settings.phone || '');
+          this.phone.set(settings.phone || '+51 ');
+          this.whatsAppPhone.set(settings.whatsAppPhone || '+51 ');
           this.email.set(settings.email || '');
           this.address.set(settings.address || '');
           this.ruc.set(settings.ruc || '');
           
           // Métodos de pago
-          this.yapePhone.set(settings.yapePhone || '');
-          this.plinPhone.set(settings.plinPhone || '');
+          this.yapePhone.set(settings.yapePhone || '+51 ');
+          this.plinPhone.set(settings.plinPhone || '+51 ');
           this.yapeQRUrl.set(settings.yapeQRUrl || '');
           this.plinQRUrl.set(settings.plinQRUrl || '');
           this.yapeEnabled.set(settings.yapeEnabled ?? false);
@@ -183,6 +188,7 @@ export class BrandSettingsComponent implements OnInit {
 
     const updateData: UpdateBrandSettings = {
       logoUrl: this.logoUrl(),
+      logoEmoji: this.logoEmoji() || undefined,
       storeName: this.storeName(),
       faviconUrl: this.faviconUrl() || undefined,
       primaryColor: this.primaryColor(),
@@ -193,6 +199,7 @@ export class BrandSettingsComponent implements OnInit {
       description: this.description() || undefined,
       slogan: this.slogan() || undefined,
       phone: this.phone() || undefined,
+      whatsAppPhone: this.whatsAppPhone() || undefined,
       email: this.email() || undefined,
       address: this.address() || undefined,
       ruc: this.ruc() || undefined,

@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { CartService } from '../../../../core/services/cart.service';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { BrandSettingsService } from '../../../../core/services/brand-settings.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -47,7 +48,8 @@ export class SuccessComponent implements OnInit {
   constructor(
     private router: Router,
     private cartService: CartService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private brandSettingsService: BrandSettingsService
   ) {}
 
   ngOnInit() {
@@ -86,6 +88,9 @@ export class SuccessComponent implements OnInit {
       // Cargar configuraciones de envío desde el backend
       this.loadShippingSettings();
       
+      // Enviar WhatsApp automáticamente al cliente
+      this.sendWhatsAppToCustomer();
+      
       // Limpiar datos de checkout DESPUÉS de cargarlos (solo se necesitan para mostrar)
       // Esto permite que los datos persistan hasta aquí pero se limpien para el próximo pedido
       // También limpiar el flag de confirmación
@@ -120,17 +125,76 @@ export class SuccessComponent implements OnInit {
     this.yapeQR.set(qrUrl);
   }
 
+  async sendWhatsAppToCustomer(): Promise<void> {
+    try {
+      // Obtener número de WhatsApp del negocio desde BrandSettings
+      const settings = await firstValueFrom(this.brandSettingsService.get());
+      const businessWhatsApp = settings?.whatsAppPhone || settings?.phone;
+      if (!businessWhatsApp) {
+        console.warn('No hay número de WhatsApp configurado en el admin');
+        return;
+      }
+
+      // Obtener teléfono del cliente desde shippingData
+      const customerPhone = this.shippingData?.phone;
+      if (!customerPhone) {
+        console.warn('No hay teléfono del cliente');
+        return;
+      }
+
+      // Limpiar los números de teléfono (remover espacios, guiones, etc.)
+      const cleanCustomerPhone = customerPhone.replace(/\s+/g, '').replace(/-/g, '').replace(/\+/g, '');
+      
+      // Crear mensaje de confirmación para el cliente
+      const shippingMethod = this.shippingData?.shippingMethod === 'delivery' ? 'Delivery' : 'Recojo en Tienda';
+      const estimatedDate = this.getEstimatedDeliveryDate();
+      
+      const message = `¡Hola! Tu pedido ha sido confirmado.\n\n` +
+        `📦 Número de Pedido: ${this.orderNumber()}\n` +
+        `💰 Total: S/ ${this.getPriceFormatted(this.total())}\n` +
+        `🚚 Método: ${shippingMethod}\n` +
+        `📅 Fecha Estimada: ${estimatedDate}\n\n` +
+        `Te notificaremos cuando tu pedido esté listo. ¡Gracias por tu compra!`;
+
+      // Abrir WhatsApp Web con el mensaje prellenado
+      // El formato es: wa.me/[número_destino]?text=[mensaje]
+      // Esto abrirá WhatsApp Web para que el admin pueda enviar el mensaje al cliente
+      // Nota: Para envío automático se necesitaría WhatsApp Business API
+      const whatsappUrl = `https://wa.me/${cleanCustomerPhone}?text=${encodeURIComponent(message)}`;
+      
+      // Abrir en nueva ventana después de un pequeño delay para que la página cargue
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+      }, 1000);
+    } catch (error) {
+      console.error('Error preparando WhatsApp para el cliente:', error);
+    }
+  }
+
   openWhatsApp() {
-    const adminWhatsAppNumber = '51987654321'; // TODO: Mover a configuración
-    
-    // Mensaje natural y profesional para confirmar el pago
-    const message = `Hola, confirmo el pago de mi pedido.\n\n` +
-      `📦 Número de Pedido: ${this.orderNumber()}\n\n` +
-      `Adjunto el comprobante de pago para su verificación.\n\n` +
-      `Gracias.`;
-    
-    const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    // Obtener número de WhatsApp de BrandSettings
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        const adminWhatsAppNumber = settings?.whatsAppPhone || settings?.phone || '51987654321';
+        // Limpiar el número (remover espacios, guiones, etc.)
+        const cleanNumber = adminWhatsAppNumber.replace(/\s+/g, '').replace(/-/g, '').replace(/\+/g, '');
+        
+        // Mensaje natural y profesional para confirmar el pago
+        const message = `Hola, confirmo el pago de mi pedido.\n\n` +
+          `📦 Número de Pedido: ${this.orderNumber()}\n\n` +
+          `Adjunto el comprobante de pago para su verificación.\n\n` +
+          `Gracias.`;
+        
+        const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      },
+      error: (error) => {
+        console.error('Error obteniendo número de WhatsApp:', error);
+        // Fallback a número por defecto
+        const whatsappUrl = `https://wa.me/51987654321?text=${encodeURIComponent('Hola, confirmo el pago de mi pedido ' + this.orderNumber())}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    });
   }
 
   copyToClipboard(text: string) {

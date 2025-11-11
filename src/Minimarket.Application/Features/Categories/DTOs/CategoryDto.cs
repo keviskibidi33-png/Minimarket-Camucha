@@ -9,5 +9,6 @@ public class CategoryDto
     public string? IconoUrl { get; set; }
     public int Orden { get; set; }
     public bool IsActive { get; set; }
+    public int ProductCount { get; set; } = 0; // Conteo de productos en esta categoría
 }
 

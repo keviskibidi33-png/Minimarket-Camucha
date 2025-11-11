@@ -53,7 +53,7 @@ export class UsersComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      phone: ['', [Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.maxLength(20)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       roles: [[], [Validators.required, Validators.minLength(1)]],
       emailConfirmed: [true]
@@ -63,7 +63,7 @@ export class UsersComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.maxLength(20)]],
       roles: [[], [Validators.required, Validators.minLength(1)]],
       emailConfirmed: [true]
     });

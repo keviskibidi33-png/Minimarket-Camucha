@@ -476,10 +476,14 @@ public class AuthController : ControllerBase
                 homeBannerImageUrl = _fileStorageService.GetFileUrl(homeBannerPath);
             }
 
+            // Determinar si se deben borrar datos existentes (si viene con reset=true)
+            var clearExistingData = bool.TryParse(form["clearExistingData"].ToString(), out var clearData) && clearData;
+
             // Crear comando
             var command = new AdminSetupCommand
             {
                 UserId = userId,
+                ClearExistingData = clearExistingData,
                 StoreName = form["storeName"].ToString() ?? string.Empty,
                 BusinessType = form["businessType"].ToString() ?? string.Empty,
                 Description = form["description"].ToString(),
@@ -494,6 +498,7 @@ public class AuthController : ControllerBase
                 PrimaryColor = form["primaryColor"].ToString() ?? "#4CAF50",
                 SecondaryColor = form["secondaryColor"].ToString() ?? "#0d7ff2",
                 Phone = form["phone"].ToString(),
+                WhatsAppPhone = form["whatsAppPhone"].ToString(),
                 Email = form["email"].ToString(),
                 Ruc = form["ruc"].ToString(),
                 Slogan = form["slogan"].ToString(),

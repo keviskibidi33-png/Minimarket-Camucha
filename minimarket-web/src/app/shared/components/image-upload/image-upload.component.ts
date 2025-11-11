@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { ToastService } from '../../services/toast.service';
@@ -11,15 +11,17 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './image-upload.component.html',
   styleUrl: './image-upload.component.css'
 })
-export class ImageUploadComponent {
+export class ImageUploadComponent implements OnInit {
   currentImageUrl = input<string>('');
   folder = input<string>('products');
   
   imageUrl = output<string>();
   
   previewUrl = signal<string | null>(null);
+  tempPreviewUrl = signal<string | null>(null); // Preview temporal (data URL)
   isUploading = signal(false);
   uploadProgress = signal(0);
+  uploadedUrl = signal<string | null>(null); // URL final del servidor
 
   constructor(
     private http: HttpClient,
@@ -30,6 +32,7 @@ export class ImageUploadComponent {
     const currentUrl = this.currentImageUrl();
     if (currentUrl) {
       this.previewUrl.set(currentUrl);
+      this.uploadedUrl.set(currentUrl);
     }
   }
 
@@ -52,9 +55,11 @@ export class ImageUploadComponent {
         return;
       }
 
-      // Previsualización
+      // Previsualización temporal (data URL) - solo para mostrar mientras se sube
       const reader = new FileReader();
       reader.onload = (e) => {
+        this.tempPreviewUrl.set(e.target?.result as string);
+        // Mostrar preview temporal mientras se sube
         this.previewUrl.set(e.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -70,7 +75,7 @@ export class ImageUploadComponent {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folder', this.folder());
+    // No agregar 'folder' al FormData, solo va en el query string
 
     this.http.post<{ filePath: string; fileUrl: string }>(
       `${environment.apiUrl}/files/upload?folder=${this.folder()}`,
@@ -78,6 +83,7 @@ export class ImageUploadComponent {
       {
         reportProgress: true,
         observe: 'events'
+        // HttpClient establece automáticamente Content-Type: multipart/form-data con el boundary correcto
       }
     ).subscribe({
       next: (event) => {
@@ -88,8 +94,11 @@ export class ImageUploadComponent {
           this.isUploading.set(false);
           this.uploadProgress.set(100);
           const response = event.body;
-          if (response) {
+          if (response && response.fileUrl) {
+            // Reemplazar preview temporal con URL del servidor
+            this.uploadedUrl.set(response.fileUrl);
             this.previewUrl.set(response.fileUrl);
+            this.tempPreviewUrl.set(null); // Limpiar preview temporal
             this.imageUrl.emit(response.fileUrl);
             this.toastService.success('Imagen subida exitosamente');
           }
@@ -98,14 +107,40 @@ export class ImageUploadComponent {
       error: (error) => {
         this.isUploading.set(false);
         this.uploadProgress.set(0);
+        // Si falla la subida, limpiar preview temporal
+        this.tempPreviewUrl.set(null);
+        // Si había una URL anterior, restaurarla
+        if (this.uploadedUrl()) {
+          this.previewUrl.set(this.uploadedUrl()!);
+        } else {
+          this.previewUrl.set(null);
+        }
         console.error('Error uploading file:', error);
-        this.toastService.error(error.error?.error || 'Error al subir la imagen');
+        
+        // Mensaje de error más detallado
+        let errorMessage = 'Error al subir la imagen';
+        if (error.error?.error) {
+          errorMessage = error.error.error;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        // Si es un error de conexión, sugerir verificar el backend
+        if (error.status === 0 || error.status === undefined) {
+          errorMessage = 'Error de conexión. Verifica que el backend esté ejecutándose.';
+        }
+        
+        this.toastService.error(errorMessage);
       }
     });
   }
 
   removeImage(): void {
     this.previewUrl.set(null);
+    this.tempPreviewUrl.set(null);
+    this.uploadedUrl.set(null);
     this.imageUrl.emit('');
     
     // Limpiar input

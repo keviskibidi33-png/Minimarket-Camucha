@@ -26,6 +26,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             brandSettings = new Domain.Entities.BrandSettings
             {
                 LogoUrl = request.BrandSettings.LogoUrl,
+                LogoEmoji = request.BrandSettings.LogoEmoji,
                 StoreName = request.BrandSettings.StoreName,
                 FaviconUrl = request.BrandSettings.FaviconUrl,
                 PrimaryColor = request.BrandSettings.PrimaryColor,
@@ -36,6 +37,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
                 Description = request.BrandSettings.Description,
                 Slogan = request.BrandSettings.Slogan,
                 Phone = request.BrandSettings.Phone,
+                WhatsAppPhone = request.BrandSettings.WhatsAppPhone,
                 Email = request.BrandSettings.Email,
                 Address = request.BrandSettings.Address,
                 Ruc = request.BrandSettings.Ruc,
@@ -66,6 +68,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
         {
             // Actualizar configuración existente
             brandSettings.LogoUrl = request.BrandSettings.LogoUrl;
+            brandSettings.LogoEmoji = request.BrandSettings.LogoEmoji;
             brandSettings.StoreName = request.BrandSettings.StoreName;
             brandSettings.FaviconUrl = request.BrandSettings.FaviconUrl;
             brandSettings.PrimaryColor = request.BrandSettings.PrimaryColor;
@@ -76,6 +79,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             brandSettings.Description = request.BrandSettings.Description;
             brandSettings.Slogan = request.BrandSettings.Slogan;
             brandSettings.Phone = request.BrandSettings.Phone;
+            brandSettings.WhatsAppPhone = request.BrandSettings.WhatsAppPhone;
             brandSettings.Email = request.BrandSettings.Email;
             brandSettings.Address = request.BrandSettings.Address;
             brandSettings.Ruc = request.BrandSettings.Ruc;
@@ -108,6 +112,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
         {
             Id = brandSettings.Id,
             LogoUrl = brandSettings.LogoUrl,
+            LogoEmoji = brandSettings.LogoEmoji,
             StoreName = brandSettings.StoreName,
             FaviconUrl = brandSettings.FaviconUrl,
             PrimaryColor = brandSettings.PrimaryColor,
@@ -118,6 +123,7 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             Description = brandSettings.Description,
             Slogan = brandSettings.Slogan,
             Phone = brandSettings.Phone,
+            WhatsAppPhone = brandSettings.WhatsAppPhone,
             Email = brandSettings.Email,
             Address = brandSettings.Address,
             Ruc = brandSettings.Ruc,

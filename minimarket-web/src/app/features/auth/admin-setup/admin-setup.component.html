@@ -125,6 +125,17 @@
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Este será el número principal de contacto de tu negocio</p>
               </div>
 
+              <!-- Número de WhatsApp para Notificaciones -->
+              <div>
+                <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark">Número de WhatsApp para Notificaciones</label>
+                <input
+                  class="form-input h-12 w-full rounded-lg border border-border-light bg-background-light py-2 px-3 text-base text-text-light placeholder-placeholder-light ring-primary/50 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder-placeholder-dark dark:focus:border-primary"
+                  type="tel"
+                  placeholder="+51 999 999 999"
+                  formControlName="whatsAppPhone">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Número donde se enviarán notificaciones de pedidos a los clientes</p>
+              </div>
+
               <!-- ¿Qué venden? -->
               <div>
                 <label class="mb-2 text-sm font-medium text-text-light dark:text-text-dark">¿Qué productos venden?</label>
@@ -714,14 +725,24 @@
 
         <!-- Botones de Navegación -->
         <div class="flex justify-between items-center mt-8 pt-6 border-t border-border-light dark:border-border-dark">
-          <button
-            type="button"
-            (click)="previousStep()"
-            [disabled]="currentStep() === 1"
-            class="flex h-12 min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-border-light bg-background-light px-5 text-base font-bold leading-normal text-text-light transition-colors duration-200 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-border-dark dark:bg-background-dark dark:text-text-dark disabled:opacity-50 disabled:cursor-not-allowed">
-            <span class="material-symbols-outlined mr-2">arrow_back</span>
-            <span>Anterior</span>
-          </button>
+          <div class="flex gap-3">
+            @if (currentStep() > 1) {
+              <button
+                type="button"
+                (click)="previousStep()"
+                class="flex h-12 min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-border-light bg-background-light px-5 text-base font-bold leading-normal text-text-light transition-colors duration-200 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-border-dark dark:bg-background-dark dark:text-text-dark">
+                <span class="material-symbols-outlined mr-2">arrow_back</span>
+                <span>Anterior</span>
+              </button>
+            }
+            <button
+              type="button"
+              (click)="attemptExit()"
+              class="flex h-12 min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 text-base font-bold leading-normal text-gray-700 dark:text-gray-300 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500/50">
+              <span class="material-symbols-outlined mr-2">close</span>
+              <span>Salir</span>
+            </button>
+          </div>
 
           @if (currentStep() < steps.length) {
             <button
@@ -748,4 +769,17 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Advertencia al Salir -->
+@if (showExitWarning()) {
+  <app-confirm-dialog
+    [isOpen]="true"
+    title="¿Salir sin completar la configuración?"
+    message="Aún no has terminado de personalizar tu tienda. Si sales ahora, podrás continuar más tarde, pero es recomendable completar la configuración para tener tu tienda lista."
+    confirmText="Seguir Configurando"
+    cancelText="Omitir por Ahora"
+    (confirmed)="onExitWarningConfirmed()"
+    (cancelled)="onExitWarningCancelled()">
+  </app-confirm-dialog>
+}
 

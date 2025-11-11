@@ -26,6 +26,7 @@ public class AdminSetupCommand : IRequest<Result<string>>
     public string PrimaryColor { get; set; } = "#4CAF50";
     public string SecondaryColor { get; set; } = "#0d7ff2";
     public string? Phone { get; set; }
+    public string? WhatsAppPhone { get; set; }
     public string? Email { get; set; }
     public string? Ruc { get; set; }
     public string? Slogan { get; set; }
@@ -60,5 +61,8 @@ public class AdminSetupCommand : IRequest<Result<string>>
     public string? CashierFirstName { get; set; }
     public string? CashierLastName { get; set; }
     public string? CashierDni { get; set; }
+    
+    // Flag para borrar datos existentes (productos y categorías)
+    public bool ClearExistingData { get; set; } = false;
 }
 

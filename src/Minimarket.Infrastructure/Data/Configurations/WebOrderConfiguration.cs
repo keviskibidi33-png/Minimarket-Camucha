@@ -67,6 +67,9 @@ public class WebOrderConfiguration : IEntityTypeConfiguration<WebOrder>
         builder.Property(w => w.TrackingUrl)
             .HasMaxLength(500);
 
+        builder.Property(w => w.PaymentProofUrl)
+            .HasMaxLength(500);
+
         // Relación con Sede
         builder.HasOne(w => w.SelectedSede)
             .WithMany()

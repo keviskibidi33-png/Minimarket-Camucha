@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, effect, DestroyRef, inject, afterN
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { SetupStatusService } from '../../../core/services/setup-status.service';
 import { filter } from 'rxjs/operators';
 import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
@@ -10,11 +11,12 @@ import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate }
 import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
 import { PaymentMethodSettingsService, PaymentMethodSetting, UpdatePaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SettingsNavbarComponent, ConfirmDialogComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -87,7 +89,8 @@ export class SettingsComponent implements OnInit {
     private paymentMethodSettingsService: PaymentMethodSettingsService,
     private toastService: ToastService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private setupStatusService: SetupStatusService
   ) {}
 
   ngOnInit(): void {
@@ -669,5 +672,24 @@ export class SettingsComponent implements OnInit {
   // Helper methods for template
   parseInt = parseInt;
   parseFloat = parseFloat;
+
+  showResetWarning = signal(false);
+
+  goToFullSetup(): void {
+    // Mostrar advertencia antes de ir al setup
+    this.showResetWarning.set(true);
+  }
+
+  onResetWarningConfirmed(): void {
+    this.showResetWarning.set(false);
+    // Marcar setup como incompleto para forzar el guard
+    this.setupStatusService.markSetupIncomplete();
+    // Navegar con parámetro reset=true para limpiar datos guardados incompletos
+    this.router.navigate(['/auth/admin-setup'], { queryParams: { reset: 'true' } });
+  }
+
+  onResetWarningCancelled(): void {
+    this.showResetWarning.set(false);
+  }
 }
 

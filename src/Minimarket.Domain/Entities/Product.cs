@@ -15,6 +15,7 @@ public class Product : BaseEntity
     public string PaginasJson { get; set; } = "{}"; // JSON: {"home": true, "home_orden": 1, "categoria": true}
     public string SedesDisponiblesJson { get; set; } = "[]"; // JSON array de sede_ids
     public bool IsActive { get; set; } = true;
+    public DateTime? ExpirationDate { get; set; } // Fecha de vencimiento del producto
 
     // Navigation properties
     public virtual Category Category { get; set; } = null!;

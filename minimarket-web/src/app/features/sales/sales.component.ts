@@ -47,27 +47,35 @@ export class SalesComponent implements OnInit {
       pageSize: this.pageSize
     };
 
-    if (this.searchTerm()) {
-      params.documentNumber = this.searchTerm();
+    // El backend espera DocumentNumber (con mayúscula)
+    if (this.searchTerm() && this.searchTerm().trim()) {
+      params.documentNumber = this.searchTerm().trim();
     }
 
     if (this.startDate()) {
+      // El backend espera DateTime, enviar como ISO string
       params.startDate = new Date(this.startDate()).toISOString();
     }
 
     if (this.endDate()) {
-      params.endDate = new Date(this.endDate()).toISOString();
+      // El backend espera DateTime, enviar como ISO string
+      // Agregar un día completo para incluir todo el día final
+      const endDate = new Date(this.endDate());
+      endDate.setHours(23, 59, 59, 999);
+      params.endDate = endDate.toISOString();
     }
 
     this.salesService.getAll(params).subscribe({
       next: (pagedResult) => {
-        this.sales.set(pagedResult.items);
-        this.totalSales.set(pagedResult.totalCount);
+        this.sales.set(pagedResult.items || []);
+        this.totalSales.set(pagedResult.totalCount || 0);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading sales:', error);
         this.toastService.error('Error al cargar las ventas');
+        this.sales.set([]);
+        this.totalSales.set(0);
         this.isLoading.set(false);
       }
     });

@@ -1,12 +1,14 @@
-import { Component, signal, OnInit, computed } from '@angular/core';
+import { Component, signal, OnInit, computed, OnDestroy, HostListener, effect, afterNextRender, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../shared/services/toast.service';
+import { SetupStatusService } from '../../../core/services/setup-status.service';
 import { fadeSlideAnimation } from '../../../shared/animations/route-animations';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 interface SetupStep {
   id: number;
@@ -18,16 +20,21 @@ interface SetupStep {
 @Component({
   selector: 'app-admin-setup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ConfirmDialogComponent],
   templateUrl: './admin-setup.component.html',
   styleUrl: './admin-setup.component.css',
   animations: [fadeSlideAnimation]
 })
-export class AdminSetupComponent implements OnInit {
+export class AdminSetupComponent implements OnInit, OnDestroy {
   setupForm: FormGroup;
   currentStep = signal<number>(1);
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
+  showExitWarning = signal(false);
+  shouldClearData = signal(false); // Flag para indicar si se deben borrar datos existentes
+  private readonly FORM_STORAGE_KEY = 'admin_setup_form_data';
+  private readonly STEP_STORAGE_KEY = 'admin_setup_current_step';
+  private stepEffectCleanup?: ReturnType<typeof effect>;
 
   // Línea de tiempo de pasos
   steps: SetupStep[] = [
@@ -76,13 +83,17 @@ export class AdminSetupComponent implements OnInit {
     private authService: AuthService,
     private http: HttpClient,
     private router: Router,
-    private toastService: ToastService
+    private route: ActivatedRoute,
+    private toastService: ToastService,
+    private setupStatusService: SetupStatusService,
+    private destroyRef: DestroyRef
   ) {
     this.setupForm = this.fb.group({
       // Paso 1: Información Básica
       storeName: ['', [Validators.required, Validators.maxLength(200)]],
       businessType: ['', Validators.required],
-      phone: ['', [Validators.required, Validators.maxLength(20)]], // Movido aquí, requerido
+      phone: ['+51 ', [Validators.required, Validators.maxLength(20)]], // Movido aquí, requerido
+      whatsAppPhone: ['+51 ', [Validators.maxLength(20)]], // Número de WhatsApp para notificaciones
       description: ['', Validators.maxLength(1000)],
       whatSells: ['', Validators.maxLength(500)],
       isVirtual: [false],
@@ -111,7 +122,7 @@ export class AdminSetupComponent implements OnInit {
       
       // Paso 4: Información de Pago y Envío
       // Información de pago (unificado Yape/Plin)
-      yapePlinPhone: ['', Validators.maxLength(20)],
+      yapePlinPhone: ['+51 ', Validators.maxLength(20)],
       yapePlinQRFile: [null],
       // Cuenta bancaria
       bankName: ['', Validators.maxLength(100)],
@@ -135,8 +146,52 @@ export class AdminSetupComponent implements OnInit {
 
   ngOnInit(): void {
     // Inicializar categorías con las predefinidas seleccionadas primero
+    // Esto debe hacerse ANTES de cargar los datos guardados
     this.predefinedCategories.forEach(cat => {
       this.categoriesArray.push(this.fb.control(true));
+    });
+
+    // Verificar si se viene desde "Personalizar por Completo" (con parámetro reset)
+    const resetParam = this.route.snapshot.queryParams['reset'];
+    if (resetParam === 'true') {
+      // Si viene con reset=true, limpiar datos y empezar desde el paso 1
+      this.clearSavedFormData();
+      this.currentStep.set(1);
+      // Marcar que se deben borrar datos existentes al completar
+      this.shouldClearData.set(true);
+      // Remover el parámetro de la URL
+      this.router.navigate(['/auth/admin-setup'], { replaceUrl: true });
+    } else {
+      // Verificar si hay datos guardados válidos antes de cargarlos
+      // Si los datos están incompletos o el paso guardado no es válido, limpiar y empezar desde el paso 1
+      if (!this.hasValidSavedData()) {
+        this.clearSavedFormData();
+        this.currentStep.set(1);
+      } else {
+        // Cargar datos guardados del localStorage DESPUÉS de inicializar categorías
+        this.loadSavedFormData();
+      }
+    }
+
+    // Suscribirse a cambios del formulario para guardar automáticamente
+    this.setupForm.valueChanges.subscribe(() => {
+      this.saveFormData();
+    });
+
+    // Guardar paso actual cuando cambie (usando afterNextRender para contexto de inyección)
+    afterNextRender(() => {
+      // Usar setTimeout para asegurar que el componente esté completamente inicializado
+      setTimeout(() => {
+        this.stepEffectCleanup = effect(() => {
+          const step = this.currentStep();
+          localStorage.setItem(this.STEP_STORAGE_KEY, step.toString());
+        });
+
+        // Limpiar el effect cuando el componente se destruya
+        this.destroyRef.onDestroy(() => {
+          this.stepEffectCleanup?.destroy();
+        });
+      }, 0);
     });
 
     // Verificar que el usuario sea admin
@@ -151,6 +206,173 @@ export class AdminSetupComponent implements OnInit {
       console.error('Error verificando usuario:', error);
       this.router.navigate(['/auth/login']);
     }
+  }
+
+  ngOnDestroy(): void {
+    // Guardar datos antes de destruir el componente
+    this.saveFormData();
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    // Si el formulario tiene datos y no está completo, mostrar advertencia
+    if (this.hasFormData() && !this.isFormComplete()) {
+      event.preventDefault();
+      event.returnValue = '¿Estás seguro de salir? Los datos del formulario no se han guardado completamente.';
+    }
+  }
+
+  private hasFormData(): boolean {
+    const formValue = this.setupForm.value;
+    return !!(formValue.storeName || formValue.phone || formValue.primaryColor);
+  }
+
+  private isFormComplete(): boolean {
+    // Verificar si el formulario está completo (todos los pasos validados)
+    return this.setupForm.valid && this.currentStep() === 5;
+  }
+
+  private hasValidSavedData(): boolean {
+    try {
+      const savedData = localStorage.getItem(this.FORM_STORAGE_KEY);
+      const savedStep = localStorage.getItem(this.STEP_STORAGE_KEY);
+      
+      // Si no hay datos guardados, no es válido
+      if (!savedData || !savedStep) {
+        return false;
+      }
+      
+      const formData = JSON.parse(savedData);
+      const step = parseInt(savedStep, 10);
+      
+      // Verificar que el paso sea válido
+      if (step < 1 || step > 5) {
+        return false;
+      }
+      
+      // Verificar que los datos mínimos requeridos estén presentes
+      // Si está en el paso 1, debe tener al menos storeName
+      if (step === 1) {
+        return !!(formData.storeName && formData.storeName.trim());
+      }
+      
+      // Si está en pasos posteriores, debe tener los datos básicos del paso 1
+      if (!formData.storeName || !formData.storeName.trim()) {
+        return false;
+      }
+      
+      // Si está en el paso 2 o posterior, debe tener colores
+      if (step >= 2 && (!formData.primaryColor || !formData.secondaryColor)) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error verificando datos guardados:', error);
+      return false;
+    }
+  }
+
+  private saveFormData(): void {
+    try {
+      const formValue = this.setupForm.value;
+      // No guardar archivos en localStorage
+      const dataToSave = {
+        ...formValue,
+        logoFile: null,
+        faviconFile: null,
+        yapePlinQRFile: null,
+        homeBannerImage: null,
+        // Guardar categorías personalizadas
+        customCategories: this.customCategories()
+      };
+      localStorage.setItem(this.FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error guardando formulario:', error);
+    }
+  }
+
+  private loadSavedFormData(): void {
+    try {
+      const savedData = localStorage.getItem(this.FORM_STORAGE_KEY);
+      const savedStep = localStorage.getItem(this.STEP_STORAGE_KEY);
+      
+      if (savedData) {
+        const formData = JSON.parse(savedData);
+        
+        // Manejar categorías guardadas si existen
+        if (formData.categories && Array.isArray(formData.categories)) {
+          // Asegurarse de que el FormArray tenga suficientes controles
+          while (this.categoriesArray.length < formData.categories.length) {
+            this.categoriesArray.push(this.fb.control(false));
+          }
+          // Actualizar valores de categorías
+          formData.categories.forEach((value: boolean, index: number) => {
+            if (this.categoriesArray.at(index)) {
+              this.categoriesArray.at(index).setValue(value);
+            }
+          });
+          // Remover categorías del objeto para evitar conflictos al hacer patchValue
+          delete formData.categories;
+        }
+        
+        // Cargar categorías personalizadas si existen
+        if (formData.customCategories && Array.isArray(formData.customCategories)) {
+          this.customCategories.set(formData.customCategories);
+          delete formData.customCategories;
+        }
+        
+        // Aplicar el resto de los datos al formulario
+        this.setupForm.patchValue(formData);
+      }
+      
+      if (savedStep) {
+        const step = parseInt(savedStep, 10);
+        if (step >= 1 && step <= 5) {
+          this.currentStep.set(step);
+        } else {
+          // Si el paso guardado no es válido, resetear a paso 1
+          this.currentStep.set(1);
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando formulario guardado:', error);
+      // En caso de error, asegurarse de que el paso sea válido
+      this.currentStep.set(1);
+    }
+  }
+
+  clearSavedFormData(): void {
+    localStorage.removeItem(this.FORM_STORAGE_KEY);
+    localStorage.removeItem(this.STEP_STORAGE_KEY);
+  }
+
+  attemptExit(): void {
+    // Si el formulario tiene datos, mostrar advertencia
+    if (this.hasFormData() && !this.isFormComplete()) {
+      this.showExitWarning.set(true);
+    } else {
+      // Si no hay datos o está completo, permitir salir
+      this.handleExit();
+    }
+  }
+
+  handleExit(): void {
+    // Limpiar datos guardados si el usuario decide salir
+    this.clearSavedFormData();
+    this.showExitWarning.set(false);
+    // Redirigir al dashboard
+    this.router.navigate(['/admin']);
+  }
+
+  onExitWarningConfirmed(): void {
+    // Usuario decidió continuar con la configuración
+    this.showExitWarning.set(false);
+  }
+
+  onExitWarningCancelled(): void {
+    // Usuario decidió omitir por ahora
+    this.handleExit();
   }
 
   get categoriesArray(): FormArray {
@@ -322,6 +544,7 @@ export class AdminSetupComponent implements OnInit {
       
       // Teléfono (movido al paso 1, siempre se envía)
       formData.append('phone', this.setupForm.get('phone')?.value || '');
+      formData.append('whatsAppPhone', this.setupForm.get('whatsAppPhone')?.value || '');
       
       // Sede (si no es virtual)
       if (!this.setupForm.get('isVirtual')?.value) {
@@ -375,6 +598,9 @@ export class AdminSetupComponent implements OnInit {
       formData.append('deliveryCost', (this.setupForm.get('deliveryCost')?.value || 0).toString());
       formData.append('deliveryZones', this.setupForm.get('deliveryZones')?.value || '');
       
+      // Flag para borrar datos existentes (si viene desde "Personalizar por Completo")
+      formData.append('clearExistingData', this.shouldClearData().toString());
+      
       // Usuario cajero (si se crea)
       if (this.setupForm.get('createCashier')?.value === true) {
         formData.append('createCashier', 'true');
@@ -391,6 +617,10 @@ export class AdminSetupComponent implements OnInit {
           this.toastService.success('Configuración inicial completada exitosamente');
           // Marcar perfil como completo
           this.authService.loadUserProfile().subscribe(() => {
+            // Limpiar datos guardados
+            this.clearSavedFormData();
+            // Marcar setup como completo
+            this.setupStatusService.markSetupComplete();
             this.router.navigate(['/admin']);
           });
         },

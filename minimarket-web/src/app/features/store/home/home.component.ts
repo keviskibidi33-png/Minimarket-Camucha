@@ -1,9 +1,11 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { ProductsService, Product } from '../../../core/services/products.service';
 import { CategoriesService, CategoryDto } from '../../../core/services/categories.service';
 import { BrandSettingsService, BrandSettings } from '../../../core/services/brand-settings.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -30,10 +32,17 @@ export class HomeComponent implements OnInit {
   constructor(
     private productsService: ProductsService,
     private categoriesService: CategoriesService,
-    private brandSettingsService: BrandSettingsService
+    private brandSettingsService: BrandSettingsService,
+    private analyticsService: AnalyticsService,
+    private titleService: Title
   ) {}
 
   ngOnInit() {
+    // Trackear vista de página
+    this.analyticsService.trackPageView('home').subscribe({
+      error: (error) => console.error('Error tracking page view:', error)
+    });
+    
     this.loadBrandSettings();
     this.loadFeaturedProducts();
     this.loadCategories();
@@ -43,9 +52,16 @@ export class HomeComponent implements OnInit {
     this.brandSettingsService.get().subscribe({
       next: (settings) => {
         this.brandSettings.set(settings);
+        // Actualizar título de la página
+        if (settings?.storeName) {
+          this.titleService.setTitle(settings.storeName);
+        } else {
+          this.titleService.setTitle('Minimarket Camucha');
+        }
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
+        this.titleService.setTitle('Minimarket Camucha');
       }
     });
   }

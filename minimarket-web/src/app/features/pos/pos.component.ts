@@ -1,19 +1,22 @@
 import { Component, OnInit, signal, computed, effect, afterNextRender, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductsService, Product } from '../../core/services/products.service';
-import { CustomersService, Customer } from '../../core/services/customers.service';
+import { CustomersService, Customer, CreateCustomerDto } from '../../core/services/customers.service';
 import { SalesService, CartItem, CreateSaleDto, Sale } from '../../core/services/sales.service';
+import { CategoriesService, CategoryDto } from '../../core/services/categories.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
 import { SendReceiptDialogComponent } from '../../shared/components/send-receipt-dialog/send-receipt-dialog.component';
 import { ConcentrationModeService } from '../../core/services/concentration-mode.service';
+import { QRPaymentModalComponent, QRPaymentData } from '../../shared/components/qr-payment-modal/qr-payment-modal.component';
+import { BrandSettingsService, BrandSettings } from '../../core/services/brand-settings.service';
 
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, SendReceiptDialogComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SendReceiptDialogComponent, QRPaymentModalComponent],
   templateUrl: './pos.component.html',
   styleUrl: './pos.component.css'
 })
@@ -22,6 +25,10 @@ export class PosComponent implements OnInit {
   products = signal<Product[]>([]);
   filteredProducts = signal<Product[]>([]);
   searchTerm = signal('');
+  selectedCategory = signal<string | null>(null);
+  
+  // Categories
+  categories = signal<CategoryDto[]>([]);
 
   // Cart
   cartItems = signal<CartItem[]>([]);
@@ -41,8 +48,75 @@ export class PosComponent implements OnInit {
   isLoading = signal(false);
   showCustomerSearch = signal(false);
   showSendReceiptDialog = signal(false);
+  showQRPaymentModal = signal(false);
+  showCreateCustomerModal = signal(false);
   lastSale = signal<Sale | null>(null);
   activeService = signal<'ventas' | 'consultas' | 'reportes'>('ventas');
+  
+  // Brand Settings
+  brandSettings = signal<BrandSettings | null>(null);
+  
+  // QR Payment Data
+  qrPaymentData = signal<QRPaymentData | null>(null);
+
+  // Consultas State
+  activeQueryTab = signal<'productos' | 'ventas' | 'clientes' | 'stock'>('productos');
+  
+  // Consultas de Productos
+  queryProductSearch = signal('');
+  queryProductCategory = signal<string | null>(null);
+  queryProducts = signal<Product[]>([]);
+  queryProductsLoading = signal(false);
+  
+  // Consultas de Ventas
+  querySales = signal<Sale[]>([]);
+  querySalesLoading = signal(false);
+  querySaleSearch = signal('');
+  querySaleStartDate = signal<string>('');
+  querySaleEndDate = signal<string>('');
+  querySalePage = signal(1);
+  querySaleTotal = signal(0);
+  
+  // Consultas de Clientes
+  queryCustomers = signal<Customer[]>([]);
+  queryCustomersLoading = signal(false);
+  queryCustomerSearch = signal('');
+  
+  // Consultas de Stock
+  queryStockProducts = signal<Product[]>([]);
+  queryStockLoading = signal(false);
+  queryStockFilter = signal<'low' | 'expired' | 'expiring'>('low');
+
+  // Reportes State
+  activeReportTab = signal<'ventas' | 'productos' | 'ingresos' | 'pagos'>('ventas');
+  
+  // Reportes de Ventas
+  reportSalesPeriod = signal<'today' | 'week' | 'month' | 'custom'>('today');
+  reportSalesStartDate = signal<string>('');
+  reportSalesEndDate = signal<string>('');
+  reportSalesData = signal<Sale[]>([]);
+  reportSalesLoading = signal(false);
+  
+  // Reportes de Productos
+  reportProductsPeriod = signal<'today' | 'week' | 'month' | 'custom'>('today');
+  reportProductsStartDate = signal<string>('');
+  reportProductsEndDate = signal<string>('');
+  reportTopProducts = signal<{productId: string; productName: string; productCode: string; totalQuantity: number; totalRevenue: number}[]>([]);
+  reportProductsLoading = signal(false);
+  
+  // Reportes de Ingresos
+  reportIncomePeriod = signal<'today' | 'week' | 'month' | 'custom'>('today');
+  reportIncomeStartDate = signal<string>('');
+  reportIncomeEndDate = signal<string>('');
+  reportIncomeData = signal<{totalSales: number; totalRevenue: number; totalTax: number; totalDiscount: number; averageSale: number} | null>(null);
+  reportIncomeLoading = signal(false);
+  
+  // Reportes de Métodos de Pago
+  reportPaymentPeriod = signal<'today' | 'week' | 'month' | 'custom'>('today');
+  reportPaymentStartDate = signal<string>('');
+  reportPaymentEndDate = signal<string>('');
+  reportPaymentData = signal<{method: string; count: number; total: number}[]>([]);
+  reportPaymentLoading = signal(false);
 
   // Computed values
   subtotal = computed(() => {
@@ -65,18 +139,67 @@ export class PosComponent implements OnInit {
     return change > 0 ? change : 0;
   });
 
+  totalProductsCount = computed(() => {
+    return this.categories().reduce((sum, cat) => sum + (cat.productCount ?? 0), 0);
+  });
+
+  // Computed values para reportes
+  reportSalesTotalRevenue = computed(() => {
+    return this.reportSalesData().reduce((sum, s) => sum + s.total, 0);
+  });
+
+  reportSalesAverage = computed(() => {
+    const sales = this.reportSalesData();
+    return sales.length > 0 ? this.reportSalesTotalRevenue() / sales.length : 0;
+  });
+
+  reportSalesTotalDiscount = computed(() => {
+    return this.reportSalesData().reduce((sum, s) => sum + s.discount, 0);
+  });
+
+  reportPaymentTotal = computed(() => {
+    return this.reportPaymentData().reduce((sum, p) => sum + p.total, 0);
+  });
+
   private readonly destroyRef = inject(DestroyRef);
   private paymentEffectCleanup?: ReturnType<typeof effect>;
+
+  // Formulario de creación de cliente
+  createCustomerForm: FormGroup;
+  isCreatingCustomer = signal(false);
 
   constructor(
     private productsService: ProductsService,
     private customersService: CustomersService,
+    private categoriesService: CategoriesService,
     private salesService: SalesService,
     private authService: AuthService,
     private toastService: ToastService,
     private router: Router,
-    public concentrationModeService: ConcentrationModeService
-  ) {}
+    public concentrationModeService: ConcentrationModeService,
+    private brandSettingsService: BrandSettingsService,
+    private fb: FormBuilder
+  ) {
+    this.createCustomerForm = this.fb.group({
+      documentType: ['DNI', [Validators.required]],
+      documentNumber: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      name: ['', [Validators.required, Validators.maxLength(200)]],
+      email: ['', [Validators.email, Validators.maxLength(100)]],
+      phone: ['+51 ', [Validators.maxLength(20)]],
+      address: ['', [Validators.maxLength(500)]]
+    });
+
+    // Validación dinámica de longitud de documento según tipo
+    this.createCustomerForm.get('documentType')?.valueChanges.subscribe(type => {
+      const docControl = this.createCustomerForm.get('documentNumber');
+      if (type === 'DNI') {
+        docControl?.setValidators([Validators.required, Validators.pattern(/^\d{8}$/)]);
+      } else if (type === 'RUC') {
+        docControl?.setValidators([Validators.required, Validators.pattern(/^\d{11}$/)]);
+      }
+      docControl?.updateValueAndValidity();
+    });
+  }
 
   // Helper methods for template
   parseFloat = parseFloat;
@@ -90,6 +213,15 @@ export class PosComponent implements OnInit {
 
     this.loadProducts();
     this.loadCustomers();
+    this.loadCategories();
+    this.loadBrandSettings();
+
+    // Cargar datos si el servicio activo es consultas o reportes
+    if (this.activeService() === 'consultas') {
+      this.loadQueryData();
+    } else if (this.activeService() === 'reportes') {
+      this.loadReportData();
+    }
     
     // Observar cambios en total para actualizar amountPaid automáticamente
     // Se ejecuta después del siguiente renderizado para asegurar que todo esté inicializado
@@ -117,15 +249,478 @@ export class PosComponent implements OnInit {
   setActiveService(service: 'ventas' | 'consultas' | 'reportes'): void {
     this.activeService.set(service);
     localStorage.setItem('pos_active_service', service);
+    
+    // Cargar datos cuando se activa consultas o reportes
+    if (service === 'consultas') {
+      this.loadQueryData();
+    } else if (service === 'reportes') {
+      this.loadReportData();
+    }
+  }
+
+  setActiveQueryTab(tab: 'productos' | 'ventas' | 'clientes' | 'stock'): void {
+    this.activeQueryTab.set(tab);
+    this.loadQueryData();
+  }
+
+  loadQueryData(): void {
+    const tab = this.activeQueryTab();
+    switch (tab) {
+      case 'productos':
+        this.loadQueryProducts();
+        break;
+      case 'ventas':
+        this.loadQuerySales();
+        break;
+      case 'clientes':
+        this.loadQueryCustomers();
+        break;
+      case 'stock':
+        this.loadQueryStock();
+        break;
+    }
+  }
+
+  loadQueryProducts(): void {
+    this.queryProductsLoading.set(true);
+    const categoryId = this.queryProductCategory();
+    const searchTerm = this.queryProductSearch().trim();
+    
+    this.productsService.getAll({
+      isActive: true,
+      categoryId: categoryId || undefined,
+      searchTerm: searchTerm || undefined,
+      page: 1,
+      pageSize: 100
+    }).subscribe({
+      next: (result) => {
+        const products = result.items || result;
+        this.queryProducts.set(Array.isArray(products) ? products : []);
+        this.queryProductsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading query products:', error);
+        this.toastService.error('Error al cargar productos');
+        this.queryProductsLoading.set(false);
+      }
+    });
+  }
+
+  loadQuerySales(): void {
+    this.querySalesLoading.set(true);
+    const params: any = {
+      page: this.querySalePage(),
+      pageSize: 20
+    };
+
+    if (this.querySaleSearch().trim()) {
+      params.documentNumber = this.querySaleSearch().trim();
+    }
+
+    if (this.querySaleStartDate()) {
+      params.startDate = new Date(this.querySaleStartDate()).toISOString();
+    }
+
+    if (this.querySaleEndDate()) {
+      params.endDate = new Date(this.querySaleEndDate()).toISOString();
+    }
+
+    this.salesService.getAll(params).subscribe({
+      next: (pagedResult) => {
+        this.querySales.set(pagedResult.items);
+        this.querySaleTotal.set(pagedResult.totalCount);
+        this.querySalesLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading query sales:', error);
+        this.toastService.error('Error al cargar ventas');
+        this.querySalesLoading.set(false);
+      }
+    });
+  }
+
+  loadQueryCustomers(): void {
+    this.queryCustomersLoading.set(true);
+    const searchTerm = this.queryCustomerSearch().trim();
+    
+    this.customersService.getAll({
+      searchTerm: searchTerm || undefined,
+      page: 1,
+      pageSize: 100
+    }).subscribe({
+      next: (result) => {
+        const customers = result.items || result;
+        this.queryCustomers.set(Array.isArray(customers) ? customers : []);
+        this.queryCustomersLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading query customers:', error);
+        this.toastService.error('Error al cargar clientes');
+        this.queryCustomersLoading.set(false);
+      }
+    });
+  }
+
+  loadQueryStock(): void {
+    this.queryStockLoading.set(true);
+    
+    this.productsService.getAll({
+      isActive: true,
+      page: 1,
+      pageSize: 200
+    }).subscribe({
+      next: (result) => {
+        const products = result.items || result;
+        const allProducts = Array.isArray(products) ? products : [];
+        
+        const filter = this.queryStockFilter();
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+        
+        let filtered: Product[] = [];
+        
+        switch (filter) {
+          case 'low':
+            filtered = allProducts.filter(p => p.stock <= 10);
+            break;
+          case 'expired':
+            filtered = allProducts.filter(p => 
+              p.expirationDate && new Date(p.expirationDate) < today
+            );
+            break;
+          case 'expiring':
+            filtered = allProducts.filter(p => 
+              p.expirationDate && 
+              new Date(p.expirationDate) >= today && 
+              new Date(p.expirationDate) <= nextWeek
+            );
+            break;
+        }
+        
+        this.queryStockProducts.set(filtered);
+        this.queryStockLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading query stock:', error);
+        this.toastService.error('Error al cargar inventario');
+        this.queryStockLoading.set(false);
+      }
+    });
+  }
+
+  onQueryProductSearch(): void {
+    this.loadQueryProducts();
+  }
+
+  onQuerySaleSearch(): void {
+    this.querySalePage.set(1);
+    this.loadQuerySales();
+  }
+
+  onQueryCustomerSearch(): void {
+    this.loadQueryCustomers();
+  }
+
+  onQueryStockFilterChange(): void {
+    this.loadQueryStock();
+  }
+
+  formatDate(date: string | Date): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatCurrency(amount: number): string {
+    return `S/ ${amount.toFixed(2)}`;
+  }
+
+  isExpired(expirationDate?: string): boolean {
+    if (!expirationDate) return false;
+    return new Date(expirationDate) < new Date();
+  }
+
+  isExpiringSoon(expirationDate?: string): boolean {
+    if (!expirationDate) return false;
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    const expDate = new Date(expirationDate);
+    return expDate >= today && expDate <= nextWeek;
+  }
+
+  setActiveReportTab(tab: 'ventas' | 'productos' | 'ingresos' | 'pagos'): void {
+    this.activeReportTab.set(tab);
+    this.loadReportData();
+  }
+
+  loadReportData(): void {
+    const tab = this.activeReportTab();
+    switch (tab) {
+      case 'ventas':
+        this.loadSalesReport();
+        break;
+      case 'productos':
+        this.loadProductsReport();
+        break;
+      case 'ingresos':
+        this.loadIncomeReport();
+        break;
+      case 'pagos':
+        this.loadPaymentReport();
+        break;
+    }
+  }
+
+  getDateRange(period: 'today' | 'week' | 'month' | 'custom', startDate?: string, endDate?: string): { start: Date; end: Date } {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    if (period === 'custom' && startDate && endDate) {
+      return {
+        start: new Date(startDate),
+        end: new Date(endDate + 'T23:59:59')
+      };
+    }
+
+    switch (period) {
+      case 'today':
+        return { start, end: today };
+      case 'week':
+        start.setDate(today.getDate() - 7);
+        return { start, end: today };
+      case 'month':
+        start.setDate(1);
+        return { start, end: today };
+      default:
+        return { start, end: today };
+    }
+  }
+
+  loadSalesReport(): void {
+    this.reportSalesLoading.set(true);
+    const period = this.reportSalesPeriod();
+    const { start, end } = this.getDateRange(
+      period,
+      this.reportSalesStartDate(),
+      this.reportSalesEndDate()
+    );
+
+    this.salesService.getAll({
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      page: 1,
+      pageSize: 1000
+    }).subscribe({
+      next: (pagedResult) => {
+        this.reportSalesData.set(pagedResult.items || []);
+        this.reportSalesLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading sales report:', error);
+        this.toastService.error('Error al cargar reporte de ventas');
+        this.reportSalesData.set([]);
+        this.reportSalesLoading.set(false);
+      }
+    });
+  }
+
+  loadProductsReport(): void {
+    this.reportProductsLoading.set(true);
+    const period = this.reportProductsPeriod();
+    const { start, end } = this.getDateRange(
+      period,
+      this.reportProductsStartDate(),
+      this.reportProductsEndDate()
+    );
+
+    this.salesService.getAll({
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      page: 1,
+      pageSize: 1000
+    }).subscribe({
+      next: (pagedResult) => {
+        // Agrupar productos por ventas
+        const productMap = new Map<string, {productId: string; productName: string; productCode: string; totalQuantity: number; totalRevenue: number}>();
+        
+        const sales = pagedResult.items || [];
+        sales.forEach(sale => {
+          if (sale.saleDetails && sale.saleDetails.length > 0) {
+            sale.saleDetails.forEach(detail => {
+              const existing = productMap.get(detail.productId);
+              if (existing) {
+                existing.totalQuantity += detail.quantity;
+                existing.totalRevenue += detail.subtotal;
+              } else {
+                productMap.set(detail.productId, {
+                  productId: detail.productId,
+                  productName: detail.productName,
+                  productCode: detail.productCode,
+                  totalQuantity: detail.quantity,
+                  totalRevenue: detail.subtotal
+                });
+              }
+            });
+          }
+        });
+
+        const topProducts = Array.from(productMap.values())
+          .sort((a, b) => b.totalQuantity - a.totalQuantity)
+          .slice(0, 20);
+
+        this.reportTopProducts.set(topProducts);
+        this.reportProductsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading products report:', error);
+        this.toastService.error('Error al cargar reporte de productos');
+        this.reportTopProducts.set([]);
+        this.reportProductsLoading.set(false);
+      }
+    });
+  }
+
+  loadIncomeReport(): void {
+    this.reportIncomeLoading.set(true);
+    const period = this.reportIncomePeriod();
+    const { start, end } = this.getDateRange(
+      period,
+      this.reportIncomeStartDate(),
+      this.reportIncomeEndDate()
+    );
+
+    this.salesService.getAll({
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      page: 1,
+      pageSize: 1000
+    }).subscribe({
+      next: (pagedResult) => {
+        const sales = (pagedResult.items || []).filter(s => s.status === 'Pagado');
+        const totalSales = sales.length;
+        const totalRevenue = sales.reduce((sum, s) => sum + s.total, 0);
+        const totalTax = sales.reduce((sum, s) => sum + s.tax, 0);
+        const totalDiscount = sales.reduce((sum, s) => sum + s.discount, 0);
+        const averageSale = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+        this.reportIncomeData.set({
+          totalSales,
+          totalRevenue,
+          totalTax,
+          totalDiscount,
+          averageSale
+        });
+        this.reportIncomeLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading income report:', error);
+        this.toastService.error('Error al cargar reporte de ingresos');
+        this.reportIncomeData.set(null);
+        this.reportIncomeLoading.set(false);
+      }
+    });
+  }
+
+  loadPaymentReport(): void {
+    this.reportPaymentLoading.set(true);
+    const period = this.reportPaymentPeriod();
+    const { start, end } = this.getDateRange(
+      period,
+      this.reportPaymentStartDate(),
+      this.reportPaymentEndDate()
+    );
+
+    this.salesService.getAll({
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      page: 1,
+      pageSize: 1000
+    }).subscribe({
+      next: (pagedResult) => {
+        const sales = (pagedResult.items || []).filter(s => s.status === 'Pagado');
+        const paymentMap = new Map<string, {method: string; count: number; total: number}>();
+
+        sales.forEach(sale => {
+          const existing = paymentMap.get(sale.paymentMethod);
+          if (existing) {
+            existing.count += 1;
+            existing.total += sale.total;
+          } else {
+            paymentMap.set(sale.paymentMethod, {
+              method: sale.paymentMethod,
+              count: 1,
+              total: sale.total
+            });
+          }
+        });
+
+        const paymentData = Array.from(paymentMap.values())
+          .sort((a, b) => b.total - a.total);
+
+        this.reportPaymentData.set(paymentData);
+        this.reportPaymentLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading payment report:', error);
+        this.toastService.error('Error al cargar reporte de métodos de pago');
+        this.reportPaymentData.set([]);
+        this.reportPaymentLoading.set(false);
+      }
+    });
+  }
+
+  onReportPeriodChange(tab: 'ventas' | 'productos' | 'ingresos' | 'pagos'): void {
+    switch (tab) {
+      case 'ventas':
+        this.loadSalesReport();
+        break;
+      case 'productos':
+        this.loadProductsReport();
+        break;
+      case 'ingresos':
+        this.loadIncomeReport();
+        break;
+      case 'pagos':
+        this.loadPaymentReport();
+        break;
+    }
+  }
+
+  loadCategories(): void {
+    this.categoriesService.getAll().subscribe({
+      next: (categories) => {
+        // Filtrar solo categorías activas y ordenar por nombre
+        const activeCategories = categories
+          .filter(cat => cat.isActive)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        this.categories.set(activeCategories);
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+      }
+    });
   }
 
   loadProducts(): void {
     this.isLoading.set(true);
-    this.productsService.getAll({ isActive: true }).subscribe({
+    const categoryId = this.selectedCategory();
+    this.productsService.getAll({ 
+      isActive: true,
+      categoryId: categoryId || undefined
+    }).subscribe({
       next: (result) => {
         const products = result.items || result;
         this.products.set(Array.isArray(products) ? products : []);
-        this.filteredProducts.set(Array.isArray(products) ? products : []);
+        this.applyFilters();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -134,6 +729,13 @@ export class PosComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  onCategorySelect(categoryId: string | null): void {
+    this.selectedCategory.set(categoryId);
+    // Limpiar búsqueda al cambiar de categoría para evitar conflictos
+    this.searchTerm.set('');
+    this.loadProducts();
   }
 
   loadCustomers(): void {
@@ -148,29 +750,48 @@ export class PosComponent implements OnInit {
     });
   }
 
+  loadBrandSettings(): void {
+    this.brandSettingsService.get().subscribe({
+      next: (settings: BrandSettings | null) => {
+        this.brandSettings.set(settings);
+      },
+      error: (error: any) => {
+        console.error('Error loading brand settings:', error);
+      }
+    });
+  }
+
+  applyFilters(): void {
+    const term = this.searchTerm().toLowerCase().trim();
+    let filtered = [...this.products()];
+
+    // Filtrar por término de búsqueda
+    if (term) {
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(term) ||
+        p.code.toLowerCase().includes(term)
+      );
+    }
+    
+    this.filteredProducts.set(filtered);
+  }
+
   onSearch(): void {
     const term = this.searchTerm().toLowerCase().trim();
-    if (!term) {
-      this.filteredProducts.set(this.products());
-      return;
-    }
-
+    
     // Si el término es solo números, buscar por código exacto primero
-    if (/^\d+$/.test(term)) {
+    if (term && /^\d+$/.test(term)) {
       const exactMatch = this.products().find(p => p.code.toLowerCase() === term);
       if (exactMatch) {
         this.addToCart(exactMatch);
         this.searchTerm.set('');
-        this.filteredProducts.set(this.products());
+        this.applyFilters();
         return;
       }
     }
 
-    const filtered = this.products().filter(p =>
-      p.name.toLowerCase().includes(term) ||
-      p.code.toLowerCase().includes(term)
-    );
-    this.filteredProducts.set(filtered);
+    // Aplicar filtros de búsqueda
+    this.applyFilters();
   }
 
   addToCart(product: Product): void {
@@ -263,11 +884,134 @@ export class PosComponent implements OnInit {
     this.customerSearchTerm.set('');
   }
 
+  openCreateCustomerModal(): void {
+    this.createCustomerForm.reset({
+      documentType: 'DNI',
+      documentNumber: '',
+      name: '',
+      email: '',
+      phone: '+51 ',
+      address: ''
+    });
+    this.showCreateCustomerModal.set(true);
+  }
+
+  closeCreateCustomerModal(): void {
+    this.showCreateCustomerModal.set(false);
+    this.createCustomerForm.reset({
+      documentType: 'DNI',
+      documentNumber: '',
+      name: '',
+      email: '',
+      phone: '+51 ',
+      address: ''
+    });
+  }
+
+  onCreateCustomer(): void {
+    if (this.createCustomerForm.invalid) {
+      // Marcar todos los campos como touched para mostrar errores
+      Object.keys(this.createCustomerForm.controls).forEach(key => {
+        this.createCustomerForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    this.isCreatingCustomer.set(true);
+    const customerData: CreateCustomerDto = this.createCustomerForm.value;
+
+    this.customersService.create(customerData).subscribe({
+      next: (newCustomer) => {
+        this.toastService.success('Cliente creado exitosamente');
+        // Agregar el nuevo cliente a la lista
+        this.customers.set([...this.customers(), newCustomer]);
+        // Seleccionar el cliente recién creado
+        this.selectCustomer(newCustomer);
+        // Cerrar el modal
+        this.closeCreateCustomerModal();
+        this.isCreatingCustomer.set(false);
+      },
+      error: (error) => {
+        console.error('Error creating customer:', error);
+        const errorMessage = error.error?.message || error.error?.errors?.[0] || 'Error al crear el cliente';
+        this.toastService.error(errorMessage);
+        this.isCreatingCustomer.set(false);
+      }
+    });
+  }
+
   onPaymentMethodChange(): void {
     // Para todos los métodos, inicializar con el total
     // Para Efectivo, el usuario puede ajustar el monto
     // Para otros métodos, el monto debe ser igual al total
     this.amountPaid.set(this.total());
+    
+    // Si se selecciona YapePlin, mostrar modal QR
+    if (this.paymentMethod() === 'YapePlin') {
+      this.showQRPaymentModalForYapePlin();
+    }
+  }
+
+  showQRPaymentModalForYapePlin(): void {
+    const settings = this.brandSettings();
+    if (!settings) {
+      this.toastService.warning('Configuración de marca no disponible. Cargando...');
+      this.loadBrandSettings();
+      return;
+    }
+
+    // Determinar si usar Yape o Plin (prioridad a Yape si ambos están habilitados)
+    const useYape = settings.yapeEnabled && settings.yapePhone;
+    const usePlin = !useYape && settings.plinEnabled && settings.plinPhone;
+
+    if (!useYape && !usePlin) {
+      this.toastService.error('Yape/Plin no está configurado. Configure los datos de pago en Configuración.');
+      this.paymentMethod.set('Efectivo');
+      return;
+    }
+
+    const paymentType = useYape ? 'Yape' : 'Plin';
+    const phoneNumber = useYape ? settings.yapePhone! : settings.plinPhone!;
+    const qrImageUrl = useYape ? settings.yapeQRUrl : settings.plinQRUrl;
+
+    // Generar referencia temporal (se reemplazará con el número real de documento al procesar)
+    const tempReference = this.generateTempReference();
+
+    const qrData: QRPaymentData = {
+      amount: this.total(),
+      phoneNumber: phoneNumber,
+      qrImageUrl: qrImageUrl,
+      reference: tempReference,
+      paymentType: paymentType as 'Yape' | 'Plin'
+    };
+
+    this.qrPaymentData.set(qrData);
+    this.showQRPaymentModal.set(true);
+  }
+
+  generateTempReference(): string {
+    // Generar una referencia temporal basada en timestamp
+    // Formato: TEMP-YYYYMMDD-HHMMSS
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `TEMP-${year}${month}${day}-${hours}${minutes}${seconds}`;
+  }
+
+  onQRPaymentConfirm(): void {
+    // Cerrar modal y procesar venta
+    this.showQRPaymentModal.set(false);
+    this.processSale();
+  }
+
+  onQRPaymentCancel(): void {
+    // Cerrar modal y cambiar método de pago a Efectivo
+    this.showQRPaymentModal.set(false);
+    this.paymentMethod.set('Efectivo');
   }
 
   processSale(): void {
@@ -284,6 +1028,12 @@ export class PosComponent implements OnInit {
 
     if (this.amountPaid() < this.total()) {
       this.toastService.warning('El monto pagado es menor al total');
+      return;
+    }
+
+    // Si es YapePlin y el modal no está abierto, mostrar modal primero
+    if (this.paymentMethod() === 'YapePlin' && !this.showQRPaymentModal()) {
+      this.showQRPaymentModalForYapePlin();
       return;
     }
 
@@ -317,6 +1067,8 @@ export class PosComponent implements OnInit {
       next: (sale) => {
         this.lastSale.set(sale);
         this.toastService.success(`Venta ${sale.documentNumber} creada exitosamente`);
+        // Cerrar modal QR si estaba abierto
+        this.showQRPaymentModal.set(false);
         // Recargar productos para actualizar stock
         this.loadProducts();
         this.clearCart();

@@ -72,10 +72,32 @@ export class CartService {
     const existingItem = currentItems.find(item => item.productId === productId);
 
     if (existingItem) {
-      // Si ya existe, aumentar cantidad
-      this.updateQuantity(productId, existingItem.quantity + quantity);
+      // Si ya existe, mantener el precio original (el primero que se agregó)
+      // Si el precio nuevo es menor (descuento), actualizar al precio con descuento
+      // Si el precio nuevo es mayor (normal), mantener el precio con descuento si ya lo tenía
+      const newPrice = product.salePrice;
+      const currentPrice = existingItem.unitPrice;
+      
+      // Si el nuevo precio es menor (descuento), actualizar al precio con descuento
+      // Si el precio actual es menor (ya tiene descuento), mantenerlo
+      const finalPrice = newPrice < currentPrice ? newPrice : currentPrice;
+      
+      // Actualizar cantidad y precio si cambió
+      const updatedItems = currentItems.map(item => {
+        if (item.productId === productId) {
+          return {
+            ...item,
+            unitPrice: finalPrice,
+            quantity: item.quantity + quantity,
+            subtotal: finalPrice * (item.quantity + quantity)
+          };
+        }
+        return item;
+      });
+      this.cartItems.set(updatedItems);
+      this.saveCartToStorage();
     } else {
-      // Si no existe, agregar nuevo item
+      // Si no existe, agregar nuevo item con el precio proporcionado
       const newItem: CartItem = {
         productId: productId,
         productGuid: productGuid,

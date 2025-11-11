@@ -67,5 +67,34 @@ public class ProductRepository : Repository<Product>, IProductRepository
         product.Stock += quantity;
         await UpdateAsync(product, cancellationToken);
     }
+
+    public async Task<Dictionary<Guid, int>> GetCountByCategoryIdsAsync(List<Guid> categoryIds, CancellationToken cancellationToken = default)
+    {
+        if (categoryIds == null || categoryIds.Count == 0)
+        {
+            return new Dictionary<Guid, int>();
+        }
+
+        // Contar TODOS los productos por categoría (activos e inactivos)
+        // Esto da una mejor idea del total de productos en cada categoría
+        var counts = await _dbSet
+            .Where(p => categoryIds.Contains(p.CategoryId) && p.CategoryId != Guid.Empty)
+            .GroupBy(p => p.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var result = counts.ToDictionary(c => c.CategoryId, c => c.Count);
+        
+        // Asegurar que todas las categorías tengan un conteo (aunque sea 0)
+        foreach (var categoryId in categoryIds)
+        {
+            if (!result.ContainsKey(categoryId))
+            {
+                result[categoryId] = 0;
+            }
+        }
+
+        return result;
+    }
 }
 

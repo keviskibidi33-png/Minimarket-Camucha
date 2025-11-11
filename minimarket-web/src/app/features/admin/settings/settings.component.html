@@ -1,7 +1,28 @@
 <div class="flex-1 p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
     <!-- Page Heading -->
-    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Configuraciones del Sistema</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Configuraciones del Sistema</h1>
+      <button
+        (click)="goToFullSetup()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90">
+        <span class="material-symbols-outlined">tune</span>
+        Personalizar por Completo Tienda
+      </button>
+    </div>
+
+    <!-- Modal de Advertencia al Reiniciar Setup -->
+    @if (showResetWarning()) {
+      <app-confirm-dialog
+        [isOpen]="true"
+        title="⚠️ Advertencia: Se borrarán datos existentes"
+        message="Al personalizar la tienda desde cero, se eliminarán TODOS los productos y categorías creados hasta el momento. Esta acción no se puede deshacer. ¿Estás seguro de continuar?"
+        confirmText="Sí, Continuar"
+        cancelText="Cancelar"
+        (confirmed)="onResetWarningConfirmed()"
+        (cancelled)="onResetWarningCancelled()">
+      </app-confirm-dialog>
+    }
 
     <!-- Navbar de pestañas -->
     <app-settings-navbar></app-settings-navbar>

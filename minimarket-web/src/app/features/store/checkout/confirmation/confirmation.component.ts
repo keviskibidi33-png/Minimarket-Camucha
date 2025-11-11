@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { PaymentsService } from '../../../../core/services/payments.service';
 import { OrdersService } from '../../../../core/services/orders.service';
+import { BrandSettingsService } from '../../../../core/services/brand-settings.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
@@ -46,6 +47,7 @@ export class ConfirmationComponent implements OnInit {
     private cartService: CartService,
     private paymentsService: PaymentsService,
     private ordersService: OrdersService,
+    private brandSettingsService: BrandSettingsService,
     private toastService: ToastService,
     private router: Router
   ) {
@@ -334,8 +336,11 @@ export class ConfirmationComponent implements OnInit {
   }
 
   async notifyAdminByWhatsApp(proofData: any) {
-    // Número de WhatsApp del admin (configurar)
-    const adminWhatsAppNumber = '51987654321'; // TODO: Mover a configuración
+    // Obtener número de WhatsApp de BrandSettings
+    const settings = await firstValueFrom(this.brandSettingsService.get());
+    const adminWhatsAppNumber = settings?.whatsAppPhone || settings?.phone || '51987654321';
+    // Limpiar el número (remover espacios, guiones, etc.)
+    const cleanNumber = adminWhatsAppNumber.replace(/\s+/g, '').replace(/-/g, '').replace(/\+/g, '');
     
     const paymentMethodText = proofData.paymentMethod === 'bank' 
       ? 'transferencia bancaria' 
@@ -353,7 +358,7 @@ export class ConfirmationComponent implements OnInit {
       `🔢 Código: ${proofData.operationCode || 'No proporcionado'}\n\n` +
       `⚠️ Revisar inmediatamente en el panel de administración.`;
     
-    const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
     
     // Abrir WhatsApp en nueva ventana
     window.open(whatsappUrl, '_blank');

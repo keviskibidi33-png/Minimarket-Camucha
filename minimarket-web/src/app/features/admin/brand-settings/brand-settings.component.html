@@ -13,21 +13,12 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Logo de la Tienda
           </label>
-          <div class="flex gap-4 items-start">
-            <div class="flex-1">
-              <input
-                type="file"
-                accept="image/*"
-                (change)="onLogoUpload($event)"
-                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
-              <p class="mt-1 text-xs text-gray-500">Formatos: PNG, JPG, SVG. Tamaño recomendado: 200x60px</p>
-            </div>
-            @if (previewLogoUrl()) {
-              <div class="w-32 h-20 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <img [src]="previewLogoUrl()" alt="Logo preview" class="w-full h-full object-contain">
-              </div>
-            }
-          </div>
+          <app-logo-selector
+            [currentLogoUrl]="logoUrl()"
+            [currentEmoji]="logoEmoji()"
+            (logoUrl)="logoUrl.set($event)"
+            (emoji)="logoEmoji.set($event)">
+          </app-logo-selector>
         </div>
 
         <!-- Favicon -->
@@ -182,13 +173,22 @@
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">WhatsApp para Notificaciones</label>
                 <input
-                  type="email"
-                  [(ngModel)]="email"
-                  name="email"
+                  type="tel"
+                  [(ngModel)]="whatsAppPhone"
+                  name="whatsAppPhone"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500">Número donde se enviarán notificaciones de pedidos a los clientes</p>
               </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+              <input
+                type="email"
+                [(ngModel)]="email"
+                name="email"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dirección</label>

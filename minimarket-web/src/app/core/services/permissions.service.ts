@@ -1,50 +1,37 @@
-import { Injectable, signal, effect, EffectRef, DestroyRef, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService, User } from './auth.service';
+import { Injectable } from '@angular/core';
+import { AuthService } from './auth.service';
 
 /**
  * Servicio para gestión de permisos y roles de usuario
- * Sincroniza automáticamente con el estado de autenticación
+ * Lee directamente del AuthService para evitar problemas con effect() en servicios singleton
  */
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionsService {
-  private readonly currentUser = signal<User | null>(null);
-  private effectCleanup?: EffectRef;
-  private readonly destroyRef = inject(DestroyRef);
+  constructor(private authService: AuthService) {}
 
-  constructor(private authService: AuthService) {
-    // Sincronizar con el signal del AuthService usando effect
-    // El effect se ejecuta en el constructor cuando tenemos el contexto de inyección válido
-    // Usamos allowSignalWrites para permitir actualizar el signal dentro del effect
-    this.effectCleanup = effect(() => {
-      const user = this.authService.currentUser();
-      this.currentUser.set(user);
-    }, { allowSignalWrites: true });
-
-    // Limpiar el effect cuando el servicio se destruya (aunque es singleton, es buena práctica)
-    this.destroyRef.onDestroy(() => {
-      this.effectCleanup?.destroy();
-    });
+  // Obtener el usuario actual directamente del AuthService
+  private getCurrentUser() {
+    return this.authService.currentUser();
   }
 
   // Verificar si el usuario tiene un rol específico
   hasRole(role: string): boolean {
-    const user = this.currentUser();
+    const user = this.getCurrentUser();
     return user?.roles?.includes(role) ?? false;
   }
 
   // Verificar si el usuario tiene alguno de los roles especificados
   hasAnyRole(roles: string[]): boolean {
-    const user = this.currentUser();
+    const user = this.getCurrentUser();
     if (!user?.roles) return false;
     return roles.some(role => user.roles.includes(role));
   }
 
   // Verificar si el usuario tiene todos los roles especificados
   hasAllRoles(roles: string[]): boolean {
-    const user = this.currentUser();
+    const user = this.getCurrentUser();
     if (!user?.roles) return false;
     return roles.every(role => user.roles.includes(role));
   }

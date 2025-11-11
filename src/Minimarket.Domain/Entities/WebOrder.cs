@@ -20,6 +20,7 @@ public class WebOrder : BaseEntity
     public decimal Total { get; set; }
     public string? TrackingUrl { get; set; }
     public DateTime? EstimatedDelivery { get; set; }
+    public string? PaymentProofUrl { get; set; } // URL del comprobante de pago subido
 
     // Navigation properties
     public virtual Sede? SelectedSede { get; set; }

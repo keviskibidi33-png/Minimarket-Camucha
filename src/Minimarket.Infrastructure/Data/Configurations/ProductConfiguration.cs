@@ -55,6 +55,10 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(1000)
             .HasDefaultValue("[]");
 
+        builder.Property(p => p.ExpirationDate)
+            .HasColumnType("datetime2")
+            .IsRequired(false);
+
         builder.HasIndex(p => p.Code)
             .IsUnique();
 

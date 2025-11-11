@@ -1,33 +1,16 @@
-import { Injectable, signal, effect, DestroyRef, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConcentrationModeService {
   private _isConcentrationMode = signal<boolean>(false);
-  private readonly destroyRef = inject(DestroyRef);
-  private fullscreenEffect?: ReturnType<typeof effect>;
   
   isConcentrationMode = this._isConcentrationMode.asReadonly();
 
   constructor() {
     // Sincronizar con el estado de pantalla completa del navegador
     this.setupFullscreenListeners();
-    
-    // Sincronizar el signal con el estado de pantalla completa
-    this.fullscreenEffect = effect(() => {
-      const isActive = this._isConcentrationMode();
-      if (isActive && !this.isFullscreen()) {
-        this.enterFullscreen();
-      } else if (!isActive && this.isFullscreen()) {
-        this.exitFullscreen();
-      }
-    });
-
-    // Limpiar el effect cuando el servicio se destruya
-    this.destroyRef.onDestroy(() => {
-      this.fullscreenEffect?.destroy();
-    });
   }
 
   private setupFullscreenListeners(): void {
@@ -106,14 +89,28 @@ export class ConcentrationModeService {
   toggle(): void {
     const newState = !this._isConcentrationMode();
     this._isConcentrationMode.set(newState);
+    // Aplicar cambios inmediatamente sin usar effect()
+    if (newState && !this.isFullscreen()) {
+      this.enterFullscreen();
+    } else if (!newState && this.isFullscreen()) {
+      this.exitFullscreen();
+    }
   }
 
   enable(): void {
     this._isConcentrationMode.set(true);
+    // Aplicar cambios inmediatamente sin usar effect()
+    if (!this.isFullscreen()) {
+      this.enterFullscreen();
+    }
   }
 
   disable(): void {
     this._isConcentrationMode.set(false);
+    // Aplicar cambios inmediatamente sin usar effect()
+    if (this.isFullscreen()) {
+      this.exitFullscreen();
+    }
   }
 }
 

@@ -20,7 +20,7 @@ export class FilesService {
   uploadFile(file: File, folder: string = 'general'): Observable<{ url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folder', folder);
+    // NO agregar 'folder' al FormData, solo va en el query string
 
     return this.http.post<FileUploadResponse>(
       `${this.apiUrl}/upload?folder=${folder}`,

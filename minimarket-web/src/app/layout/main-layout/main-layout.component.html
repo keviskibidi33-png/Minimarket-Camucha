@@ -15,10 +15,17 @@
     <div>
       <!-- Logo -->
       <div class="flex items-center gap-3 p-2 mb-6">
-        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10" 
-             style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCxO-GXIAyAfF7RWp_EVAwv-NkIrI-xJ9WoNVoVMlVCEdpqkqprqwkjFIuD4Yb6WS7Lo8oR4w6cAkPZjZ9evO8BTCa6cnycm5LSTYMM__R_Nlwf3HGbAwJslPI5y6UKUjxdyszH5RvfqpflKMMqyN3zISR3IC6cDxQIjR9E994ZDj73R9h3qJ2emDXJaVFHrUDwNzdBkZ-O9qwj76I_Vp3pMoSk8XobJPSJJv12SeuZPTFXglxm4WukpNnJ6nYUQ7hxsaO81zKcoeem');"></div>
+        @if (brandSettings()?.logoUrl) {
+          <img [src]="brandSettings()!.logoUrl" 
+               [alt]="brandSettings()?.storeName || 'Logo'" 
+               class="rounded-lg size-10 object-contain bg-white dark:bg-gray-800 p-1">
+        } @else {
+          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10 bg-primary-admin flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-xl">storefront</span>
+          </div>
+        }
         <div class="flex flex-col" [class.hidden]="!sidebarOpen">
-          <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">Minimarket Camucha</h1>
+          <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ brandSettings()?.storeName || 'Minimarket Camucha' }}</h1>
           <p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">Admin</p>
         </div>
       </div>

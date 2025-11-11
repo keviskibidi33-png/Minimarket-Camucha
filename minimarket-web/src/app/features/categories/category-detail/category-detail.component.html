@@ -1,0 +1,133 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-4">
+        <button
+          (click)="router.navigate(['/admin/categorias'])"
+          class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div>
+          <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+            {{ category()?.name || 'Cargando...' }}
+          </h1>
+          @if (category()?.description) {
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ category()?.description }}</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading() && !category()) {
+      <div class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+        <p class="ml-4 text-gray-500">Cargando categoría...</p>
+      </div>
+    }
+
+    <!-- Category Info -->
+    @if (category() && !isLoading()) {
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total de productos</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              {{ products().length }} producto{{ products().length !== 1 ? 's' : '' }}
+            </p>
+          </div>
+          <div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ category()!.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
+              {{ category()!.isActive ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Table -->
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-12">
+            <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+            <p class="ml-4 text-gray-500">Cargando productos...</p>
+          </div>
+        } @else if (products().length === 0) {
+          <div class="px-6 py-12 text-center">
+            <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">inventory_2</span>
+            <p class="text-gray-500 dark:text-gray-400">No hay productos en esta categoría</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th class="px-6 py-3" scope="col">Producto</th>
+                  <th class="px-6 py-3" scope="col">Código (SKU)</th>
+                  <th class="px-6 py-3" scope="col">Stock</th>
+                  <th class="px-6 py-3" scope="col">Precio</th>
+                  <th class="px-6 py-3" scope="col">Fecha de Vencimiento</th>
+                  <th class="px-6 py-3 text-right" scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of products(); track product.id) {
+                  <tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-3">
+                        @if (product.imageUrl) {
+                          <img [src]="product.imageUrl" [alt]="product.name" class="w-10 h-10 rounded object-cover">
+                        } @else {
+                          <div class="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-gray-400">inventory_2</span>
+                          </div>
+                        }
+                        <div>
+                          <p class="font-medium text-gray-900 dark:text-white">{{ product.name }}</p>
+                          @if (product.description) {
+                            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{{ product.description }}</p>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="font-mono text-gray-700 dark:text-gray-300">{{ product.code }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full {{ product.stock > 0 ? 'bg-green-500' : 'bg-red-500' }}"></span>
+                        <span class="text-gray-700 dark:text-gray-300">{{ product.stock }}</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="font-semibold text-gray-900 dark:text-white">{{ formatPrice(product.salePrice) }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span [ngClass]="getExpirationClass(product.expirationDate)">
+                        {{ formatDate(product.expirationDate) }}
+                        @if (isExpired(product.expirationDate)) {
+                          <span class="ml-2 text-xs">(Vencido)</span>
+                        } @else if (isExpiringSoon(product.expirationDate)) {
+                          <span class="ml-2 text-xs">(Por vencer)</span>
+                        }
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                      <button
+                        [routerLink]="['/admin/productos/editar', product.id]"
+                        class="text-primary-admin hover:text-primary-admin/80"
+                        title="Editar">
+                        <span class="material-symbols-outlined text-xl">edit</span>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+

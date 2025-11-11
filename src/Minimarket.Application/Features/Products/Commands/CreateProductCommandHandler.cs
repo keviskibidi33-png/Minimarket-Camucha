@@ -53,7 +53,8 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             MinimumStock = request.Product.MinimumStock,
             CategoryId = request.Product.CategoryId,
             ImageUrl = request.Product.ImageUrl,
-            IsActive = true
+            IsActive = true,
+            ExpirationDate = request.Product.ExpirationDate
         };
 
         await _unitOfWork.Products.AddAsync(product, cancellationToken);
@@ -76,7 +77,8 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             CategoryName = category.Name,
             ImageUrl = product.ImageUrl,
             IsActive = product.IsActive,
-            CreatedAt = product.CreatedAt
+            CreatedAt = product.CreatedAt,
+            ExpirationDate = product.ExpirationDate
         };
 
         return Result<ProductDto>.Success(result);

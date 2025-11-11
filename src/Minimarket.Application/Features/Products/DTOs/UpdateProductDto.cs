@@ -13,5 +13,6 @@ public class UpdateProductDto
     public Guid CategoryId { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? ExpirationDate { get; set; } // Fecha de vencimiento
 }
 

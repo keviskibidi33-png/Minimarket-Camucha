@@ -72,9 +72,18 @@
 
           <!-- Categoría -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Categoría <span class="text-red-500">*</span>
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Categoría <span class="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                (click)="openCreateCategoryModal()"
+                class="text-xs text-primary-admin hover:text-primary-admin/80 font-medium flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">add</span>
+                Nueva Categoría
+              </button>
+            </div>
             <select
               formControlName="categoryId"
               data-cy="category-select"
@@ -82,7 +91,9 @@
               [class.border-red-500]="productForm.get('categoryId')?.invalid && productForm.get('categoryId')?.touched">
               <option value="">Seleccione una categoría</option>
               @for (category of categories(); track category.id) {
-                <option [value]="category.id" [attr.data-cy]="'category-option-' + category.id">{{ category.name }}</option>
+                <option [value]="category.id" [attr.data-cy]="'category-option-' + category.id">
+                  {{ category.name }}@if (category.productCount !== undefined) { ({{ category.productCount }} producto{{ category.productCount !== 1 ? 's' : '' }}) }
+                </option>
               }
             </select>
             @if (getFieldError('categoryId')) {
@@ -179,6 +190,18 @@
             }
           </div>
 
+          <!-- Fecha de Vencimiento -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Fecha de Vencimiento
+            </label>
+            <input
+              type="date"
+              formControlName="expirationDate"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+              placeholder="Seleccione una fecha">
+          </div>
+
           <!-- Estado (solo en modo edición) -->
           @if (isEditMode()) {
             <div class="md:col-span-2">
@@ -216,4 +239,81 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para crear categoría -->
+@if (showCreateCategoryModal()) {
+  <div 
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    (click)="closeCreateCategoryModal()">
+    <div 
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 relative"
+      (click)="$event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+          Nueva Categoría
+        </h2>
+        <button
+          (click)="closeCreateCategoryModal()"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div class="space-y-4">
+        @if (errorMessage()) {
+          <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3">
+            <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+          </div>
+        }
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            [value]="newCategoryName()"
+            (input)="newCategoryName.set($any($event.target).value)"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Ej: Bebidas">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Descripción (opcional)
+          </label>
+          <textarea
+            [value]="newCategoryDescription()"
+            (input)="newCategoryDescription.set($any($event.target).value)"
+            rows="3"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Descripción de la categoría"></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            (click)="closeCreateCategoryModal()"
+            class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 font-medium transition-colors">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="createCategory()"
+            [disabled]="!newCategoryName().trim() || isCreatingCategory()"
+            class="flex-1 px-4 py-2 bg-primary-admin text-white rounded hover:bg-primary-admin/90 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isCreatingCategory()) {
+              <span class="material-symbols-outlined animate-spin mr-2 inline-block text-sm">refresh</span>
+            }
+            Crear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
 

@@ -17,6 +17,7 @@ export interface Product {
   imageUrl?: string;
   isActive: boolean;
   createdAt: string;
+  expirationDate?: string; // Fecha de vencimiento
 }
 
 export interface CreateProductDto {
@@ -29,6 +30,7 @@ export interface CreateProductDto {
   minimumStock: number;
   categoryId: string;
   imageUrl?: string;
+  expirationDate?: string; // Fecha de vencimiento
 }
 
 export interface UpdateProductDto extends CreateProductDto {
@@ -65,19 +67,23 @@ export class ProductsService {
   getAll(params?: ProductsQueryParams): Observable<PagedResult<Product>> {
     let httpParams = new HttpParams();
     
-    if (params?.searchTerm) {
-      httpParams = httpParams.set('searchTerm', params.searchTerm);
+    if (params?.searchTerm && params.searchTerm.trim()) {
+      httpParams = httpParams.set('searchTerm', params.searchTerm.trim());
     }
     if (params?.categoryId) {
-      httpParams = httpParams.set('categoryId', params.categoryId);
+      // Solo enviar categoryId si es un GUID válido
+      const categoryIdStr = String(params.categoryId).trim();
+      if (categoryIdStr && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryIdStr)) {
+        httpParams = httpParams.set('categoryId', categoryIdStr);
+      }
     }
     if (params?.isActive !== undefined) {
       httpParams = httpParams.set('isActive', params.isActive.toString());
     }
-    if (params?.page) {
+    if (params?.page && params.page > 0) {
       httpParams = httpParams.set('page', params.page.toString());
     }
-    if (params?.pageSize) {
+    if (params?.pageSize && params.pageSize > 0) {
       httpParams = httpParams.set('pageSize', params.pageSize.toString());
     }
 

@@ -37,8 +37,17 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     // Solo agregar Content-Type para peticiones que envían datos
+    // NO establecer Content-Type si:
+    // 1. Ya existe un Content-Type (para FormData, el navegador lo establece automáticamente)
+    // 2. El body es FormData (para uploads de archivos)
+    const isFormData = req.body instanceof FormData;
+    const hasContentType = req.headers.has('Content-Type');
+    
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'DELETE') {
-      headers['Content-Type'] = 'application/json';
+      // Solo establecer Content-Type si no es FormData y no tiene Content-Type ya establecido
+      if (!isFormData && !hasContentType) {
+        headers['Content-Type'] = 'application/json';
+      }
     }
 
     const cloned = req.clone({

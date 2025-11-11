@@ -18,6 +18,17 @@ public class GetAllCategoriesQueryHandler : IRequestHandler<GetAllCategoriesQuer
     public async Task<Result<IEnumerable<CategoryDto>>> Handle(GetAllCategoriesQuery request, CancellationToken cancellationToken)
     {
         var categories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
+        
+        // Obtener conteo de productos por categoría
+        var categoryIds = categories.Select(c => c.Id).ToList();
+        var productCounts = await _unitOfWork.ProductRepository.GetCountByCategoryIdsAsync(categoryIds, cancellationToken);
+
+        // Debug: Verificar que se están obteniendo conteos
+        // Esto se puede remover después de verificar que funciona
+        if (productCounts.Count > 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"Conteos obtenidos: {string.Join(", ", productCounts.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+        }
 
         var result = categories
             .Where(c => c.IsActive)
@@ -31,7 +42,8 @@ public class GetAllCategoriesQueryHandler : IRequestHandler<GetAllCategoriesQuer
                 ImageUrl = c.ImageUrl,
                 IconoUrl = c.IconoUrl,
                 Orden = c.Orden,
-                IsActive = c.IsActive
+                IsActive = c.IsActive,
+                ProductCount = productCounts.GetValueOrDefault(c.Id, 0)
             })
             .ToList();
 

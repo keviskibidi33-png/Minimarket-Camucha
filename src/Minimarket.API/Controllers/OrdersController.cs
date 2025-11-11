@@ -273,5 +273,89 @@ public class OrdersController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpGet("admin/all")]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> GetAllOrders(
+        [FromQuery] string? status,
+        [FromQuery] string? searchTerm,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var query = new GetAllOrdersQuery
+        {
+            Status = status,
+            SearchTerm = searchTerm,
+            StartDate = startDate,
+            EndDate = endDate,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result.Data);
+    }
+
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] UpdateOrderStatusRequest request)
+    {
+        var command = new UpdateOrderStatusCommand
+        {
+            OrderId = id,
+            Status = request.Status,
+            TrackingUrl = request.TrackingUrl,
+            EstimatedDelivery = request.EstimatedDelivery
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Estado del pedido actualizado correctamente" });
+    }
+
+    [HttpPut("{id}/payment-proof")]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> UpdatePaymentProof(Guid id, [FromBody] UpdatePaymentProofRequest request)
+    {
+        var command = new UpdatePaymentProofCommand
+        {
+            OrderId = id,
+            PaymentProofUrl = request.PaymentProofUrl
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Comprobante de pago actualizado correctamente" });
+    }
+}
+
+public class UpdateOrderStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
+    public string? TrackingUrl { get; set; }
+    public DateTime? EstimatedDelivery { get; set; }
+}
+
+public class UpdatePaymentProofRequest
+{
+    public string PaymentProofUrl { get; set; } = string.Empty;
 }
 

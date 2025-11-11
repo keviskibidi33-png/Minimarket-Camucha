@@ -16,6 +16,7 @@ export interface CategoryDto {
   description: string;
   imageUrl?: string;
   isActive: boolean;
+  productCount?: number; // Conteo de productos en esta categoría
 }
 
 export interface CreateCategoryDto {

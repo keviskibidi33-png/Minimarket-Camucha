@@ -19,6 +19,9 @@ public class WebOrderDto
     public decimal Subtotal { get; set; }
     public decimal ShippingCost { get; set; }
     public decimal Total { get; set; }
+    public string? TrackingUrl { get; set; }
+    public DateTime? EstimatedDelivery { get; set; }
+    public string? PaymentProofUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public List<OrderItemDto> Items { get; set; } = new();

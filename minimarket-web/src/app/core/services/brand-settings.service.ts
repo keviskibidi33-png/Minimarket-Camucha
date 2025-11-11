@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 export interface BrandSettings {
   id: string;
   logoUrl: string;
+  logoEmoji?: string;
   storeName: string;
   faviconUrl?: string;
   primaryColor: string;
@@ -17,6 +18,7 @@ export interface BrandSettings {
   description?: string;
   slogan?: string;
   phone?: string;
+  whatsAppPhone?: string;
   email?: string;
   address?: string;
   ruc?: string;
@@ -48,6 +50,7 @@ export interface BrandSettings {
 
 export interface UpdateBrandSettings {
   logoUrl: string;
+  logoEmoji?: string;
   storeName: string;
   faviconUrl?: string;
   primaryColor: string;
@@ -58,6 +61,7 @@ export interface UpdateBrandSettings {
   description?: string;
   slogan?: string;
   phone?: string;
+  whatsAppPhone?: string;
   email?: string;
   address?: string;
   ruc?: string;

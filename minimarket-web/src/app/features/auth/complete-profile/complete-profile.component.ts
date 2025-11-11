@@ -42,7 +42,7 @@ export class CompleteProfileComponent implements OnInit {
       // Dirección de envío (ahora es el formulario principal)
       addressLabel: ['', [Validators.required, Validators.maxLength(50)]],
       addressFullName: ['', [Validators.required, Validators.maxLength(200)]],
-      addressPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
+      addressPhone: ['+51 ', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
       addressAddress: ['', [Validators.required, Validators.maxLength(500)]],
       addressReference: [''],
       addressDistrict: ['', [Validators.required, Validators.maxLength(100)]],

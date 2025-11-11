@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { setupGuard } from './core/guards/setup.guard';
 
 export const routes: Routes = [
   // Rutas públicas de la TIENDA
@@ -15,6 +16,10 @@ export const routes: Routes = [
   {
     path: 'tienda/ofertas',
     loadComponent: () => import('./features/store/ofertas/ofertas.component').then(m => m.StoreOfertasComponent)
+  },
+  {
+    path: 'tienda/ofertas/:id',
+    loadComponent: () => import('./features/store/ofertas/oferta-detail/oferta-detail.component').then(m => m.OfertaDetailComponent)
   },
   {
     path: 'tienda/contacto',
@@ -102,7 +107,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard],
+    canActivate: [authGuard, setupGuard],
     loadComponent: () => import('./layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     children: [
       {
@@ -176,6 +181,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/categories/category-form/category-form.component').then(m => m.CategoryFormComponent)
       },
       {
+        path: 'categorias/:id',
+        canActivate: [roleGuard(['Administrador', 'Almacenero'])],
+        loadComponent: () => import('./features/categories/category-detail/category-detail.component').then(m => m.CategoryDetailComponent)
+      },
+      {
         path: 'categorias/editar/:id',
         canActivate: [roleGuard(['Administrador', 'Almacenero'])],
         loadComponent: () => import('./features/categories/category-form/category-form.component').then(m => m.CategoryFormComponent)
@@ -219,6 +229,11 @@ export const routes: Routes = [
         path: 'analytics',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent)
+      },
+      {
+        path: 'pedidos',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/orders/orders.component').then(m => m.OrdersComponent)
       }
     ]
   },

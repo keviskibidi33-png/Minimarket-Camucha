@@ -73,7 +73,8 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, R
                 Paginas = ParseJsonObject(p.PaginasJson),
                 SedesDisponibles = ParseJsonGuidArray(p.SedesDisponiblesJson),
                 IsActive = p.IsActive,
-                CreatedAt = p.CreatedAt
+                CreatedAt = p.CreatedAt,
+                ExpirationDate = p.ExpirationDate
             })
             .ToList();
 

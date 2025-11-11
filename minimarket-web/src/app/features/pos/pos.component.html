@@ -101,6 +101,41 @@
         </label>
       </div>
 
+      <!-- Categories Filter - Circular buttons -->
+      @if (categories().length > 0) {
+        <div class="flex-shrink-0 flex items-center gap-2 overflow-x-auto pb-2" style="scrollbar-width: thin;">
+          <!-- Botón "Todas" -->
+          <button
+            (click)="onCategorySelect(null)"
+            [class.bg-primary-admin]="selectedCategory() === null"
+            [class.text-white]="selectedCategory() === null"
+            [class.bg-gray-100]="selectedCategory() !== null"
+            [class.dark:bg-gray-700]="selectedCategory() !== null"
+            [class.text-gray-700]="selectedCategory() !== null"
+            [class.dark:text-gray-300]="selectedCategory() !== null"
+            class="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-full px-4 py-2 min-w-[80px] transition-all duration-200 hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="text-xs font-bold">Todas</span>
+            <span class="text-[10px] opacity-75">{{ totalProductsCount() }}</span>
+          </button>
+          
+          <!-- Categorías -->
+          @for (category of categories(); track category.id) {
+            <button
+              (click)="onCategorySelect(category.id)"
+              [class.bg-primary-admin]="selectedCategory() === category.id"
+              [class.text-white]="selectedCategory() === category.id"
+              [class.bg-gray-100]="selectedCategory() !== category.id"
+              [class.dark:bg-gray-700]="selectedCategory() !== category.id"
+              [class.text-gray-700]="selectedCategory() !== category.id"
+              [class.dark:text-gray-300]="selectedCategory() !== category.id"
+              class="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-full px-4 py-2 min-w-[80px] transition-all duration-200 hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20 hover:text-primary-admin dark:hover:text-primary-admin">
+              <span class="text-xs font-bold truncate max-w-[70px]">{{ category.name }}</span>
+              <span class="text-[10px] opacity-75">{{ category.productCount ?? 0 }}</span>
+            </button>
+          }
+        </div>
+      }
+
       <!-- Product List -->
       <div class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm min-h-0" style="scrollbar-width: thin; scrollbar-color: rgb(156 163 175) transparent;">
         @if (isLoading()) {
@@ -183,33 +218,41 @@
               </button>
             </div>
           } @else {
-            <div class="relative">
-              <input
-                type="text"
-                [value]="customerSearchTerm()"
-                (input)="customerSearchTerm.set($any($event.target).value)"
-                (focus)="showCustomerSearch.set(true)"
-                (keydown.escape)="showCustomerSearch.set(false); customerSearchTerm.set('')"
-                data-cy="customer-search"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin"
-                placeholder="Buscar cliente por nombre o documento...">
-              @if (showCustomerSearch()) {
-                <div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto">
-                  @if (getFilteredCustomers().length > 0) {
-                    @for (customer of getFilteredCustomers(); track customer.id) {
-                      <button
-                        (click)="selectCustomer(customer)"
-                        [attr.data-cy]="'customer-option-' + customer.id"
-                        class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-                        <p class="font-medium text-gray-900 dark:text-white">{{ customer.name }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ customer.documentType }}: {{ customer.documentNumber }}</p>
-                      </button>
+            <div class="space-y-2">
+              <div class="relative">
+                <input
+                  type="text"
+                  [value]="customerSearchTerm()"
+                  (input)="customerSearchTerm.set($any($event.target).value)"
+                  (focus)="showCustomerSearch.set(true)"
+                  (keydown.escape)="showCustomerSearch.set(false); customerSearchTerm.set('')"
+                  data-cy="customer-search"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin"
+                  placeholder="Buscar cliente por nombre o documento...">
+                @if (showCustomerSearch()) {
+                  <div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto">
+                    @if (getFilteredCustomers().length > 0) {
+                      @for (customer of getFilteredCustomers(); track customer.id) {
+                        <button
+                          (click)="selectCustomer(customer)"
+                          [attr.data-cy]="'customer-option-' + customer.id"
+                          class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                          <p class="font-medium text-gray-900 dark:text-white">{{ customer.name }}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400">{{ customer.documentType }}: {{ customer.documentNumber }}</p>
+                        </button>
+                      }
+                    } @else {
+                      <p class="px-4 py-2 text-sm text-gray-500 text-center">No se encontraron clientes</p>
                     }
-                  } @else {
-                    <p class="px-4 py-2 text-sm text-gray-500 text-center">No se encontraron clientes</p>
-                  }
-                </div>
-              }
+                  </div>
+                }
+              </div>
+              <button
+                (click)="openCreateCustomerModal()"
+                class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white text-sm font-medium hover:bg-primary-admin/90 transition-colors">
+                <span class="material-symbols-outlined text-base">person_add</span>
+                <span>Crear Nuevo Cliente</span>
+              </button>
             </div>
           }
         </div>
@@ -382,6 +425,150 @@
       (onSend)="onSendReceipt($event)">
     </app-send-receipt-dialog>
 
+    <!-- QR Payment Modal -->
+    @if (showQRPaymentModal()) {
+      <app-qr-payment-modal
+        [isOpen]="showQRPaymentModal()"
+        [paymentData]="qrPaymentData()"
+        (onConfirm)="onQRPaymentConfirm()"
+        (onCancel)="onQRPaymentCancel()">
+      </app-qr-payment-modal>
+    }
+
+    <!-- Modal Crear Cliente -->
+    @if (showCreateCustomerModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">Crear Nuevo Cliente</h3>
+              <button
+                (click)="closeCreateCustomerModal()"
+                class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form [formGroup]="createCustomerForm" (ngSubmit)="onCreateCustomer()" class="space-y-4">
+              <!-- Tipo de Documento -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tipo de Documento <span class="text-red-500">*</span>
+                </label>
+                <select
+                  formControlName="documentType"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="DNI">DNI</option>
+                  <option value="RUC">RUC</option>
+                </select>
+                @if (createCustomerForm.get('documentType')?.invalid && createCustomerForm.get('documentType')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">Tipo de documento requerido</p>
+                }
+              </div>
+
+              <!-- Número de Documento -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Número de Documento <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="documentNumber"
+                  placeholder="Ingrese el número de documento"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                @if (createCustomerForm.get('documentNumber')?.invalid && createCustomerForm.get('documentNumber')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (createCustomerForm.get('documentNumber')?.errors?.['required']) {
+                      Número de documento requerido
+                    } @else if (createCustomerForm.get('documentNumber')?.errors?.['pattern']) {
+                      @if (createCustomerForm.get('documentType')?.value === 'DNI') {
+                        El DNI debe tener 8 dígitos
+                      } @else {
+                        El RUC debe tener 11 dígitos
+                      }
+                    }
+                  </p>
+                }
+              </div>
+
+              <!-- Nombre -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nombre Completo <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="name"
+                  placeholder="Ingrese el nombre completo"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                @if (createCustomerForm.get('name')?.invalid && createCustomerForm.get('name')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">Nombre requerido</p>
+                }
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  formControlName="email"
+                  placeholder="correo@ejemplo.com"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                @if (createCustomerForm.get('email')?.invalid && createCustomerForm.get('email')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">Email inválido</p>
+                }
+              </div>
+
+              <!-- Teléfono -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Teléfono
+                </label>
+                <input
+                  type="text"
+                  formControlName="phone"
+                  placeholder="+51 999 999 999"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              </div>
+
+              <!-- Dirección -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Dirección
+                </label>
+                <textarea
+                  formControlName="address"
+                  rows="3"
+                  placeholder="Ingrese la dirección"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
+              </div>
+
+              <!-- Botones -->
+              <div class="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  (click)="closeCreateCustomerModal()"
+                  class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="createCustomerForm.invalid || isCreatingCustomer()"
+                  class="flex-1 px-4 py-2 rounded-lg bg-primary-admin text-white font-medium hover:bg-primary-admin/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (isCreatingCustomer()) {
+                    <span class="material-symbols-outlined animate-spin inline-block mr-2">refresh</span>
+                  }
+                  Crear Cliente
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Success Actions (after sale) -->
     @if (lastSale() && !showSendReceiptDialog()) {
       <div class="fixed bottom-4 right-4 flex gap-2">
@@ -400,21 +587,726 @@
       </div>
     }
   } @else if (activeService() === 'consultas') {
-    <main class="flex-1 p-6 overflow-y-auto min-h-0">
-      <div class="max-w-4xl mx-auto">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Consultas</h2>
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <p class="text-gray-600 dark:text-gray-400">Funcionalidad de consultas próximamente...</p>
+    <main class="flex-1 p-4 overflow-y-auto min-h-0">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Consultas</h2>
+        
+        <!-- Tabs de Consultas -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-4">
+          <div class="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              (click)="setActiveQueryTab('productos')"
+              [class.bg-primary-admin]="activeQueryTab() === 'productos'"
+              [class.text-white]="activeQueryTab() === 'productos'"
+              [class.text-gray-700]="activeQueryTab() !== 'productos'"
+              [class.dark:text-gray-300]="activeQueryTab() !== 'productos'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">inventory_2</span>
+              Productos
+            </button>
+            <button
+              (click)="setActiveQueryTab('ventas')"
+              [class.bg-primary-admin]="activeQueryTab() === 'ventas'"
+              [class.text-white]="activeQueryTab() === 'ventas'"
+              [class.text-gray-700]="activeQueryTab() !== 'ventas'"
+              [class.dark:text-gray-300]="activeQueryTab() !== 'ventas'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">receipt_long</span>
+              Ventas
+            </button>
+            <button
+              (click)="setActiveQueryTab('clientes')"
+              [class.bg-primary-admin]="activeQueryTab() === 'clientes'"
+              [class.text-white]="activeQueryTab() === 'clientes'"
+              [class.text-gray-700]="activeQueryTab() !== 'clientes'"
+              [class.dark:text-gray-300]="activeQueryTab() !== 'clientes'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">people</span>
+              Clientes
+            </button>
+            <button
+              (click)="setActiveQueryTab('stock')"
+              [class.bg-primary-admin]="activeQueryTab() === 'stock'"
+              [class.text-white]="activeQueryTab() === 'stock'"
+              [class.text-gray-700]="activeQueryTab() !== 'stock'"
+              [class.dark:text-gray-300]="activeQueryTab() !== 'stock'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">warning</span>
+              Stock
+            </button>
+          </div>
         </div>
+
+        <!-- Contenido de Consultas de Productos -->
+        @if (activeQueryTab() === 'productos') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar Producto</label>
+                <input
+                  type="text"
+                  [value]="queryProductSearch()"
+                  (input)="queryProductSearch.set($any($event.target).value); onQueryProductSearch()"
+                  placeholder="Nombre o código..."
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                <select
+                  [value]="queryProductCategory() || ''"
+                  (change)="queryProductCategory.set($any($event.target).value || null); loadQueryProducts()"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="">Todas las categorías</option>
+                  @for (category of categories(); track category.id) {
+                    <option [value]="category.id">{{ category.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Lista de Productos -->
+            @if (queryProductsLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (queryProducts().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">inventory_2</span>
+                <p>No se encontraron productos</p>
+              </div>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Código</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Nombre</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Categoría</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Stock</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Precio</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Vencimiento</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (product of queryProducts(); track product.id) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.code }}</td>
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.name }}</td>
+                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ product.categoryName || 'Sin categoría' }}</td>
+                        <td class="px-4 py-2 text-right">
+                          <span [class.text-red-600]="product.stock <= 10" [class.font-bold]="product.stock <= 10">
+                            {{ product.stock }}
+                          </span>
+                        </td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white">{{ formatCurrency(product.salePrice) }}</td>
+                        <td class="px-4 py-2">
+                          @if (product.expirationDate) {
+                            <span [class.text-red-600]="isExpired(product.expirationDate)" [class.text-yellow-600]="isExpiringSoon(product.expirationDate)">
+                              {{ formatDate(product.expirationDate) }}
+                            </span>
+                          } @else {
+                            <span class="text-gray-400">-</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Contenido de Consultas de Ventas -->
+        @if (activeQueryTab() === 'ventas') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número de Documento</label>
+                <input
+                  type="text"
+                  [value]="querySaleSearch()"
+                  (input)="querySaleSearch.set($any($event.target).value); onQuerySaleSearch()"
+                  placeholder="B001-000001..."
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
+                <input
+                  type="date"
+                  [value]="querySaleStartDate()"
+                  (change)="querySaleStartDate.set($any($event.target).value); onQuerySaleSearch()"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
+                <input
+                  type="date"
+                  [value]="querySaleEndDate()"
+                  (change)="querySaleEndDate.set($any($event.target).value); onQuerySaleSearch()"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              </div>
+            </div>
+
+            <!-- Lista de Ventas -->
+            @if (querySalesLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (querySales().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">receipt_long</span>
+                <p>No se encontraron ventas</p>
+              </div>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Documento</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Fecha</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Cliente</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Total</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Método Pago</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (sale of querySales(); track sale.id) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-2 text-gray-900 dark:text-white font-medium">{{ sale.documentNumber }}</td>
+                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ formatDate(sale.saleDate) }}</td>
+                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ sale.customerName || 'Cliente General' }}</td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ formatCurrency(sale.total) }}</td>
+                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ sale.paymentMethod }}</td>
+                        <td class="px-4 py-2">
+                          <span [class.text-green-600]="sale.status === 'Pagado'" [class.text-yellow-600]="sale.status === 'Pendiente'" [class.text-red-600]="sale.status === 'Anulado'">
+                            {{ sale.status }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Contenido de Consultas de Clientes -->
+        @if (activeQueryTab() === 'clientes') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar Cliente</label>
+              <input
+                type="text"
+                [value]="queryCustomerSearch()"
+                (input)="queryCustomerSearch.set($any($event.target).value); onQueryCustomerSearch()"
+                placeholder="Nombre, DNI, email..."
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+
+            <!-- Lista de Clientes -->
+            @if (queryCustomersLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (queryCustomers().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">people</span>
+                <p>No se encontraron clientes</p>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (customer of queryCustomers(); track customer.id) {
+                  <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 class="font-bold text-gray-900 dark:text-white mb-2">{{ customer.name }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <span class="material-symbols-outlined align-middle text-base mr-1">badge</span>
+                      DNI: {{ customer.documentNumber }}
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <span class="material-symbols-outlined align-middle text-base mr-1">phone</span>
+                      {{ customer.phone || 'Sin teléfono' }}
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      <span class="material-symbols-outlined align-middle text-base mr-1">email</span>
+                      {{ customer.email || 'Sin email' }}
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Contenido de Consultas de Stock -->
+        @if (activeQueryTab() === 'stock') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtro de Stock</label>
+              <select
+                [value]="queryStockFilter()"
+                (change)="queryStockFilter.set($any($event.target).value); onQueryStockFilterChange()"
+                class="w-full md:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="low">Stock Bajo (≤10 unidades)</option>
+                <option value="expired">Productos Vencidos</option>
+                <option value="expiring">Próximos a Vencer (7 días)</option>
+              </select>
+            </div>
+
+            <!-- Lista de Productos con Stock -->
+            @if (queryStockLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (queryStockProducts().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">check_circle</span>
+                <p>No hay productos con este filtro</p>
+              </div>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Código</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Nombre</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Stock</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Vencimiento</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Precio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (product of queryStockProducts(); track product.id) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.code }}</td>
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.name }}</td>
+                        <td class="px-4 py-2 text-right">
+                          <span [class.text-red-600]="product.stock <= 10" [class.font-bold]="product.stock <= 10">
+                            {{ product.stock }}
+                          </span>
+                        </td>
+                        <td class="px-4 py-2">
+                          @if (product.expirationDate) {
+                            <span [class.text-red-600]="isExpired(product.expirationDate)" [class.text-yellow-600]="isExpiringSoon(product.expirationDate)">
+                              {{ formatDate(product.expirationDate) }}
+                            </span>
+                          } @else {
+                            <span class="text-gray-400">-</span>
+                          }
+                        </td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white">{{ formatCurrency(product.salePrice) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
       </div>
     </main>
   } @else if (activeService() === 'reportes') {
-    <main class="flex-1 p-6 overflow-y-auto min-h-0">
-      <div class="max-w-4xl mx-auto">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Reportes</h2>
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <p class="text-gray-600 dark:text-gray-400">Funcionalidad de reportes próximamente...</p>
+    <main class="flex-1 p-4 overflow-y-auto min-h-0">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Reportes</h2>
+        
+        <!-- Tabs de Reportes -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-4">
+          <div class="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              (click)="setActiveReportTab('ventas')"
+              [class.bg-primary-admin]="activeReportTab() === 'ventas'"
+              [class.text-white]="activeReportTab() === 'ventas'"
+              [class.text-gray-700]="activeReportTab() !== 'ventas'"
+              [class.dark:text-gray-300]="activeReportTab() !== 'ventas'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">receipt_long</span>
+              Ventas
+            </button>
+            <button
+              (click)="setActiveReportTab('productos')"
+              [class.bg-primary-admin]="activeReportTab() === 'productos'"
+              [class.text-white]="activeReportTab() === 'productos'"
+              [class.text-gray-700]="activeReportTab() !== 'productos'"
+              [class.dark:text-gray-300]="activeReportTab() !== 'productos'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">trending_up</span>
+              Productos
+            </button>
+            <button
+              (click)="setActiveReportTab('ingresos')"
+              [class.bg-primary-admin]="activeReportTab() === 'ingresos'"
+              [class.text-white]="activeReportTab() === 'ingresos'"
+              [class.text-gray-700]="activeReportTab() !== 'ingresos'"
+              [class.dark:text-gray-300]="activeReportTab() !== 'ingresos'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">attach_money</span>
+              Ingresos
+            </button>
+            <button
+              (click)="setActiveReportTab('pagos')"
+              [class.bg-primary-admin]="activeReportTab() === 'pagos'"
+              [class.text-white]="activeReportTab() === 'pagos'"
+              [class.text-gray-700]="activeReportTab() !== 'pagos'"
+              [class.dark:text-gray-300]="activeReportTab() !== 'pagos'"
+              class="flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+              <span class="material-symbols-outlined align-middle mr-2 text-base">payment</span>
+              Pagos
+            </button>
+          </div>
         </div>
+
+        <!-- Contenido de Reporte de Ventas -->
+        @if (activeReportTab() === 'ventas') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
+                <select
+                  [value]="reportSalesPeriod()"
+                  (change)="reportSalesPeriod.set($any($event.target).value); onReportPeriodChange('ventas')"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="today">Hoy</option>
+                  <option value="week">Últimos 7 días</option>
+                  <option value="month">Este mes</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+              @if (reportSalesPeriod() === 'custom') {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    [value]="reportSalesStartDate()"
+                    (change)="reportSalesStartDate.set($any($event.target).value); onReportPeriodChange('ventas')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
+                  <input
+                    type="date"
+                    [value]="reportSalesEndDate()"
+                    (change)="reportSalesEndDate.set($any($event.target).value); onReportPeriodChange('ventas')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+              }
+            </div>
+
+            <!-- Resumen -->
+            @if (reportSalesLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else {
+              @if (reportSalesData().length > 0) {
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Ventas</p>
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ reportSalesData().length }}</p>
+                  </div>
+                  <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Ingresos Totales</p>
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {{ formatCurrency(reportSalesTotalRevenue()) }}
+                    </p>
+                  </div>
+                  <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Promedio por Venta</p>
+                    <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                      {{ formatCurrency(reportSalesAverage()) }}
+                    </p>
+                  </div>
+                  <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Descuentos</p>
+                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {{ formatCurrency(reportSalesTotalDiscount()) }}
+                    </p>
+                  </div>
+                </div>
+              }
+              
+              <!-- Lista de Ventas -->
+              @if (reportSalesData().length === 0) {
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <span class="material-symbols-outlined text-6xl mb-4 block">receipt_long</span>
+                  <p>No hay ventas en el período seleccionado</p>
+                </div>
+              } @else {
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Documento</th>
+                        <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Fecha</th>
+                        <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Cliente</th>
+                        <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Total</th>
+                        <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (sale of reportSalesData(); track sale.id) {
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td class="px-4 py-2 text-gray-900 dark:text-white font-medium">{{ sale.documentNumber }}</td>
+                          <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ formatDate(sale.saleDate) }}</td>
+                          <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ sale.customerName || 'Cliente General' }}</td>
+                          <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ formatCurrency(sale.total) }}</td>
+                          <td class="px-4 py-2">
+                            <span [class.text-green-600]="sale.status === 'Pagado'" [class.text-yellow-600]="sale.status === 'Pendiente'" [class.text-red-600]="sale.status === 'Anulado'">
+                              {{ sale.status }}
+                            </span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- Contenido de Reporte de Productos -->
+        @if (activeReportTab() === 'productos') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
+                <select
+                  [value]="reportProductsPeriod()"
+                  (change)="reportProductsPeriod.set($any($event.target).value); onReportPeriodChange('productos')"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="today">Hoy</option>
+                  <option value="week">Últimos 7 días</option>
+                  <option value="month">Este mes</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+              @if (reportProductsPeriod() === 'custom') {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    [value]="reportProductsStartDate()"
+                    (change)="reportProductsStartDate.set($any($event.target).value); onReportPeriodChange('productos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
+                  <input
+                    type="date"
+                    [value]="reportProductsEndDate()"
+                    (change)="reportProductsEndDate.set($any($event.target).value); onReportPeriodChange('productos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+              }
+            </div>
+
+            <!-- Lista de Productos Más Vendidos -->
+            @if (reportProductsLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (reportTopProducts().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">trending_up</span>
+                <p>No hay productos vendidos en el período seleccionado</p>
+              </div>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">#</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Código</th>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Producto</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Cantidad Vendida</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Ingresos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (product of reportTopProducts(); track product.productId; let i = $index) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400 font-bold">{{ i + 1 }}</td>
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.productCode }}</td>
+                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ product.productName }}</td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ product.totalQuantity }}</td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ formatCurrency(product.totalRevenue) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Contenido de Reporte de Ingresos -->
+        @if (activeReportTab() === 'ingresos') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
+                <select
+                  [value]="reportIncomePeriod()"
+                  (change)="reportIncomePeriod.set($any($event.target).value); onReportPeriodChange('ingresos')"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="today">Hoy</option>
+                  <option value="week">Últimos 7 días</option>
+                  <option value="month">Este mes</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+              @if (reportIncomePeriod() === 'custom') {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    [value]="reportIncomeStartDate()"
+                    (change)="reportIncomeStartDate.set($any($event.target).value); onReportPeriodChange('ingresos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
+                  <input
+                    type="date"
+                    [value]="reportIncomeEndDate()"
+                    (change)="reportIncomeEndDate.set($any($event.target).value); onReportPeriodChange('ingresos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+              }
+            </div>
+
+            <!-- Resumen de Ingresos -->
+            @if (reportIncomeLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (reportIncomeData()) {
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Ventas</p>
+                  <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ reportIncomeData()!.totalSales }}</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Ingresos Totales</p>
+                  <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(reportIncomeData()!.totalRevenue) }}</p>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">IGV (18%)</p>
+                  <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ formatCurrency(reportIncomeData()!.totalTax) }}</p>
+                </div>
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-6">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Descuentos</p>
+                  <p class="text-3xl font-bold text-red-600 dark:text-red-400">{{ formatCurrency(reportIncomeData()!.totalDiscount) }}</p>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Promedio por Venta</p>
+                  <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(reportIncomeData()!.averageSale) }}</p>
+                </div>
+              </div>
+            } @else {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">attach_money</span>
+                <p>No hay ingresos en el período seleccionado</p>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Contenido de Reporte de Métodos de Pago -->
+        @if (activeReportTab() === 'pagos') {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
+                <select
+                  [value]="reportPaymentPeriod()"
+                  (change)="reportPaymentPeriod.set($any($event.target).value); onReportPeriodChange('pagos')"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="today">Hoy</option>
+                  <option value="week">Últimos 7 días</option>
+                  <option value="month">Este mes</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+              @if (reportPaymentPeriod() === 'custom') {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    [value]="reportPaymentStartDate()"
+                    (change)="reportPaymentStartDate.set($any($event.target).value); onReportPeriodChange('pagos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
+                  <input
+                    type="date"
+                    [value]="reportPaymentEndDate()"
+                    (change)="reportPaymentEndDate.set($any($event.target).value); onReportPeriodChange('pagos')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+              }
+            </div>
+
+            <!-- Lista de Métodos de Pago -->
+            @if (reportPaymentLoading()) {
+              <div class="flex justify-center py-8">
+                <span class="material-symbols-outlined animate-spin text-primary-admin text-4xl">refresh</span>
+              </div>
+            } @else if (reportPaymentData().length === 0) {
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-4 block">payment</span>
+                <p>No hay pagos en el período seleccionado</p>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                @for (payment of reportPaymentData(); track payment.method) {
+                  <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ payment.method }}</p>
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{{ formatCurrency(payment.total) }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">{{ payment.count }} transacción{{ payment.count !== 1 ? 'es' : '' }}</p>
+                  </div>
+                }
+              </div>
+              
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Método de Pago</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Cantidad</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Total</th>
+                      <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Porcentaje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (payment of reportPaymentData(); track payment.method) {
+                      <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-2 text-gray-900 dark:text-white font-medium">{{ payment.method }}</td>
+                        <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ payment.count }}</td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ formatCurrency(payment.total) }}</td>
+                        <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">
+                          {{ reportPaymentTotal() > 0 ? ((payment.total / reportPaymentTotal()) * 100).toFixed(1) : '0.0' }}%
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
       </div>
     </main>
   }

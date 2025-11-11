@@ -32,7 +32,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
       acceptTerms: [false, [Validators.requiredTrue]],
       acceptAdditionalPurposes: [false, [Validators.requiredTrue]]
     });

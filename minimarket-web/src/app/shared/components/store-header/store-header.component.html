@@ -2,10 +2,14 @@
   <div class="flex items-center whitespace-nowrap px-4 md:px-10 py-3 w-full max-w-7xl" style="overflow: visible;">
     <div class="flex items-center gap-8 flex-shrink-0">
       <a routerLink="/" class="flex items-center gap-3 text-text-light dark:text-text-dark">
-        <div class="text-primary text-3xl">
-          <span class="material-symbols-outlined">storefront</span>
-        </div>
-        <h2 class="text-xl font-bold tracking-tight">Minimarket Camucha</h2>
+        @if (brandSettings()?.logoUrl) {
+          <img [src]="brandSettings()!.logoUrl" [alt]="brandSettings()?.storeName || 'Logo'" class="h-10 w-auto object-contain">
+        } @else {
+          <div class="text-primary text-3xl">
+            <span class="material-symbols-outlined">storefront</span>
+          </div>
+        }
+        <h2 class="text-xl font-bold tracking-tight">{{ brandSettings()?.storeName || 'Minimarket Camucha' }}</h2>
       </a>
       <nav class="hidden lg:flex items-center gap-6">
         <a routerLink="/" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary" [routerLinkActiveOptions]="{exact: true}">Inicio</a>

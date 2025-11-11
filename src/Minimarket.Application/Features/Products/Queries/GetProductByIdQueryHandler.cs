@@ -44,7 +44,8 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
             Paginas = ParseJsonObject(product.PaginasJson),
             SedesDisponibles = ParseJsonGuidArray(product.SedesDisponiblesJson),
             IsActive = product.IsActive,
-            CreatedAt = product.CreatedAt
+            CreatedAt = product.CreatedAt,
+            ExpirationDate = product.ExpirationDate
         };
 
         return Result<ProductDto>.Success(result);

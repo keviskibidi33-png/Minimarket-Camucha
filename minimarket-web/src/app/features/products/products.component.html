@@ -12,8 +12,7 @@
               class="form-input w-full min-w-0 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary-admin/50 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900/50 h-10 placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-10 pr-4 text-sm font-normal"
               placeholder="Buscar por nombre, código..."
               [value]="searchTerm()"
-              (input)="searchTerm.set($any($event.target).value)"
-              (keyup.enter)="onSearch()"
+              (input)="onSearchInput($any($event.target).value)"
               type="text"
               data-cy="search-input">
           </div>
@@ -115,27 +114,45 @@
                   </td>
                   <td class="px-6 py-4">S/ {{ product.salePrice.toFixed(2) }}</td>
                   <td class="px-6 py-4">
-                    @if (product.isActive) {
-                      @if (product.stock === 0) {
-                        <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">Agotado</span>
-                      } @else if (product.stock <= product.minimumStock) {
-                        <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Bajo Stock</span>
-                      } @else {
-                        <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">Activo</span>
+                    <div class="flex items-center gap-3">
+                      <!-- Toggle Activo/Inactivo -->
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          [checked]="product.isActive"
+                          [disabled]="isTogglingActive().has(product.id)"
+                          (change)="toggleProductActive(product, $event)"
+                          class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          @if (isTogglingActive().has(product.id)) {
+                            <span class="material-symbols-outlined animate-spin text-xs inline-block">refresh</span>
+                          } @else {
+                            {{ product.isActive ? 'Activo' : 'Inactivo' }}
+                          }
+                        </span>
+                      </label>
+                      <!-- Badge de estado adicional -->
+                      @if (product.isActive) {
+                        @if (product.stock === 0) {
+                          <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">Agotado</span>
+                        } @else if (product.stock <= product.minimumStock) {
+                          <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Bajo Stock</span>
+                        }
                       }
-                    } @else {
-                      <span class="inline-flex items-center bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-gray-900 dark:text-gray-300">Inactivo</span>
-                    }
+                    </div>
                   </td>
                   <td class="px-6 py-4 text-right space-x-2">
                     <button 
-                      routerLink="/productos/editar/{{ product.id }}"
-                      class="text-primary-admin hover:text-primary-admin/80">
+                      (click)="editProduct(product.id)"
+                      class="text-primary-admin hover:text-primary-admin/80 transition-colors"
+                      title="Editar producto">
                       <span class="material-symbols-outlined text-xl">edit</span>
                     </button>
                     <button 
-                      (click)="deleteProduct(product.id)"
-                      class="text-red-500 hover:text-red-400">
+                      (click)="openDeleteModal(product)"
+                      class="text-red-500 hover:text-red-400 transition-colors"
+                      title="Eliminar producto">
                       <span class="material-symbols-outlined text-xl">delete</span>
                     </button>
                   </td>
@@ -185,5 +202,18 @@
       </nav>
     </div>
   </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  @if (showDeleteModal()) {
+    <app-confirm-dialog
+      [isOpen]="true"
+      title="¿Eliminar Producto?"
+      [message]="'¿Está seguro de eliminar el producto \'' + (productToDelete()?.name || '') + '\'? Esta acción no se puede deshacer.'"
+      confirmText="Eliminar"
+      cancelText="Cancelar"
+      (confirmed)="confirmDelete()"
+      (cancelled)="closeDeleteModal()">
+    </app-confirm-dialog>
+  }
 </div>
 

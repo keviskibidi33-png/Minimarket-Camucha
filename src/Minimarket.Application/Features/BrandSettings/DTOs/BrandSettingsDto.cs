@@ -4,6 +4,7 @@ public class BrandSettingsDto
 {
     public Guid Id { get; set; }
     public string LogoUrl { get; set; } = string.Empty;
+    public string? LogoEmoji { get; set; }
     public string StoreName { get; set; } = string.Empty;
     public string? FaviconUrl { get; set; }
     public string PrimaryColor { get; set; } = string.Empty;
@@ -14,6 +15,7 @@ public class BrandSettingsDto
     public string? Description { get; set; }
     public string? Slogan { get; set; }
     public string? Phone { get; set; }
+    public string? WhatsAppPhone { get; set; }
     public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Ruc { get; set; }

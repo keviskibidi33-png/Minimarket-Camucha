@@ -34,7 +34,7 @@ export class CustomerFormComponent implements OnInit {
       documentNumber: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
       name: ['', [Validators.required, Validators.maxLength(200)]],
       email: ['', [Validators.email, Validators.maxLength(100)]],
-      phone: ['', [Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.maxLength(20)]],
       address: ['', [Validators.maxLength(500)]],
       isActive: [true]
     });

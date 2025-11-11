@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OfertasService, Oferta } from '../../../core/services/ofertas.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 
@@ -16,9 +17,17 @@ export class StoreOfertasComponent implements OnInit {
   ofertas = signal<Oferta[]>([]);
   isLoading = signal(true);
 
-  constructor(private ofertasService: OfertasService) {}
+  constructor(
+    private ofertasService: OfertasService,
+    private analyticsService: AnalyticsService
+  ) {}
 
   ngOnInit(): void {
+    // Trackear vista de página
+    this.analyticsService.trackPageView('tienda/ofertas').subscribe({
+      error: (error) => console.error('Error tracking page view:', error)
+    });
+    
     this.loadOfertas();
   }
 

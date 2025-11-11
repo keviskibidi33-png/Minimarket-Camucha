@@ -16,6 +16,9 @@ public class BrandSettingsConfiguration : IEntityTypeConfiguration<BrandSettings
             .IsRequired()
             .HasMaxLength(500);
 
+        builder.Property(b => b.LogoEmoji)
+            .HasMaxLength(10); // Los emojis pueden tener hasta 10 caracteres (incluyendo variaciones)
+
         builder.Property(b => b.StoreName)
             .IsRequired()
             .HasMaxLength(200);
@@ -50,6 +53,9 @@ public class BrandSettingsConfiguration : IEntityTypeConfiguration<BrandSettings
             .HasMaxLength(500);
 
         builder.Property(b => b.Phone)
+            .HasMaxLength(20);
+
+        builder.Property(b => b.WhatsAppPhone)
             .HasMaxLength(20);
 
         builder.Property(b => b.Email)

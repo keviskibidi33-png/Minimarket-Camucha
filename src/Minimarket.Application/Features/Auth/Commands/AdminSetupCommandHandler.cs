@@ -32,6 +32,8 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
         {
             // 1. Actualizar o crear BrandSettings
             var brandSettings = await _unitOfWork.BrandSettings.FirstOrDefaultAsync(bs => true, cancellationToken);
+            var isFirstTimeSetup = brandSettings == null;
+            
             if (brandSettings == null)
             {
                 brandSettings = new Domain.Entities.BrandSettings
@@ -47,6 +49,7 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
                     Description = request.Description,
                     Slogan = request.Slogan,
                     Phone = request.Phone,
+                    WhatsAppPhone = request.WhatsAppPhone,
                     Email = request.Email,
                     Ruc = request.Ruc,
                     // Información de Pago
@@ -89,6 +92,7 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
                 brandSettings.Description = request.Description;
                 brandSettings.Slogan = request.Slogan;
                 brandSettings.Phone = request.Phone;
+                brandSettings.WhatsAppPhone = request.WhatsAppPhone;
                 brandSettings.Email = request.Email;
                 brandSettings.Ruc = request.Ruc;
                 // Información de Pago
@@ -137,7 +141,34 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
                 await _unitOfWork.Sedes.AddAsync(sede, cancellationToken);
             }
 
-            // 3. Crear categorías si no existen
+            // 3. Borrar productos y categorías existentes si se solicita o es la primera vez
+            // Se borran si: es la primera vez que se completa el setup O si se solicita explícitamente
+            if (request.ClearExistingData || isFirstTimeSetup)
+            {
+                _logger.LogInformation("Borrando productos y categorías existentes...");
+                
+                // Borrar todos los productos
+                var allProducts = await _unitOfWork.ProductRepository.GetAllAsync(cancellationToken);
+                foreach (var product in allProducts)
+                {
+                    await _unitOfWork.ProductRepository.DeleteAsync(product, cancellationToken);
+                }
+                
+                // Borrar todas las categorías (excepto las que se van a crear)
+                var allCategories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
+                foreach (var category in allCategories)
+                {
+                    // No borrar categorías que se van a crear
+                    if (!request.Categories.Contains(category.Name))
+                    {
+                        await _unitOfWork.Categories.DeleteAsync(category, cancellationToken);
+                    }
+                }
+                
+                _logger.LogInformation("Productos y categorías antiguas eliminadas");
+            }
+
+            // 4. Crear categorías si no existen
             foreach (var categoryName in request.Categories)
             {
                 var existingCategory = await _unitOfWork.Categories.FirstOrDefaultAsync(
@@ -155,7 +186,7 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
                 }
             }
 
-            // 4. Crear usuario cajero si se solicita
+            // 5. Crear usuario cajero si se solicita
             if (request.CreateCashier && 
                 !string.IsNullOrEmpty(request.CashierEmail) && 
                 !string.IsNullOrEmpty(request.CashierPassword) &&
@@ -202,7 +233,7 @@ public class AdminSetupCommandHandler : IRequestHandler<AdminSetupCommand, Resul
                 }
             }
 
-            // 5. Marcar perfil del admin como completo
+            // 6. Marcar perfil del admin como completo
             var adminProfile = await _unitOfWork.UserProfiles.FirstOrDefaultAsync(
                 up => up.UserId == request.UserId, cancellationToken);
             

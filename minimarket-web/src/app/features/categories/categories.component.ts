@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CategoriesService, CategoryDto } from '../../core/services/categories.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -23,7 +23,8 @@ export class CategoriesComponent implements OnInit {
 
   constructor(
     private categoriesService: CategoriesService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -88,6 +89,10 @@ export class CategoriesComponent implements OnInit {
   onDeleteCanceled(): void {
     this.showConfirmDialog.set(false);
     this.categoryToDelete.set(null);
+  }
+
+  viewCategoryDetail(categoryId: string): void {
+    this.router.navigate(['/admin/categorias', categoryId]);
   }
 }
 

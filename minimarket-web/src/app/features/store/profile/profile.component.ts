@@ -81,7 +81,7 @@ export class ProfileComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       dni: [{value: '', disabled: true}, [Validators.required, Validators.pattern(/^\d{8}$/)]],
       email: [{value: '', disabled: true}, [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]]
+      phone: ['+51 ', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]]
     });
     
     this.paymentMethodForm = this.fb.group({
@@ -99,7 +99,7 @@ export class ProfileComponent implements OnInit {
       firstName: ['', [Validators.maxLength(100)]],
       lastName: ['', [Validators.maxLength(100)]],
       dni: ['', [Validators.pattern(/^\d{8}$/)]],
-      phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/), Validators.maxLength(20)]],
       address: ['', [Validators.required, Validators.maxLength(500)]],
       reference: ['', [Validators.maxLength(500)]],
       district: ['', [Validators.required, Validators.maxLength(100)]],
@@ -306,7 +306,7 @@ export class ProfileComponent implements OnInit {
         lastName: profile.lastName || '',
         dni: profile.dni || '',
         email: profile.email || '',
-        phone: profile.phone || ''
+        phone: profile.phone || '+51 '
       });
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -578,7 +578,7 @@ export class ProfileComponent implements OnInit {
       firstName: '',
       lastName: '',
       dni: '',
-      phone: profile?.phone || '',
+      phone: profile?.phone || '+51 ',
       isDefault: this.addresses().length === 0
     });
     this.updateAddressValidators();

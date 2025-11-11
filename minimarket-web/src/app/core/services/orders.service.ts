@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -49,9 +49,29 @@ export interface WebOrder {
   subtotal: number;
   shippingCost: number;
   total: number;
+  trackingUrl?: string;
+  estimatedDelivery?: string;
+  paymentProofUrl?: string;
   createdAt: string;
   updatedAt?: string;
   items: OrderItem[];
+}
+
+export interface GetAllOrdersParams {
+  status?: string;
+  searchTerm?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 @Injectable({
@@ -103,6 +123,9 @@ export class OrdersService {
           subtotal: response.subtotal || response.Subtotal || 0,
           shippingCost: response.shippingCost || response.ShippingCost || 0,
           total: response.total || response.Total || 0,
+          trackingUrl: response.trackingUrl || response.TrackingUrl,
+          estimatedDelivery: response.estimatedDelivery || response.EstimatedDelivery,
+          paymentProofUrl: response.paymentProofUrl || response.PaymentProofUrl,
           createdAt: response.createdAt || response.CreatedAt || '',
           updatedAt: response.updatedAt || response.UpdatedAt,
           items: (response.items || response.Items || []).map((item: any) => ({
@@ -160,6 +183,45 @@ export class OrdersService {
 
   getUserOrders(): Observable<WebOrder[]> {
     return this.http.get<WebOrder[]>(`${this.apiUrl}/my-orders`);
+  }
+
+  getAllOrders(params?: GetAllOrdersParams): Observable<PagedResult<WebOrder>> {
+    let httpParams = new HttpParams();
+    
+    if (params?.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.searchTerm) {
+      httpParams = httpParams.set('searchTerm', params.searchTerm);
+    }
+    if (params?.startDate) {
+      httpParams = httpParams.set('startDate', params.startDate);
+    }
+    if (params?.endDate) {
+      httpParams = httpParams.set('endDate', params.endDate);
+    }
+    if (params?.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params?.pageSize) {
+      httpParams = httpParams.set('pageSize', params.pageSize.toString());
+    }
+
+    return this.http.get<PagedResult<WebOrder>>(`${this.apiUrl}/admin/all`, { params: httpParams });
+  }
+
+  updateOrderStatus(orderId: string, status: string, trackingUrl?: string, estimatedDelivery?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${orderId}/status`, {
+      status,
+      trackingUrl,
+      estimatedDelivery
+    });
+  }
+
+  updatePaymentProof(orderId: string, paymentProofUrl: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${orderId}/payment-proof`, {
+      paymentProofUrl
+    });
   }
 }
 

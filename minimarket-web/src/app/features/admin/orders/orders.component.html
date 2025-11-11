@@ -1,0 +1,340 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Heading -->
+    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Pedidos</h1>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Buscar</label>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="applyFilters()"
+            placeholder="Número, email, nombre..."
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estado</label>
+          <select
+            [(ngModel)]="selectedStatus"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            @for (status of statuses; track status.value) {
+              <option [value]="status.value">{{ status.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha Inicio</label>
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha Fin</label>
+          <input
+            type="date"
+            [(ngModel)]="endDate"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button
+          (click)="applyFilters()"
+          class="px-6 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+          Aplicar Filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+      @if (isLoading()) {
+        <div class="p-12 text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-admin"></div>
+          <p class="mt-4 text-gray-500">Cargando pedidos...</p>
+        </div>
+      } @else if (orders().length === 0) {
+        <div class="p-12 text-center">
+          <p class="text-gray-500">No se encontraron pedidos</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Número</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método Envío</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
+              @for (order of orders(); track order.id) {
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    {{ order.orderNumber }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    <div>{{ order.customerName }}</div>
+                    <div class="text-xs text-gray-500">{{ order.customerEmail }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {{ order.shippingMethod === 'delivery' ? 'Delivery' : 'Recojo' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="'px-2 py-1 text-xs font-semibold rounded-full ' + getStatusColor(order.status)">
+                      {{ getStatusLabel(order.status) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    S/ {{ order.total.toFixed(2) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {{ formatDate(order.createdAt) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      (click)="viewOrderDetails(order)"
+                      class="text-primary-admin hover:text-primary-admin/80 mr-3">
+                      Ver
+                    </button>
+                    <button
+                      (click)="openStatusModal(order)"
+                      class="text-blue-600 hover:text-blue-800">
+                      Estado
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              Mostrando {{ (currentPage() - 1) * pageSize + 1 }} - {{ Math.min(currentPage() * pageSize, totalCount()) }} de {{ totalCount() }} pedidos
+            </div>
+            <div class="flex space-x-2">
+              <button
+                (click)="previousPage()"
+                [disabled]="currentPage() === 1"
+                class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+              </button>
+              @for (page of getPagesArray(); track page) {
+                @if (page === -1) {
+                  <span class="px-3 py-1 text-gray-500">...</span>
+                } @else {
+                  <button
+                    (click)="goToPage(page)"
+                    [class.bg-primary-admin]="currentPage() === page"
+                    [class.text-white]="currentPage() === page"
+                    [class.bg-white]="currentPage() !== page"
+                    [class.text-gray-700]="currentPage() !== page"
+                    class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700">
+                    {{ page }}
+                  </button>
+                }
+              }
+              <button
+                (click)="nextPage()"
+                [disabled]="currentPage() === totalPages()"
+                class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                Siguiente
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+@if (showOrderDetails() && selectedOrder()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Detalles del Pedido</h2>
+        <button
+          (click)="closeOrderDetails()"
+          class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6">
+        @if (selectedOrder(); as order) {
+          <div class="space-y-6">
+            <!-- Order Info -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Número de Pedido</p>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ order.orderNumber }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Estado</p>
+                <span [class]="'px-2 py-1 text-xs font-semibold rounded-full ' + getStatusColor(order.status)">
+                  {{ getStatusLabel(order.status) }}
+                </span>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Fecha</p>
+                <p class="text-gray-900 dark:text-white">{{ formatDate(order.createdAt) }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Método de Pago</p>
+                <p class="text-gray-900 dark:text-white">{{ order.paymentMethod }} @if (order.walletMethod) { ({{ order.walletMethod }}) }</p>
+              </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Cliente</h3>
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <p class="text-gray-900 dark:text-white font-medium">{{ order.customerName }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.customerEmail }}</p>
+                @if (order.customerPhone) {
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.customerPhone }}</p>
+                }
+              </div>
+            </div>
+
+            <!-- Shipping Info -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Envío</h3>
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <p class="text-gray-900 dark:text-white">{{ order.shippingMethod === 'delivery' ? 'Delivery' : 'Recojo en Tienda' }}</p>
+                @if (order.shippingAddress) {
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shippingAddress }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shippingCity }}, {{ order.shippingRegion }}</p>
+                }
+                @if (order.trackingUrl) {
+                  <a [href]="order.trackingUrl" target="_blank" class="text-primary-admin hover:underline text-sm">Rastrear envío</a>
+                }
+              </div>
+            </div>
+
+            <!-- Payment Proof -->
+            @if (order.requiresPaymentProof) {
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Comprobante de Pago</h3>
+                @if (order.paymentProofUrl) {
+                  <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <img [src]="order.paymentProofUrl" alt="Comprobante de pago" class="max-w-full h-auto rounded-lg mb-2">
+                    <a [href]="order.paymentProofUrl" target="_blank" class="text-primary-admin hover:underline text-sm">Ver en tamaño completo</a>
+                  </div>
+                } @else {
+                  <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                    <p class="text-yellow-800 dark:text-yellow-200">Comprobante de pago pendiente</p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Order Items -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Productos</h3>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Producto</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Cantidad</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Precio Unit.</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
+                    @for (item of order.items; track item.productId) {
+                      <tr>
+                        <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">{{ item.productName }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{{ item.quantity }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">S/ {{ item.unitPrice.toFixed(2) }}</td>
+                        <td class="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">S/ {{ item.subtotal.toFixed(2) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                <span class="text-gray-900 dark:text-white">S/ {{ order.subtotal.toFixed(2) }}</span>
+              </div>
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-600 dark:text-gray-400">Envío:</span>
+                <span class="text-gray-900 dark:text-white">S/ {{ order.shippingCost.toFixed(2) }}</span>
+              </div>
+              <div class="flex justify-between text-lg font-bold mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <span class="text-gray-900 dark:text-white">Total:</span>
+                <span class="text-gray-900 dark:text-white">S/ {{ order.total.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Status Update Modal -->
+@if (showStatusModal() && selectedOrder()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Actualizar Estado del Pedido</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estado</label>
+          <select
+            [(ngModel)]="newStatus"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            @for (status of getStatusesForModal(); track status.value) {
+              <option [value]="status.value">{{ status.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL de Rastreo (opcional)</label>
+          <input
+            type="text"
+            [(ngModel)]="trackingUrl"
+            placeholder="https://..."
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha Estimada de Entrega (opcional)</label>
+          <input
+            type="date"
+            [(ngModel)]="estimatedDelivery"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        </div>
+        <div class="flex justify-end space-x-3 pt-4">
+          <button
+            (click)="closeStatusModal()"
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+            Cancelar
+          </button>
+          <button
+            (click)="updateOrderStatus()"
+            class="px-4 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
+            Actualizar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

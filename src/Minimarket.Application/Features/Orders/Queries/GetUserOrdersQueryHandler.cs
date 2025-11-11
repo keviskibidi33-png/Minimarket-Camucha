@@ -51,6 +51,9 @@ public class GetUserOrdersQueryHandler : IRequestHandler<GetUserOrdersQuery, Res
                 Subtotal = order.Subtotal,
                 ShippingCost = order.ShippingCost,
                 Total = order.Total,
+                TrackingUrl = order.TrackingUrl,
+                EstimatedDelivery = order.EstimatedDelivery,
+                PaymentProofUrl = order.PaymentProofUrl,
                 CreatedAt = order.CreatedAt,
                 UpdatedAt = order.UpdatedAt,
                 Items = order.OrderItems.Select(item => new OrderItemDto

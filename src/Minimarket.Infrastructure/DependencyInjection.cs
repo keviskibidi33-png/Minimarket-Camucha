@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
 
         // Services
+        services.AddHttpContextAccessor(); // Necesario para FileStorageService
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPdfService, PdfService>();
         services.AddScoped<IFileStorageService, FileStorageService>();

@@ -31,12 +31,14 @@ export class ProductCardComponent {
     this.isAdding = true;
     
     if (this.product.stock > 0) {
+      // IMPORTANTE: Usar precio normal (sin descuento) cuando se agrega desde aquí
+      // El descuento solo se aplica cuando se agrega desde la página de detalle de oferta
       // Pasar el GUID directamente, el CartService lo convertirá de forma consistente
       this.cartService.addToCart({
         id: this.product.id, // Pasar el GUID string directamente
         name: this.product.name,
         imageUrl: this.product.imageUrl,
-        salePrice: this.product.salePrice,
+        salePrice: this.product.salePrice, // Precio normal - sin descuento
         stock: this.product.stock
       }, 1);
       

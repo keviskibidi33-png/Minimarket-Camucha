@@ -1,8 +1,9 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { BrandSettingsService, BrandSettings } from '../../../core/services/brand-settings.service';
 import { ProductAutocompleteComponent } from '../product-autocomplete/product-autocomplete.component';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 import { Product } from '../../../core/services/products.service';
@@ -14,7 +15,7 @@ import { Product } from '../../../core/services/products.service';
   templateUrl: './store-header.component.html',
   styleUrl: './store-header.component.css'
 })
-export class StoreHeaderComponent {
+export class StoreHeaderComponent implements OnInit {
   // Usar computed para obtener el contador del carrito directamente
   // Es más eficiente que effect() y se actualiza automáticamente
   cartItemsCount = computed(() => {
@@ -26,14 +27,31 @@ export class StoreHeaderComponent {
   isAuthenticated = computed(() => this.authService.isAuthenticated());
   currentUser = computed(() => this.authService.currentUser());
   showUserMenu = signal(false);
+  brandSettings = signal<BrandSettings | null>(null);
 
   constructor(
     private cartService: CartService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private brandSettingsService: BrandSettingsService
   ) {
     // No necesitamos effect aquí, computed es suficiente y más eficiente
     // El computed se actualizará automáticamente cuando cambie el carrito
+  }
+
+  ngOnInit(): void {
+    this.loadBrandSettings();
+  }
+
+  loadBrandSettings(): void {
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        this.brandSettings.set(settings);
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+      }
+    });
   }
 
   toggleUserMenu() {

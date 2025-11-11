@@ -60,6 +60,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.CategoryId = request.Product.CategoryId;
         product.ImageUrl = request.Product.ImageUrl;
         product.IsActive = request.Product.IsActive;
+        product.ExpirationDate = request.Product.ExpirationDate;
         product.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.Products.UpdateAsync(product, cancellationToken);
@@ -82,7 +83,8 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
             CategoryName = category.Name,
             ImageUrl = product.ImageUrl,
             IsActive = product.IsActive,
-            CreatedAt = product.CreatedAt
+            CreatedAt = product.CreatedAt,
+            ExpirationDate = product.ExpirationDate
         };
 
         return Result<ProductDto>.Success(result);

@@ -11,5 +11,6 @@ public class CreateProductDto
     public int MinimumStock { get; set; }
     public Guid CategoryId { get; set; }
     public string? ImageUrl { get; set; }
+    public DateTime? ExpirationDate { get; set; } // Fecha de vencimiento
 }
 

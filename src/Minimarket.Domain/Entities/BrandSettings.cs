@@ -3,6 +3,7 @@ namespace Minimarket.Domain.Entities;
 public class BrandSettings : BaseEntity
 {
     public string LogoUrl { get; set; } = string.Empty;
+    public string? LogoEmoji { get; set; } // Emoji predefinido como alternativa al logo
     public string StoreName { get; set; } = string.Empty;
     public string? FaviconUrl { get; set; }
     public string PrimaryColor { get; set; } = "#4CAF50"; // Verde por defecto
@@ -13,6 +14,7 @@ public class BrandSettings : BaseEntity
     public string? Description { get; set; }
     public string? Slogan { get; set; }
     public string? Phone { get; set; }
+    public string? WhatsAppPhone { get; set; } // Número de WhatsApp para notificaciones
     public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Ruc { get; set; }

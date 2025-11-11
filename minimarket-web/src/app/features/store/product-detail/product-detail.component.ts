@@ -4,6 +4,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ProductsService, Product } from '../../../core/services/products.service';
 import { CartService } from '../../../core/services/cart.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 
@@ -32,6 +33,7 @@ export class ProductDetailComponent implements OnInit {
     private productsService: ProductsService,
     private cartService: CartService,
     private toastService: ToastService,
+    private analyticsService: AnalyticsService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -51,6 +53,11 @@ export class ProductDetailComponent implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.isLoading.set(false);
+        
+        // Trackear vista de producto
+        this.analyticsService.trackProductView(id).subscribe({
+          error: (error) => console.error('Error tracking product view:', error)
+        });
       },
       error: (error) => {
         console.error('Error loading product:', error);
@@ -87,12 +94,14 @@ export class ProductDetailComponent implements OnInit {
     if (product && product.stock > 0) {
       this.isAdding = true;
       
+      // IMPORTANTE: Usar precio normal (sin descuento) cuando se agrega desde aquí
+      // El descuento solo se aplica cuando se agrega desde la página de detalle de oferta
       // Pasar el GUID directamente, el CartService lo convertirá de forma consistente
       this.cartService.addToCart({
         id: product.id, // Pasar el GUID string directamente
         name: product.name,
         imageUrl: product.imageUrl,
-        salePrice: product.salePrice,
+        salePrice: product.salePrice, // Precio normal - sin descuento
         stock: product.stock
       }, this.quantity());
       

@@ -6,6 +6,7 @@ import { ProductsService, Product } from '../../../core/services/products.servic
 import { CategoriesService, CategoryDto } from '../../../core/services/categories.service';
 import { CartService } from '../../../core/services/cart.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -63,10 +64,16 @@ export class StoreProductsComponent implements OnInit {
     private categoriesService: CategoriesService,
     private cartService: CartService,
     private toastService: ToastService,
+    private analyticsService: AnalyticsService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
+    // Trackear vista de página
+    this.analyticsService.trackPageView('tienda/productos').subscribe({
+      error: (error) => console.error('Error tracking page view:', error)
+    });
+    
     // Obtener categoría y término de búsqueda de query params
     this.route.queryParams.subscribe(params => {
       if (params['category']) {
@@ -83,6 +90,9 @@ export class StoreProductsComponent implements OnInit {
 
   loadProducts() {
     this.isLoading.set(true);
+    // Limpiar productos anteriores antes de cargar nuevos
+    this.products.set([]);
+    this.filteredProducts.set([]);
     
     // Primero obtener TODOS los productos (sin paginación) para calcular el rango completo
     // Esto permite que el slider se adapte a todos los productos disponibles, no solo a la página actual
@@ -375,12 +385,14 @@ export class StoreProductsComponent implements OnInit {
       return;
     }
     
+    // IMPORTANTE: Usar precio normal (sin descuento) cuando se agrega desde aquí
+    // El descuento solo se aplica cuando se agrega desde la página de detalle de oferta
     // Pasar el GUID directamente, el CartService lo convertirá de forma consistente
     this.cartService.addToCart({
       id: product.id, // Pasar el GUID string directamente
       name: product.name,
       imageUrl: product.imageUrl || '',
-      salePrice: product.salePrice,
+      salePrice: product.salePrice, // Precio normal - sin descuento
       stock: product.stock
     }, 1);
     

@@ -6,10 +6,8 @@ import { SetupStatusService } from '../../../core/services/setup-status.service'
 import { filter } from 'rxjs/operators';
 import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
-import { CategoriesService } from '../../../core/services/categories.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
 import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
-import { PaymentMethodSettingsService, PaymentMethodSetting, UpdatePaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -22,9 +20,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 })
 export class SettingsComponent implements OnInit {
   settings = signal<SystemSettings[]>([]);
-  categories = signal<any[]>([]);
   isLoading = signal(false);
-  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'>('cart');
+  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'>('cart');
   
   private readonly destroyRef = inject(DestroyRef);
   private tabPersistenceEffect?: ReturnType<typeof effect>;
@@ -40,13 +37,6 @@ export class SettingsComponent implements OnInit {
   
   // Configuración de IGV
   igvRate = signal(0.18); // 18% IGV
-  
-  // Configuraciones de categorías
-  selectedCategory = signal<string | null>(null);
-  categoryImageUrl = signal('');
-  showNewCategoryForm = signal(false);
-  newCategoryName = signal('');
-  newCategoryDescription = signal('');
   
   // Configuraciones de tarifas de envío
   shippingRates = signal<ShippingRate[]>([]);
@@ -68,25 +58,11 @@ export class SettingsComponent implements OnInit {
   // Configuraciones de templates de email
   emailLogoUrl = signal('');
   emailPromotionImageUrl = signal('');
-  
-  // Configuraciones de métodos de pago
-  paymentMethodSettings = signal<PaymentMethodSetting[]>([]);
-  isLoadingPaymentMethods = signal(false);
-  
-  // Computed para obtener el nombre de la categoría seleccionada
-  selectedCategoryName = computed(() => {
-    const categoryId = this.selectedCategory();
-    if (!categoryId) return '';
-    const category = this.categories().find(c => c.id === categoryId);
-    return category?.name || '';
-  });
 
   constructor(
     private settingsService: SettingsService,
-    private categoriesService: CategoriesService,
     private shippingService: ShippingService,
     private emailTemplatesService: EmailTemplatesService,
-    private paymentMethodSettingsService: PaymentMethodSettingsService,
     private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute,
@@ -98,8 +74,8 @@ export class SettingsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const tabParam = params['tab'];
       if (tabParam) {
-        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
-          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners'];
         if (validTabs.includes(tabParam as any)) {
           this.activeTab.set(tabParam as any);
         }
@@ -120,10 +96,8 @@ export class SettingsComponent implements OnInit {
     this.updateTabFromRoute();
 
     this.loadSettings();
-    this.loadCategories();
     this.loadShippingRates();
     this.loadEmailTemplateSettings();
-    this.loadPaymentMethodSettings();
 
     // Observar cambios en activeTab para persistir (dentro de afterNextRender para evitar NG0203)
     afterNextRender(() => {
@@ -227,16 +201,6 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  loadCategories(): void {
-    this.categoriesService.getAll().subscribe({
-      next: (categories) => {
-        this.categories.set(categories);
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-      }
-    });
-  }
 
   saveCartSetting(): void {
     const settingsToSave = [
@@ -274,70 +238,6 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  onCategorySelected(categoryId: string): void {
-    this.selectedCategory.set(categoryId);
-    const category = this.categories().find(c => c.id === categoryId);
-    if (category) {
-      this.categoryImageUrl.set(category.imageUrl || '');
-    }
-  }
-
-  saveCategoryImage(): void {
-    const categoryId = this.selectedCategory();
-    if (!categoryId) {
-      this.toastService.error('Selecciona una categoría');
-      return;
-    }
-
-    const category = this.categories().find(c => c.id === categoryId);
-    if (!category) {
-      return;
-    }
-
-    const updateDto = {
-      name: category.name,
-      description: category.description,
-      imageUrl: this.categoryImageUrl(),
-      isActive: category.isActive
-    };
-
-    this.categoriesService.update(categoryId, updateDto).subscribe({
-      next: () => {
-        this.toastService.success('Imagen de categoría guardada correctamente');
-        this.loadCategories();
-      },
-      error: (error) => {
-        console.error('Error saving category image:', error);
-        this.toastService.error('Error al guardar imagen de categoría');
-      }
-    });
-  }
-
-  createNewCategory(): void {
-    if (!this.newCategoryName().trim()) {
-      this.toastService.error('El nombre de la categoría es requerido');
-      return;
-    }
-
-    const newCategory = {
-      name: this.newCategoryName().trim(),
-      description: this.newCategoryDescription().trim() || undefined
-    };
-
-    this.categoriesService.create(newCategory).subscribe({
-      next: () => {
-        this.toastService.success('Categoría creada correctamente');
-        this.loadCategories();
-        this.newCategoryName.set('');
-        this.newCategoryDescription.set('');
-        this.showNewCategoryForm.set(false);
-      },
-      error: (error) => {
-        console.error('Error creating category:', error);
-        this.toastService.error('Error al crear categoría');
-      }
-    });
-  }
 
   saveShippingSettings(): void {
     const settingsToSave: UpdateSystemSettings[] = [
@@ -387,7 +287,7 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'): void {
+  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'): void {
     this.activeTab.set(tab);
     // Actualizar la URL con el query param para mantener consistencia
     this.router.navigate(['/admin/configuraciones'], { queryParams: { tab } });
@@ -624,50 +524,6 @@ export class SettingsComponent implements OnInit {
     }
   }
 
-  // Métodos de pago
-  loadPaymentMethodSettings(): void {
-    this.isLoadingPaymentMethods.set(true);
-    this.paymentMethodSettingsService.getAll(false).subscribe({
-      next: (settings) => {
-        this.paymentMethodSettings.set(settings);
-        this.isLoadingPaymentMethods.set(false);
-      },
-      error: (error: any) => {
-        // Solo loguear si no es un 404 (endpoint no existe aún)
-        if (error.status !== 404) {
-          console.error('Error loading payment method settings:', error);
-          this.toastService.error('Error al cargar métodos de pago');
-        }
-        // Establecer array vacío si el endpoint no existe
-        this.paymentMethodSettings.set([]);
-        this.isLoadingPaymentMethods.set(false);
-      }
-    });
-  }
-
-  togglePaymentMethod(setting: PaymentMethodSetting): void {
-    const update: UpdatePaymentMethodSetting = {
-      isEnabled: !setting.isEnabled,
-      displayOrder: setting.displayOrder,
-      description: setting.description
-    };
-
-    this.paymentMethodSettingsService.update(setting.id, update).subscribe({
-      next: (updated) => {
-        const settings = this.paymentMethodSettings();
-        const index = settings.findIndex(s => s.id === setting.id);
-        if (index !== -1) {
-          settings[index] = updated;
-          this.paymentMethodSettings.set([...settings]);
-        }
-        this.toastService.success(`Método de pago ${updated.isEnabled ? 'habilitado' : 'deshabilitado'} correctamente`);
-      },
-      error: (error) => {
-        console.error('Error updating payment method setting:', error);
-        this.toastService.error('Error al actualizar método de pago');
-      }
-    });
-  }
 
   // Helper methods for template
   parseInt = parseInt;

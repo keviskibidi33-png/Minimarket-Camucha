@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { BrandSettingsService } from '../../../core/services/brand-settings.service';
 import { fadeSlideAnimation } from '../../../shared/animations/route-animations';
 
 @Component({
@@ -18,10 +19,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
   showPassword = signal(false);
+  storeName = signal('Minimarket Camucha');
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private brandSettingsService: BrandSettingsService,
     private router: Router
   ) {
     this.loginForm = this.fb.group({
@@ -33,6 +36,19 @@ export class LoginComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // Inicializar Google Sign-In cuando el componente se carga
     this.authService.initializeGoogleSignIn();
+    
+    // Cargar nombre de la tienda
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        if (settings?.storeName) {
+          this.storeName.set(settings.storeName);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+        // Mantener el valor por defecto si hay error
+      }
+    });
   }
 
   ngAfterViewInit(): void {

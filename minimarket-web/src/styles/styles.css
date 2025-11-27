@@ -1,4 +1,5 @@
 @import 'ngx-toastr/toastr';
+@import 'quill/dist/quill.snow.css';
 
 @tailwind base;
 @tailwind components;

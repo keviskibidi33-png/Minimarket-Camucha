@@ -175,207 +175,86 @@
       }
 
       @if (activeTab() === 'shipping-rates') {
-        <!-- Shipping Rates Management -->
+        <!-- Configuración Simplificada de Tarifas de Envío -->
         <div class="space-y-6">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Tarifas de Envío</h2>
-            <button
-              (click)="openShippingRateForm()"
-              class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
-              + Nueva Tarifa
-            </button>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Configuración de Tarifas de Envío</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              Sistema simplificado: precio fijo para Lima con envío gratis a partir de un monto mínimo.
+            </p>
           </div>
 
-          @if (shippingRates().length === 0) {
-            <div class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p class="text-gray-500 dark:text-gray-400">No hay tarifas de envío configuradas</p>
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+            <!-- Precio Fijo de Envío -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Precio Fijo de Envío (S/)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                [value]="fixedShippingPrice()"
+                (input)="fixedShippingPrice.set(parseFloat($any($event.target).value) || 0)"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Precio fijo que se cobrará por envío a domicilio en Lima (sin importar distancia o peso)
+              </p>
             </div>
-          } @else {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (rate of shippingRates(); track rate.id) {
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ rate.zoneName }}</h3>
-                    @if (rate.isActive) {
-                      <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900 dark:text-green-100">Activa</span>
-                    } @else {
-                      <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full dark:bg-gray-700 dark:text-gray-300">Inactiva</span>
-                    }
-                  </div>
-                  <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    <p><strong>Precio Base:</strong> S/ {{ rate.basePrice.toFixed(2) }}</p>
-                    <p><strong>Por Km:</strong> S/ {{ rate.pricePerKm.toFixed(2) }}</p>
-                    <p><strong>Por Kg:</strong> S/ {{ rate.pricePerKg.toFixed(2) }}</p>
-                    <p><strong>Distancia:</strong> {{ rate.minDistance }} - {{ rate.maxDistance === 0 ? '∞' : rate.maxDistance }} km</p>
-                    <p><strong>Peso:</strong> {{ rate.minWeight }} - {{ rate.maxWeight === 0 ? '∞' : rate.maxWeight }} kg</p>
-                    @if (rate.freeShippingThreshold > 0) {
-                      <p><strong>Envío Gratis:</strong> S/ {{ rate.freeShippingThreshold.toFixed(2) }}+</p>
-                    }
-                  </div>
-                  <div class="flex gap-2">
-                    <button
-                      (click)="openShippingRateForm(rate)"
-                      class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100">
-                      Editar
-                    </button>
-                    <button
-                      (click)="deleteShippingRate(rate)"
-                      class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
-                      Eliminar
-                    </button>
-                  </div>
+
+            <!-- Umbral de Envío Gratis -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Monto Mínimo para Envío Gratis (S/)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                [value]="freeShippingThreshold()"
+                (input)="freeShippingThreshold.set(parseFloat($any($event.target).value) || 0)"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Si el subtotal de la compra es igual o mayor a este monto, el envío será gratis
+              </p>
+            </div>
+
+            <!-- Información de Cálculo -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Cómo funciona:</h3>
+              <ul class="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
+                <li>Si el subtotal es menor a S/ {{ freeShippingThreshold().toFixed(2) }}, el envío cuesta S/ {{ fixedShippingPrice().toFixed(2) }}</li>
+                <li>Si el subtotal es igual o mayor a S/ {{ freeShippingThreshold().toFixed(2) }}, el envío es gratis</li>
+                <li>El retiro en tienda siempre es gratis</li>
+              </ul>
+            </div>
+
+            <!-- Ejemplos -->
+            <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Ejemplos:</h3>
+              <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex justify-between">
+                  <span>Compra de S/ 15.00:</span>
+                  <span class="font-semibold">Envío: S/ {{ fixedShippingPrice().toFixed(2) }} | Total: S/ {{ (15 + fixedShippingPrice()).toFixed(2) }}</span>
                 </div>
-              }
-            </div>
-          }
-
-          <!-- Form Modal -->
-          @if (showShippingRateForm()) {
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closeShippingRateForm()">
-              <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                  {{ editingShippingRate() ? 'Editar' : 'Nueva' }} Tarifa de Envío
-                </h3>
-                
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nombre de la Zona *
-                    </label>
-                    <input
-                      type="text"
-                      [value]="zoneName()"
-                      (input)="zoneName.set($any($event.target).value)"
-                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
-                      placeholder="Ej: Lima Centro">
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Precio Base (S/)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="basePrice()"
-                        (input)="basePrice.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Precio por Km (S/)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="pricePerKm()"
-                        (input)="pricePerKm.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Precio por Kg (S/)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="pricePerKg()"
-                        (input)="pricePerKg.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Distancia Mínima (km)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="minDistance()"
-                        (input)="minDistance.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Distancia Máxima (km, 0 = sin límite)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="maxDistance()"
-                        (input)="maxDistance.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Peso Mínimo (kg)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="minWeight()"
-                        (input)="minWeight.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Peso Máximo (kg, 0 = sin límite)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        [value]="maxWeight()"
-                        (input)="maxWeight.set(parseFloat($any($event.target).value) || 0)"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Monto Mínimo para Envío Gratis (S/, 0 = no aplica)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      [value]="freeShippingThreshold()"
-                      (input)="freeShippingThreshold.set(parseFloat($any($event.target).value) || 0)"
-                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                  </div>
-
-                  <div class="flex items-center">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="isActiveRate()"
-                        (change)="isActiveRate.set($any($event.target).checked)"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
-                      <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Tarifa Activa</span>
-                    </label>
-                  </div>
-
-                  <div class="flex gap-3 pt-4">
-                    <button
-                      (click)="saveShippingRate()"
-                      class="flex-1 px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
-                      Guardar
-                    </button>
-                    <button
-                      (click)="closeShippingRateForm()"
-                      class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
-                      Cancelar
-                    </button>
-                  </div>
+                <div class="flex justify-between">
+                  <span>Compra de S/ {{ freeShippingThreshold().toFixed(2) }}:</span>
+                  <span class="font-semibold text-green-600 dark:text-green-400">Envío: Gratis | Total: S/ {{ freeShippingThreshold().toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Retiro en tienda:</span>
+                  <span class="font-semibold text-green-600 dark:text-green-400">Siempre gratis</span>
                 </div>
               </div>
             </div>
-          }
+
+            <!-- Botón Guardar -->
+            <button
+              (click)="saveShippingRatesSettings()"
+              class="w-full px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+              Guardar Configuración
+            </button>
+          </div>
         </div>
       }
 
@@ -521,13 +400,133 @@
         </div>
       }
 
-      @if (activeTab() === 'banners') {
-        <!-- Banners Config -->
+      @if (activeTab() === 'navbar-news') {
+        <!-- Navbar de Noticias Config -->
         <div class="space-y-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Banners</h2>
-          <p class="text-gray-600 dark:text-gray-400">
-            La gestión avanzada de banners estará disponible próximamente.
-          </p>
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración del Navbar de Noticias</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Activa o desactiva la funcionalidad de mostrar noticias en el navbar y selecciona cuáles aparecerán
+              </p>
+            </div>
+            <button
+              (click)="goToBlogNews()"
+              class="px-4 py-2 bg-primary-admin text-white font-semibold rounded-lg hover:bg-primary-admin/90 flex items-center gap-2">
+              <span class="material-symbols-outlined">add</span>
+              Crear Noticia
+            </button>
+          </div>
+
+          <!-- Control Global: Activar/Desactivar Noticias en Navbar -->
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Mostrar Noticias en Navbar</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Activa o desactiva completamente la funcionalidad de mostrar noticias en el menú de navegación. 
+                  Si está desactivado, ninguna noticia aparecerá en el navbar, sin importar su configuración individual.
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer ml-6">
+                <input
+                  type="checkbox"
+                  [checked]="enableNewsInNavbar()"
+                  (change)="toggleEnableNewsInNavbar()"
+                  class="sr-only peer">
+                <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+              </label>
+            </div>
+          </div>
+
+          @if (isLoadingPages()) {
+            <div class="text-center py-12 text-gray-500">Cargando noticias...</div>
+          } @else if (pages().length === 0) {
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center">
+              <span class="material-symbols-outlined text-5xl text-yellow-600 dark:text-yellow-400 mb-4 block">info</span>
+              <h3 class="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">No hay noticias activas</h3>
+              <p class="text-sm text-yellow-800 dark:text-yellow-200 mb-4">
+                Para mostrar noticias en el navbar, primero debes crear y activar al menos una noticia.
+              </p>
+              <button
+                (click)="goToBlogNews()"
+                class="px-4 py-2 bg-primary-admin text-white font-semibold rounded-lg hover:bg-primary-admin/90">
+                Ir a Blog de Noticias
+              </button>
+            </div>
+          } @else {
+            @if (!enableNewsInNavbar()) {
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+                <span class="material-symbols-outlined text-5xl text-gray-400 dark:text-gray-500 mb-4 block">toggle_off</span>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Noticias en Navbar Desactivadas</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  La funcionalidad de mostrar noticias en el navbar está desactivada. 
+                  Activa el control superior para habilitar la selección de noticias.
+                </p>
+              </div>
+            } @else {
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Importante:</strong> Debe haber al menos una noticia visible en el navbar. Si intentas desmarcar la última noticia seleccionada, se mostrará un error.
+                </p>
+              </div>
+
+              <div class="space-y-3">
+              @for (page of pages(); track page.id) {
+                <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <div class="flex items-center gap-4 flex-1">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="selectedPagesForNavbar().has(page.id)"
+                        (change)="togglePageForNavbar(page.id)"
+                        [disabled]="!enableNewsInNavbar() || (selectedPagesForNavbar().has(page.id) && selectedPagesForNavbar().size === 1)"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                    </label>
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900 dark:text-white">{{ page.titulo }}</h3>
+                      @if (page.metaDescription) {
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-1">{{ page.metaDescription }}</p>
+                      }
+                      <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span class="flex items-center gap-1">
+                          <span class="material-symbols-outlined text-sm">calendar_today</span>
+                          {{ formatDate(page.createdAt) }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                          <span class="material-symbols-outlined text-sm">link</span>
+                          /{{ page.slug }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  @if (selectedPagesForNavbar().has(page.id) && selectedPagesForNavbar().size === 1) {
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full ml-2">
+                      Última visible
+                    </span>
+                  }
+                </div>
+              }
+              </div>
+
+              <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  <strong>{{ selectedPagesForNavbar().size }}</strong> de <strong>{{ pages().length }}</strong> noticias seleccionadas
+                </div>
+                <button
+                  (click)="saveNavbarNewsSettings()"
+                  [disabled]="!enableNewsInNavbar() || isLoadingPages() || selectedPagesForNavbar().size === 0"
+                  class="px-6 py-2 bg-primary-admin text-white font-semibold rounded-lg hover:bg-primary-admin/90 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                  @if (isLoadingPages()) {
+                    Guardando...
+                  } @else {
+                    Guardar Configuración
+                  }
+                </button>
+              </div>
+            }
+          }
         </div>
       }
 

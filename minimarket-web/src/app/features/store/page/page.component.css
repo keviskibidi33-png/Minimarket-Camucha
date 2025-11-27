@@ -1,0 +1,52 @@
+/* Estilos para páginas dinámicas */
+
+::ng-deep .prose {
+  color: #374151;
+}
+
+::ng-deep .dark .prose {
+  color: #e5e7eb;
+}
+
+::ng-deep .prose h1,
+::ng-deep .prose h2,
+::ng-deep .prose h3 {
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #111827;
+}
+
+::ng-deep .dark .prose h1,
+::ng-deep .dark .prose h2,
+::ng-deep .dark .prose h3 {
+  color: #f9fafb;
+}
+
+::ng-deep .prose p {
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+::ng-deep .prose ul,
+::ng-deep .prose ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+::ng-deep .prose li {
+  margin: 0.5em 0;
+}
+
+::ng-deep .prose a {
+  color: #4CAF50;
+  text-decoration: underline;
+}
+
+::ng-deep .prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+

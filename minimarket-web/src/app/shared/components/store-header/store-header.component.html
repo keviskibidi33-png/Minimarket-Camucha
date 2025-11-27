@@ -16,6 +16,15 @@
         <a routerLink="/tienda/productos" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Productos</a>
         <a routerLink="/tienda/ofertas" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Ofertas</a>
         <a routerLink="/tienda/contacto" class="text-sm font-medium hover:text-primary" routerLinkActive="text-primary">Contacto</a>
+        <!-- Noticias del Blog -->
+        @for (page of pages(); track page.id) {
+          <a 
+            [routerLink]="['/pagina', page.slug]" 
+            class="text-sm font-medium hover:text-primary" 
+            routerLinkActive="text-primary">
+            {{ page.titulo }}
+          </a>
+        }
       </nav>
     </div>
     <div class="flex flex-1 items-center gap-4 px-4 mx-4 min-w-0" style="position: relative; z-index: 100; overflow: visible;">

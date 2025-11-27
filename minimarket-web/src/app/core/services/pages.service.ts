@@ -20,6 +20,7 @@ export interface Page {
   keywords?: string;
   orden: number;
   activa: boolean;
+  mostrarEnNavbar: boolean; // Controla si aparece en el navbar (independiente de activa)
   sections: PageSection[];
   createdAt: string;
   updatedAt?: string;
@@ -33,6 +34,7 @@ export interface CreatePage {
   keywords?: string;
   orden: number;
   activa: boolean;
+  mostrarEnNavbar: boolean;
   sections: CreatePageSection[];
 }
 
@@ -50,6 +52,7 @@ export interface UpdatePage {
   keywords?: string;
   orden: number;
   activa: boolean;
+  mostrarEnNavbar: boolean;
   sections: UpdatePageSection[];
 }
 

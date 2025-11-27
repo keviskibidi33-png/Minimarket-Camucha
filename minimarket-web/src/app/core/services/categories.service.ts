@@ -48,17 +48,13 @@ export class CategoriesService {
   }
 
   create(category: CreateCategoryDto): Observable<CategoryDto> {
-    // NOTA: El backend CreateCategoryCommand espera { category: {...} }
-    // pero ASP.NET Core model binding puede mapear directamente si el JSON coincide
-    // Manteniendo consistencia con ProductsService y CustomersService que envían directamente
-    return this.http.post<CategoryDto>(this.apiUrl, category);
+    // El backend CreateCategoryCommand espera { category: {...} }
+    return this.http.post<CategoryDto>(this.apiUrl, { category });
   }
 
   update(id: string, category: UpdateCategoryDto): Observable<CategoryDto> {
-    // NOTA: El backend UpdateCategoryCommand espera { category: {...} }
-    // pero ASP.NET Core model binding puede mapear directamente si el JSON coincide
-    // Manteniendo consistencia con ProductsService y CustomersService que envían directamente
-    return this.http.put<CategoryDto>(`${this.apiUrl}/${id}`, category);
+    // El backend UpdateCategoryCommand espera { category: {...} }
+    return this.http.put<CategoryDto>(`${this.apiUrl}/${id}`, { category });
   }
 
   delete(id: string): Observable<void> {

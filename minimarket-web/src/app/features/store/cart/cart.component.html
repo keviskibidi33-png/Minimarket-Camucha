@@ -122,8 +122,21 @@
           }
           <div class="flex justify-between text-gray-600 dark:text-gray-300">
             <span>Envío</span>
-            <span>{{ getPriceFormatted(shipping()) }}</span>
+            @if (shipping() === 0 && subtotal() >= freeShippingThreshold()) {
+              <span class="text-green-600 dark:text-green-400 font-medium">Gratis</span>
+            } @else {
+              <span>{{ getPriceFormatted(shipping()) }}</span>
+            }
           </div>
+          @if (shipping() === 0 && subtotal() >= freeShippingThreshold()) {
+            <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+              ✓ Envío gratis - Compra mínima de S/ {{ freeShippingThreshold().toFixed(2) }}
+            </p>
+          } @else if (subtotal() < freeShippingThreshold()) {
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Agrega S/ {{ (freeShippingThreshold() - subtotal()).toFixed(2) }} más para envío gratis
+            </p>
+          }
           <div class="flex justify-between text-orange-500">
             <span>Descuento</span>
             <span>-{{ getPriceFormatted(discount()) }}</span>
@@ -135,6 +148,26 @@
           <span class="text-lg font-bold">Total</span>
           <span class="text-xl font-black">{{ getPriceFormatted(total()) }}</span>
         </div>
+
+        <!-- Información de Retiro en Tienda (si está guardada) -->
+        @if (shippingMethod() === 'pickup' && selectedSede()) {
+          <div class="mt-6 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/30 rounded-lg">
+            <h3 class="text-sm font-semibold text-[#333333] dark:text-white mb-2">Retiro en Tienda</h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">{{ selectedSede()!.nombre }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">{{ selectedSede()!.direccion }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">{{ selectedSede()!.ciudad }}, {{ selectedSede()!.pais }}</p>
+            @if (selectedSede()!.googleMapsUrl) {
+              <a 
+                [href]="selectedSede()!.googleMapsUrl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                <span class="material-symbols-outlined text-sm">location_on</span>
+                Ver en Google Maps
+              </a>
+            }
+          </div>
+        }
 
         <!-- CTA Button -->
         <button 

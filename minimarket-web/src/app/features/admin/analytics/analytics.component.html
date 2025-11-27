@@ -5,6 +5,34 @@
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <!-- Accesos Rápidos -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accesos Rápidos</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="setDateRange('1d')"
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+            Último Día
+          </button>
+          <button
+            (click)="setDateRange('3d')"
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+            3 Días
+          </button>
+          <button
+            (click)="setDateRange('1w')"
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+            1 Semana
+          </button>
+          <button
+            (click)="setDateRange('1m')"
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors">
+            1 Mes
+          </button>
+        </div>
+      </div>
+      
+      <!-- Filtros de Fecha -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha Inicio</label>
@@ -56,35 +84,101 @@
           </div>
         </div>
 
-        <!-- Top Pages -->
+        <!-- Gráfica de Tendencias (Vistas y Ventas) -->
         <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Páginas Más Visitadas</h2>
-          <div class="space-y-2">
-            @for (page of dashboard()!.topPages; track page.pageSlug) {
-              <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span class="text-gray-900 dark:text-white">{{ page.pageSlug }}</span>
-                <span class="text-gray-600 dark:text-gray-400 font-semibold">{{ page.viewCount }} vistas</span>
+          <div class="h-80">
+            <canvas baseChart
+              [data]="lineChartData()"
+              [options]="lineChartOptions"
+              [type]="lineChartType">
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica de Ingresos -->
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+          <div class="h-80">
+            <canvas baseChart
+              [data]="revenueChartData()"
+              [options]="revenueChartOptions"
+              [type]="revenueChartType">
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Gráficas de Top Páginas y Productos lado a lado -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Top Pages Chart -->
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            <div class="h-80">
+              @if (dashboard()!.topPages && dashboard()!.topPages.length > 0) {
+                <canvas baseChart
+                  [data]="topPagesChartData()"
+                  [options]="topPagesChartOptions"
+                  [type]="topPagesChartType">
+                </canvas>
+              } @else {
+                <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  <p>No hay datos de páginas visitadas</p>
+                </div>
+              }
+            </div>
+            <!-- Lista de páginas debajo de la gráfica -->
+            @if (dashboard()!.topPages && dashboard()!.topPages.length > 0) {
+              <div class="mt-4 space-y-2">
+                @for (page of dashboard()!.topPages; track page.pageSlug) {
+                  <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <span class="text-sm text-gray-900 dark:text-white">{{ page.pageSlug }}</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400 font-semibold">{{ page.viewCount }} vistas</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Top Products Chart -->
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            <div class="h-80">
+              @if (dashboard()!.topProducts && dashboard()!.topProducts.length > 0) {
+                <canvas baseChart
+                  [data]="topProductsChartData()"
+                  [options]="topProductsChartOptions"
+                  [type]="topProductsChartType">
+                </canvas>
+              } @else {
+                <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  <p>No hay datos de productos visitados</p>
+                </div>
+              }
+            </div>
+            <!-- Lista de productos debajo de la gráfica -->
+            @if (dashboard()!.topProducts && dashboard()!.topProducts.length > 0) {
+              <div class="mt-4 space-y-2">
+                @for (product of dashboard()!.topProducts; track product.productId) {
+                  <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <span class="text-sm text-gray-900 dark:text-white truncate flex-1">{{ product.productName }}</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400 font-semibold ml-2">{{ product.viewCount }} vistas</span>
+                  </div>
+                }
               </div>
             }
           </div>
         </div>
 
-        <!-- Top Products -->
+        <!-- Gráfica Comparativa de KPIs -->
         <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Productos Más Visitados</h2>
-          <div class="space-y-2">
-            @for (product of dashboard()!.topProducts; track product.productId) {
-              <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span class="text-gray-900 dark:text-white">{{ product.productName }}</span>
-                <span class="text-gray-600 dark:text-gray-400 font-semibold">{{ product.viewCount }} vistas</span>
-              </div>
-            }
+          <div class="h-80">
+            <canvas baseChart
+              [data]="kpisChartData()"
+              [options]="kpisChartOptions"
+              [type]="kpisChartType">
+            </canvas>
           </div>
         </div>
 
-        <!-- Daily Stats -->
+        <!-- Tabla de Estadísticas Diarias (Opcional - para referencia detallada) -->
         <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Estadísticas Diarias</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Estadísticas Diarias Detalladas</h2>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-800">
@@ -97,15 +191,23 @@
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
-                @for (stat of dashboard()!.dailyStats; track stat.date) {
+                @if (dashboard()!.dailyStats && dashboard()!.dailyStats.length > 0) {
+                  @for (stat of dashboard()!.dailyStats; track stat.date) {
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {{ formatDate(stat.date) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.pageViews }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.productViews }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.sales }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">S/ {{ stat.revenue.toFixed(2) }}</td>
+                    </tr>
+                  }
+                } @else {
                   <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {{ formatDate(stat.date) }}
+                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No hay datos disponibles para el período seleccionado
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.pageViews }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.productViews }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.sales }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">S/ {{ stat.revenue.toFixed(2) }}</td>
                   </tr>
                 }
               </tbody>

@@ -36,6 +36,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (oferta of ofertas(); track oferta.id) {
             <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-shadow">
+              @if (oferta.imagenUrl) {
+                <div class="w-full h-64 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                  <img [src]="oferta.imagenUrl" [alt]="oferta.nombre" class="w-full h-full object-cover">
+                </div>
+              }
               <!-- Badge de Descuento -->
               <div class="relative bg-gradient-to-r from-primary to-secondary p-6 text-white">
                 <div class="absolute top-4 right-4">

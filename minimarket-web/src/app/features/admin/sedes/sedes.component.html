@@ -29,7 +29,17 @@
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.direccion }}</p>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.ciudad }}, {{ sede.pais }}</p>
             @if (sede.telefono) {
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ sede.telefono }}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.telefono }}</p>
+            }
+            @if (sede.googleMapsUrl) {
+              <a 
+                [href]="sede.googleMapsUrl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4">
+                <span class="material-symbols-outlined text-base">location_on</span>
+                Ver en Google Maps
+              </a>
             }
             <div class="flex items-center gap-2 mb-4">
               @if (sede.isOpen) {
@@ -157,6 +167,23 @@
                     (change)="onLogoUpload($event)"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
                 </div>
+              </div>
+
+              <!-- Google Maps URL -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  URL de Google Maps
+                  <span class="text-gray-500 text-xs">(Opcional)</span>
+                </label>
+                <input
+                  type="url"
+                  [(ngModel)]="googleMapsUrl"
+                  name="googleMapsUrl"
+                  placeholder="https://maps.app.goo.gl/ejemplo"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Enlace de Google Maps para mostrar la ubicación de la sede
+                </p>
               </div>
 
               <!-- Horarios -->

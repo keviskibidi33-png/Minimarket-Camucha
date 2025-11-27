@@ -29,6 +29,7 @@ export class SedesComponent implements OnInit {
   telefono = signal('');
   estado = signal(true);
   logoUrl = signal('');
+  googleMapsUrl = signal('');
   horarios = signal<{ [key: string]: { abre: string; cierra: string } }>({
     lunes: { abre: '08:00', cierra: '18:00' },
     martes: { abre: '08:00', cierra: '18:00' },
@@ -78,6 +79,7 @@ export class SedesComponent implements OnInit {
       this.telefono.set(sede.telefono || '');
       this.estado.set(sede.estado);
       this.logoUrl.set(sede.logoUrl || '');
+      this.googleMapsUrl.set(sede.googleMapsUrl || '');
       this.horarios.set(sede.horarios || this.horarios());
     } else {
       this.resetForm();
@@ -101,6 +103,7 @@ export class SedesComponent implements OnInit {
     this.telefono.set('');
     this.estado.set(true);
     this.logoUrl.set('');
+    this.googleMapsUrl.set('');
     this.horarios.set({
       lunes: { abre: '08:00', cierra: '18:00' },
       martes: { abre: '08:00', cierra: '18:00' },
@@ -118,6 +121,27 @@ export class SedesComponent implements OnInit {
       return;
     }
 
+    // Validar URL de Google Maps si está presente
+    const googleMapsUrl = this.googleMapsUrl().trim();
+    if (googleMapsUrl) {
+      try {
+        const url = new URL(googleMapsUrl);
+        // Validar que sea una URL de Google Maps
+        const isValidGoogleMapsUrl = url.hostname.includes('google.com') || 
+                                     url.hostname.includes('maps.app.goo.gl') ||
+                                     url.hostname.includes('goo.gl') ||
+                                     url.hostname.includes('maps.google.com');
+        
+        if (!isValidGoogleMapsUrl) {
+          this.toastService.error('Por favor, ingrese una URL válida de Google Maps');
+          return;
+        }
+      } catch (error) {
+        this.toastService.error('La URL de Google Maps no es válida');
+        return;
+      }
+    }
+
     const sedeData: CreateSede | UpdateSede = {
       nombre: this.nombre(),
       direccion: this.direccion(),
@@ -128,7 +152,8 @@ export class SedesComponent implements OnInit {
       telefono: this.telefono() || undefined,
       horarios: this.horarios(),
       logoUrl: this.logoUrl() || undefined,
-      estado: this.estado()
+      estado: this.estado(),
+      googleMapsUrl: googleMapsUrl || undefined
     };
 
     const sede = this.editingSede();

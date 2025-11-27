@@ -56,7 +56,7 @@ export class CategoryFormComponent implements OnInit {
         console.error('Error loading category:', error);
         this.toastService.error('Error al cargar la categoría');
         this.isLoading.set(false);
-        this.router.navigate(['/categorias']);
+        this.router.navigate(['/admin/categorias']);
       }
     });
   }
@@ -79,7 +79,7 @@ export class CategoryFormComponent implements OnInit {
       this.categoriesService.update(this.categoryId()!, updateDto).subscribe({
         next: () => {
           this.toastService.success('Categoría actualizada exitosamente');
-          this.router.navigate(['/categorias']);
+          this.router.navigate(['/admin/categorias']);
         },
         error: (error) => {
           console.error('Error updating category:', error);
@@ -96,7 +96,7 @@ export class CategoryFormComponent implements OnInit {
       this.categoriesService.create(createDto).subscribe({
         next: () => {
           this.toastService.success('Categoría creada exitosamente');
-          this.router.navigate(['/categorias']);
+          this.router.navigate(['/admin/categorias']);
         },
         error: (error) => {
           console.error('Error creating category:', error);
@@ -108,7 +108,7 @@ export class CategoryFormComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/categorias']);
+    this.router.navigate(['/admin/categorias']);
   }
 }
 

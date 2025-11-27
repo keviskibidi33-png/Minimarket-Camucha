@@ -21,18 +21,24 @@
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (oferta of ofertas(); track oferta.id) {
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <div class="flex items-start justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ oferta.nombre }}</h3>
-              @if (isActive(oferta)) {
-                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activa</span>
-              } @else {
-                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">Inactiva</span>
-              }
-            </div>
-            @if (oferta.descripcion) {
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ oferta.descripcion }}</p>
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+            @if (oferta.imagenUrl) {
+              <div class="w-full h-48 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                <img [src]="oferta.imagenUrl" [alt]="oferta.nombre" class="w-full h-full object-cover">
+              </div>
             }
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ oferta.nombre }}</h3>
+                @if (isActive(oferta)) {
+                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activa</span>
+                } @else {
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">Inactiva</span>
+                }
+              </div>
+              @if (oferta.descripcion) {
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ oferta.descripcion }}</p>
+              }
             <div class="mb-4">
               <p class="text-2xl font-bold text-primary-admin">
                 @if (oferta.descuentoTipo === 0) {
@@ -57,6 +63,7 @@
                 class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
                 Eliminar
               </button>
+            </div>
             </div>
           </div>
         }
@@ -94,6 +101,29 @@
                   name="descripcion"
                   rows="3"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
+              </div>
+
+              <!-- Imagen URL -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  URL de Imagen de la Card
+                </label>
+                <input
+                  type="url"
+                  [(ngModel)]="imagenUrl"
+                  name="imagenUrl"
+                  placeholder="https://ejemplo.com/imagen-oferta.jpg"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Ingrese la URL de la imagen que se mostrará en la card de la oferta
+                </p>
+                @if (imagenUrl().trim()) {
+                  <div class="mt-3">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Vista previa:</p>
+                    <img [src]="imagenUrl()" [alt]="nombre()" class="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-700" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'">
+                  </div>
+                }
               </div>
 
               <!-- Tipo de Descuento -->
@@ -172,40 +202,111 @@
               }
 
               <!-- Fechas -->
-              <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Fecha Inicio <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    [(ngModel)]="fechaInicio"
-                    name="fechaInicio"
-                    required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Período de la Oferta <span class="text-red-500">*</span>
+                </label>
+                
+                <!-- Opciones Rápidas -->
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('today')"
+                    [class.bg-primary-admin]="fechaPreset() === 'today'"
+                    [class.text-white]="fechaPreset() === 'today'"
+                    [class.bg-gray-100]="fechaPreset() !== 'today'"
+                    [class.text-gray-700]="fechaPreset() !== 'today'"
+                    [class.dark:bg-gray-700]="fechaPreset() !== 'today'"
+                    [class.dark:text-gray-300]="fechaPreset() !== 'today'"
+                    class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-admin/80 hover:text-white transition-colors">
+                    Solo Hoy
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('3days')"
+                    [class.bg-primary-admin]="fechaPreset() === '3days'"
+                    [class.text-white]="fechaPreset() === '3days'"
+                    [class.bg-gray-100]="fechaPreset() !== '3days'"
+                    [class.text-gray-700]="fechaPreset() !== '3days'"
+                    [class.dark:bg-gray-700]="fechaPreset() !== '3days'"
+                    [class.dark:text-gray-300]="fechaPreset() !== '3days'"
+                    class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-admin/80 hover:text-white transition-colors">
+                    3 Días
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('1week')"
+                    [class.bg-primary-admin]="fechaPreset() === '1week'"
+                    [class.text-white]="fechaPreset() === '1week'"
+                    [class.bg-gray-100]="fechaPreset() !== '1week'"
+                    [class.text-gray-700]="fechaPreset() !== '1week'"
+                    [class.dark:bg-gray-700]="fechaPreset() !== '1week'"
+                    [class.dark:text-gray-300]="fechaPreset() !== '1week'"
+                    class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-admin/80 hover:text-white transition-colors">
+                    1 Semana
+                  </button>
+                  <button
+                    type="button"
+                    (click)="applyDatePreset('1month')"
+                    [class.bg-primary-admin]="fechaPreset() === '1month'"
+                    [class.text-white]="fechaPreset() === '1month'"
+                    [class.bg-gray-100]="fechaPreset() !== '1month'"
+                    [class.text-gray-700]="fechaPreset() !== '1month'"
+                    [class.dark:bg-gray-700]="fechaPreset() !== '1month'"
+                    [class.dark:text-gray-300]="fechaPreset() !== '1month'"
+                    class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-admin/80 hover:text-white transition-colors">
+                    1 Mes
+                  </button>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Fecha Fin <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    [(ngModel)]="fechaFin"
-                    name="fechaFin"
-                    required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+
+                <!-- Campos de Fecha -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Fecha Inicio <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      [ngModel]="fechaInicio()"
+                      (ngModelChange)="fechaInicio.set($event); onDateChange()"
+                      name="fechaInicio"
+                      required
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Fecha Fin <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      [ngModel]="fechaFin()"
+                      (ngModelChange)="fechaFin.set($event); onDateChange()"
+                      name="fechaFin"
+                      required
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  </div>
                 </div>
               </div>
 
               <!-- Orden y Estado -->
               <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Orden de Visualización
+                    <span class="material-symbols-outlined text-xs text-gray-400 ml-1 cursor-help" 
+                          title="Número que determina el orden de aparición en la página de ofertas. Menor número = aparece primero. Ejemplo: Orden 1 aparece antes que Orden 2">
+                      info
+                    </span>
+                  </label>
                   <input
                     type="number"
                     [(ngModel)]="orden"
                     name="orden"
+                    min="0"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Menor número = aparece primero en la tienda
+                  </p>
                 </div>
                 <div>
                   <label class="flex items-center gap-2 mt-6">
@@ -218,6 +319,82 @@
                   </label>
                 </div>
               </div>
+
+              <!-- Vista Previa -->
+              @if (nombre().trim() || descripcion().trim()) {
+                <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">preview</span>
+                    Vista Previa - Cómo se verá en la Tienda
+                  </h3>
+                  
+                  <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    @if (imagenUrl().trim()) {
+                      <div class="w-full h-48 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                        <img [src]="imagenUrl()" [alt]="nombre()" class="w-full h-full object-cover">
+                      </div>
+                    }
+                    <!-- Badge de Descuento -->
+                    <div class="relative bg-gradient-to-r from-primary to-secondary p-6 text-white">
+                      <div class="absolute top-4 right-4">
+                        @if (isPreviewActive()) {
+                          <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-bold rounded-full">
+                            Activa
+                          </span>
+                        }
+                      </div>
+                      <div class="text-4xl font-black mb-2">
+                        @if (descuentoValor() > 0) {
+                          {{ getDescuentoText() }}
+                        } @else {
+                          <span class="text-white/70 text-2xl">Sin descuento configurado</span>
+                        }
+                      </div>
+                      <h3 class="text-xl font-bold mb-2">
+                        {{ nombre().trim() || 'Nombre de la oferta' }}
+                      </h3>
+                      @if (descripcion().trim()) {
+                        <p class="text-sm text-white/90">{{ descripcion() }}</p>
+                      }
+                    </div>
+
+                    <!-- Detalles -->
+                    <div class="p-6">
+                      <div class="space-y-3 mb-6">
+                        @if (fechaInicio() && fechaFin()) {
+                          <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <span class="material-symbols-outlined text-base mr-2">calendar_today</span>
+                            <span><strong>Inicio:</strong> {{ formatPreviewDate(fechaInicio()) }}</span>
+                          </div>
+                          <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <span class="material-symbols-outlined text-base mr-2">event</span>
+                            <span><strong>Fin:</strong> {{ formatPreviewDate(fechaFin()) }}</span>
+                          </div>
+                        }
+                        @if (categoriasIds().length > 0 || productosIds().length > 0) {
+                          <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <span class="material-symbols-outlined text-base mr-2">category</span>
+                            <span>{{ getPreviewAplicacionText() }}</span>
+                          </div>
+                        } @else {
+                          <div class="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
+                            <span class="material-symbols-outlined text-base mr-2">warning</span>
+                            <span>No hay categorías ni productos seleccionados</span>
+                          </div>
+                        }
+                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                          <span class="material-symbols-outlined text-base mr-2">sort</span>
+                          <span><strong>Orden:</strong> {{ orden() }} ({{ getOrdenText() }})</span>
+                        </div>
+                      </div>
+
+                      <div class="block w-full text-center px-4 py-3 rounded-lg bg-primary text-white font-semibold">
+                        Ver Productos en Oferta
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
 
               <!-- Actions -->
               <div class="flex justify-end gap-4">

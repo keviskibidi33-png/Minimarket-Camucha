@@ -26,6 +26,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/store/contact/contact.component').then(m => m.StoreContactComponent)
   },
   {
+    path: 'pagina/:slug',
+    loadComponent: () => import('./features/store/page/page.component').then(m => m.PageComponent)
+  },
+  {
     path: 'tienda/producto/:id',
     loadComponent: () => import('./features/store/product-detail/product-detail.component').then(m => m.ProductDetailComponent)
   },
@@ -224,6 +228,11 @@ export const routes: Routes = [
         path: 'page-builder',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/page-builder/page-builder.component').then(m => m.PageBuilderComponent)
+      },
+      {
+        path: 'banners',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/banners/banners.component').then(m => m.BannersComponent)
       },
       {
         path: 'analytics',

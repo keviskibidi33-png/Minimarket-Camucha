@@ -15,6 +15,7 @@ export interface Oferta {
   fechaFin: string;
   activa: boolean;
   orden: number;
+  imagenUrl?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -30,6 +31,7 @@ export interface CreateOferta {
   fechaFin: string;
   activa: boolean;
   orden: number;
+  imagenUrl?: string;
 }
 
 export interface UpdateOferta {
@@ -43,6 +45,7 @@ export interface UpdateOferta {
   fechaFin: string;
   activa: boolean;
   orden: number;
+  imagenUrl?: string;
 }
 
 @Injectable({

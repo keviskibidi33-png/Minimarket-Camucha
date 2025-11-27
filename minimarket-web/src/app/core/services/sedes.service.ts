@@ -17,6 +17,7 @@ export interface Sede {
   estado: boolean;
   isOpen: boolean;
   nextOpenTime?: string;
+  googleMapsUrl?: string;
 }
 
 export interface CreateSede {
@@ -30,6 +31,7 @@ export interface CreateSede {
   horarios: { [key: string]: { abre: string; cierra: string } };
   logoUrl?: string;
   estado: boolean;
+  googleMapsUrl?: string;
 }
 
 export interface UpdateSede {
@@ -43,6 +45,7 @@ export interface UpdateSede {
   horarios: { [key: string]: { abre: string; cierra: string } };
   logoUrl?: string;
   estado: boolean;
+  googleMapsUrl?: string;
 }
 
 @Injectable({

@@ -1,13 +1,18 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, Chart, registerables } from 'chart.js';
 import { AnalyticsService, AnalyticsDashboard } from '../../../core/services/analytics.service';
 import { ToastService } from '../../../shared/services/toast.service';
+
+// Registrar todos los componentes de Chart.js
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseChartDirective],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
 })
@@ -16,6 +21,290 @@ export class AnalyticsComponent implements OnInit {
   isLoading = signal(false);
   startDate = signal('');
   endDate = signal('');
+
+  // Configuración de gráfica de línea (Vistas y Ventas a lo largo del tiempo)
+  lineChartData = computed<ChartConfiguration<'line'>['data']>(() => {
+    const data = this.dashboard();
+    if (!data || !data.dailyStats || data.dailyStats.length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    const labels = data.dailyStats.map(stat => this.formatDateShort(stat.date));
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Vistas de Páginas',
+          data: data.dailyStats.map(stat => stat.pageViews),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Vistas de Productos',
+          data: data.dailyStats.map(stat => stat.productViews),
+          borderColor: 'rgb(16, 185, 129)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Ventas',
+          data: data.dailyStats.map(stat => stat.sales),
+          borderColor: 'rgb(245, 101, 101)',
+          backgroundColor: 'rgba(245, 101, 101, 0.1)',
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+  });
+
+  lineChartOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Tendencias de Vistas y Ventas'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Vistas'
+        }
+      },
+      y1: {
+        beginAtZero: true,
+        position: 'right',
+        title: {
+          display: true,
+          text: 'Ventas'
+        },
+        grid: {
+          drawOnChartArea: false
+        }
+      }
+    }
+  };
+
+  lineChartType = 'line' as const;
+
+  // Configuración de gráfica de barras (Top Páginas)
+  topPagesChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const data = this.dashboard();
+    if (!data || !data.topPages || data.topPages.length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    return {
+      labels: data.topPages.map(page => page.pageSlug),
+      datasets: [
+        {
+          label: 'Vistas',
+          data: data.topPages.map(page => page.viewCount),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1
+        }
+      ]
+    };
+  });
+
+  topPagesChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: 'Páginas Más Visitadas'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  };
+
+  topPagesChartType = 'bar' as const;
+
+  // Configuración de gráfica de barras (Top Productos)
+  topProductsChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const data = this.dashboard();
+    if (!data || !data.topProducts || data.topProducts.length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    return {
+      labels: data.topProducts.map(product => product.productName.length > 20 
+        ? product.productName.substring(0, 20) + '...' 
+        : product.productName),
+      datasets: [
+        {
+          label: 'Vistas',
+          data: data.topProducts.map(product => product.viewCount),
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: 'rgb(16, 185, 129)',
+          borderWidth: 1
+        }
+      ]
+    };
+  });
+
+  topProductsChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: 'Productos Más Visitados'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  };
+
+  topProductsChartType = 'bar' as const;
+
+  // Configuración de gráfica de barras comparativa (KPIs)
+  kpisChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const data = this.dashboard();
+    if (!data) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    return {
+      labels: ['Vistas Páginas', 'Vistas Productos', 'Ventas'],
+      datasets: [
+        {
+          label: 'Métricas',
+          data: [
+            data.totalPageViews,
+            data.totalProductViews,
+            data.totalSales
+          ],
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 101, 101, 0.8)'
+          ],
+          borderColor: [
+            'rgb(59, 130, 246)',
+            'rgb(16, 185, 129)',
+            'rgb(245, 101, 101)'
+          ],
+          borderWidth: 1
+        }
+      ]
+    };
+  });
+
+  kpisChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      title: {
+        display: true,
+        text: 'Resumen de Métricas'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  };
+
+  kpisChartType = 'bar' as const;
+
+  // Configuración de gráfica de ingresos (línea)
+  revenueChartData = computed<ChartConfiguration<'line'>['data']>(() => {
+    const data = this.dashboard();
+    if (!data || !data.dailyStats || data.dailyStats.length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    const labels = data.dailyStats.map(stat => this.formatDateShort(stat.date));
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Ingresos (S/)',
+          data: data.dailyStats.map(stat => stat.revenue),
+          borderColor: 'rgb(168, 85, 247)',
+          backgroundColor: 'rgba(168, 85, 247, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+  });
+
+  revenueChartOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Ingresos Diarios'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Ingresos (S/)'
+        }
+      }
+    }
+  };
+
+  revenueChartType = 'line' as const;
 
   constructor(
     private analyticsService: AnalyticsService,
@@ -57,8 +346,43 @@ export class AnalyticsComponent implements OnInit {
     this.loadDashboard();
   }
 
+  setDateRange(range: '1d' | '3d' | '1w' | '1m'): void {
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    switch (range) {
+      case '1d':
+        startDate.setDate(startDate.getDate() - 1);
+        break;
+      case '3d':
+        startDate.setDate(startDate.getDate() - 3);
+        break;
+      case '1w':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '1m':
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+    }
+    
+    this.startDate.set(startDate.toISOString().split('T')[0]);
+    this.endDate.set(endDate.toISOString().split('T')[0]);
+    this.loadDashboard();
+  }
+
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  formatDateShort(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('es-PE', {
+      month: 'short',
+      day: 'numeric'
+    });
   }
 }
 

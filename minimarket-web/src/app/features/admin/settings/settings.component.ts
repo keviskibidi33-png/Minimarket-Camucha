@@ -8,6 +8,7 @@ import { SettingsNavbarComponent } from '../../../shared/components/settings-nav
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
 import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
+import { PagesService, Page, UpdatePage } from '../../../core/services/pages.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -21,7 +22,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 export class SettingsComponent implements OnInit {
   settings = signal<SystemSettings[]>([]);
   isLoading = signal(false);
-  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'>('cart');
+  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'>('cart');
   
   private readonly destroyRef = inject(DestroyRef);
   private tabPersistenceEffect?: ReturnType<typeof effect>;
@@ -38,31 +39,25 @@ export class SettingsComponent implements OnInit {
   // Configuración de IGV
   igvRate = signal(0.18); // 18% IGV
   
-  // Configuraciones de tarifas de envío
-  shippingRates = signal<ShippingRate[]>([]);
-  showShippingRateForm = signal(false);
-  editingShippingRate = signal<ShippingRate | null>(null);
-  
-  // Form data para tarifas
-  zoneName = signal('');
-  basePrice = signal(0);
-  pricePerKm = signal(0);
-  pricePerKg = signal(0);
-  minDistance = signal(0);
-  maxDistance = signal(0);
-  minWeight = signal(0);
-  maxWeight = signal(0);
-  freeShippingThreshold = signal(0);
-  isActiveRate = signal(true);
+  // Configuraciones de tarifas de envío simplificadas
+  fixedShippingPrice = signal(8.00);
+  freeShippingThreshold = signal(20.00);
   
   // Configuraciones de templates de email
   emailLogoUrl = signal('');
   emailPromotionImageUrl = signal('');
 
+  // Configuraciones de Navbar de Noticias
+  enableNewsInNavbar = signal(true); // Control global para activar/desactivar noticias en navbar
+  pages = signal<Page[]>([]);
+  isLoadingPages = signal(false);
+  selectedPagesForNavbar = signal<Set<string>>(new Set()); // IDs de noticias seleccionadas
+
   constructor(
     private settingsService: SettingsService,
     private shippingService: ShippingService,
     private emailTemplatesService: EmailTemplatesService,
+    private pagesService: PagesService,
     private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute,
@@ -74,10 +69,14 @@ export class SettingsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const tabParam = params['tab'];
       if (tabParam) {
-        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'> = 
-          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news'];
         if (validTabs.includes(tabParam as any)) {
           this.activeTab.set(tabParam as any);
+          // Si es la pestaña de navbar-news, cargar las noticias
+          if (tabParam === 'navbar-news') {
+            this.loadPagesForNavbar();
+          }
         }
       } else {
         // Si no hay query param, cargar desde localStorage
@@ -96,8 +95,12 @@ export class SettingsComponent implements OnInit {
     this.updateTabFromRoute();
 
     this.loadSettings();
-    this.loadShippingRates();
     this.loadEmailTemplateSettings();
+    
+    // Si el tab activo es navbar-news, cargar las noticias
+    if (this.activeTab() === 'navbar-news') {
+      this.loadPagesForNavbar();
+    }
 
     // Observar cambios en activeTab para persistir (dentro de afterNextRender para evitar NG0203)
     afterNextRender(() => {
@@ -126,8 +129,8 @@ export class SettingsComponent implements OnInit {
 
     // Para las otras pestañas, cargar desde localStorage
     const savedTab = localStorage.getItem('settings_active_tab');
-    const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
-      ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news' | 'categories' | 'payment-methods'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news', 'categories', 'payment-methods'];
     
     if (savedTab && validTabs.includes(savedTab as any)) {
       this.activeTab.set(savedTab as any);
@@ -145,8 +148,8 @@ export class SettingsComponent implements OnInit {
     // Si estamos en /admin/configuraciones, restaurar el último tab guardado
     if (url === '/admin/configuraciones' || url.endsWith('/configuraciones')) {
       const savedTab = localStorage.getItem('settings_active_tab');
-      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners' | 'categories' | 'payment-methods'> = 
-        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'banners', 'categories', 'payment-methods'];
+      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news' | 'categories' | 'payment-methods'> = 
+        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news', 'categories', 'payment-methods'];
       
       if (savedTab && validTabs.includes(savedTab as any)) {
         this.activeTab.set(savedTab as any);
@@ -162,12 +165,18 @@ export class SettingsComponent implements OnInit {
         // Cargar configuración de IGV
         const igvSetting = settings.find(s => s.key === 'apply_igv_to_cart');
         if (igvSetting) {
-          this.applyIgvToCart.set(igvSetting.value === 'true' || igvSetting.value === '1');
+          const igvEnabled = igvSetting.value === 'true' || igvSetting.value === '1';
+          this.applyIgvToCart.set(igvEnabled);
+        } else {
+          this.applyIgvToCart.set(false);
         }
         
         const igvRateSetting = settings.find(s => s.key === 'igv_rate');
         if (igvRateSetting) {
-          this.igvRate.set(parseFloat(igvRateSetting.value) || 0.18);
+          const rate = parseFloat(igvRateSetting.value) || 0.18;
+          this.igvRate.set(rate);
+        } else {
+          this.igvRate.set(0.18);
         }
         
         // Cargar configuraciones de envío
@@ -191,6 +200,19 @@ export class SettingsComponent implements OnInit {
           this.pickupTime.set(pickupTimeSetting.value || '16:00');
         }
         
+        // Cargar configuraciones de tarifas de envío simplificadas
+        const fixedPriceSetting = settings.find(s => s.key === 'fixed_shipping_price');
+        if (fixedPriceSetting) {
+          const price = parseFloat(fixedPriceSetting.value) || 8.00;
+          this.fixedShippingPrice.set(price);
+        }
+        
+        const freeShippingSetting = settings.find(s => s.key === 'free_shipping_threshold');
+        if (freeShippingSetting) {
+          const threshold = parseFloat(freeShippingSetting.value) || 20.00;
+          this.freeShippingThreshold.set(threshold);
+        }
+        
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -203,36 +225,81 @@ export class SettingsComponent implements OnInit {
 
 
   saveCartSetting(): void {
+    const currentIgvState = this.applyIgvToCart();
+    const currentIgvRate = this.igvRate();
+
     const settingsToSave = [
       {
         key: 'apply_igv_to_cart',
-        value: this.applyIgvToCart() ? 'true' : 'false',
+        value: currentIgvState ? 'true' : 'false',
         description: 'Aplicar IGV al carrito de compras',
         isActive: true
       },
       {
         key: 'igv_rate',
-        value: this.igvRate().toString(),
+        value: currentIgvRate.toString() || '0.18',
         description: 'Tasa de IGV (ej: 0.18 para 18%)',
         isActive: true
       }
     ];
 
+    // Validar que los valores no estén vacíos
+    const invalidSettings = settingsToSave.filter(s => !s.value || s.value.trim() === '');
+    if (invalidSettings.length > 0) {
+      this.toastService.error('Error: No se pueden guardar valores vacíos');
+      return;
+    }
+
     let savedCount = 0;
+    let errorCount = 0;
     const totalSettings = settingsToSave.length;
+    const responses: { [key: string]: string } = {};
 
     settingsToSave.forEach(setting => {
       this.settingsService.update(setting.key, setting).subscribe({
-        next: () => {
+        next: (response) => {
+          responses[setting.key] = response.value;
+          
+          // Actualizar el estado local con el valor de la respuesta
+          if (setting.key === 'apply_igv_to_cart') {
+            const enabled = response.value === 'true' || response.value === '1';
+            this.applyIgvToCart.set(enabled);
+          } else if (setting.key === 'igv_rate') {
+            const rate = parseFloat(response.value) || 0.18;
+            this.igvRate.set(rate);
+          }
+          
           savedCount++;
+          
           if (savedCount === totalSettings) {
-            this.toastService.success('Configuraciones del carrito guardadas correctamente');
-            this.loadSettings();
+            // Validar que todas las respuestas sean válidas
+            const allValid = settingsToSave.every(s => {
+              const responseValue = responses[s.key];
+              if (!responseValue || responseValue.trim() === '') return false;
+              
+              if (s.key === 'apply_igv_to_cart') {
+                return responseValue === 'true' || responseValue === '1' || responseValue === 'false' || responseValue === '0';
+              } else if (s.key === 'igv_rate') {
+                return !isNaN(parseFloat(responseValue));
+              }
+              return true;
+            });
+            
+            if (allValid) {
+              this.toastService.success('Configuraciones del carrito guardadas correctamente');
+            } else {
+              this.toastService.warning('Configuración guardada pero algunos valores son inválidos. Recargando...');
+              setTimeout(() => this.loadSettings(), 500);
+            }
           }
         },
-        error: (error) => {
-          console.error(`Error saving setting ${setting.key}:`, error);
+        error: () => {
+          errorCount++;
           this.toastService.error(`Error al guardar ${setting.key}`);
+          
+          if (errorCount === totalSettings || savedCount + errorCount === totalSettings) {
+            setTimeout(() => this.loadSettings(), 500);
+          }
         }
       });
     });
@@ -287,8 +354,12 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'banners'): void {
+  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'): void {
     this.activeTab.set(tab);
+    // Si es navbar-news, cargar las noticias
+    if (tab === 'navbar-news') {
+      this.loadPagesForNavbar();
+    }
     // Actualizar la URL con el query param para mantener consistencia
     this.router.navigate(['/admin/configuraciones'], { queryParams: { tab } });
   }
@@ -411,123 +482,273 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  // Shipping Rates Management
-  loadShippingRates(): void {
-    this.shippingService.getAllRates().subscribe({
-      next: (rates) => {
-        this.shippingRates.set(rates);
+  saveShippingRatesSettings(): void {
+    const settingsToSave = [
+      {
+        key: 'fixed_shipping_price',
+        value: this.fixedShippingPrice().toString(),
+        description: 'Precio fijo de envío para Lima',
+        isActive: true
+      },
+      {
+        key: 'free_shipping_threshold',
+        value: this.freeShippingThreshold().toString(),
+        description: 'Monto mínimo para envío gratis',
+        isActive: true
+      }
+    ];
+
+    let savedCount = 0;
+    let errorCount = 0;
+    const totalSettings = settingsToSave.length;
+
+    settingsToSave.forEach(setting => {
+      this.settingsService.update(setting.key, setting).subscribe({
+        next: () => {
+          savedCount++;
+          if (savedCount === totalSettings) {
+            this.toastService.success('Configuraciones de tarifas de envío guardadas correctamente');
+            setTimeout(() => {
+              this.loadSettings();
+            }, 300);
+          }
+        },
+        error: () => {
+          errorCount++;
+          this.toastService.error(`Error al guardar ${setting.key}`);
+        }
+      });
+    });
+  }
+
+
+  // Métodos para Navbar de Noticias
+  loadPagesForNavbar(): void {
+    this.isLoadingPages.set(true);
+    
+    // Cargar configuración global primero
+    this.settingsService.getByKey('enable_news_in_navbar').subscribe({
+      next: (setting) => {
+        if (setting) {
+          this.enableNewsInNavbar.set(setting.value.toLowerCase() === 'true' || setting.value === '1');
+        } else {
+          // Por defecto activado
+          this.enableNewsInNavbar.set(true);
+        }
+      },
+      error: () => {
+        this.enableNewsInNavbar.set(true);
+      }
+    });
+    
+    this.pagesService.getAll().subscribe({
+      next: (pages) => {
+        // Filtrar solo noticias activas
+        const activePages = pages.filter(p => p.activa);
+        this.pages.set(activePages);
+        
+        // Cargar las noticias que ya están marcadas para mostrar en navbar
+        const selectedIds = new Set<string>();
+        activePages.forEach(page => {
+          if (page.mostrarEnNavbar) {
+            selectedIds.add(page.id);
+          }
+        });
+        this.selectedPagesForNavbar.set(selectedIds);
+        
+        this.isLoadingPages.set(false);
       },
       error: (error) => {
-        console.error('Error loading shipping rates:', error);
-        this.toastService.error('Error al cargar tarifas de envío');
+        console.error('Error loading pages:', error);
+        this.toastService.error('Error al cargar noticias');
+        this.isLoadingPages.set(false);
       }
     });
   }
 
-  openShippingRateForm(rate?: ShippingRate): void {
-    if (rate) {
-      this.editingShippingRate.set(rate);
-      this.zoneName.set(rate.zoneName);
-      this.basePrice.set(rate.basePrice);
-      this.pricePerKm.set(rate.pricePerKm);
-      this.pricePerKg.set(rate.pricePerKg);
-      this.minDistance.set(rate.minDistance);
-      this.maxDistance.set(rate.maxDistance);
-      this.minWeight.set(rate.minWeight);
-      this.maxWeight.set(rate.maxWeight);
-      this.freeShippingThreshold.set(rate.freeShippingThreshold);
-      this.isActiveRate.set(rate.isActive);
-    } else {
-      this.resetShippingRateForm();
+  togglePageForNavbar(pageId: string): void {
+    // Si la funcionalidad global está desactivada, no permitir cambios
+    if (!this.enableNewsInNavbar()) {
+      this.toastService.error('Primero debes activar la funcionalidad "Mostrar Noticias en Navbar"');
+      return;
     }
-    this.showShippingRateForm.set(true);
+    
+    const selected = new Set(this.selectedPagesForNavbar());
+    const pageToUpdate = this.pages().find(p => p.id === pageId);
+    
+    if (!pageToUpdate) {
+      this.toastService.error('No se encontró la noticia');
+      return;
+    }
+    
+    // Si se está desmarcando y es la última noticia seleccionada, mostrar error
+    if (selected.has(pageId) && selected.size === 1) {
+      this.toastService.error('Debe haber al menos una noticia visible en el navbar. Crea una noticia primero si no tienes ninguna.');
+      return;
+    }
+    
+    const newMostrarEnNavbar = !selected.has(pageId);
+    
+    // Actualizar inmediatamente en el backend
+    const updateData: UpdatePage = {
+      titulo: pageToUpdate.titulo,
+      slug: pageToUpdate.slug,
+      tipoPlantilla: pageToUpdate.tipoPlantilla,
+      metaDescription: pageToUpdate.metaDescription,
+      keywords: pageToUpdate.keywords,
+      orden: pageToUpdate.orden,
+      activa: pageToUpdate.activa,
+      mostrarEnNavbar: newMostrarEnNavbar,
+      sections: pageToUpdate.sections.map(s => ({
+        id: s.id,
+        seccionTipo: s.seccionTipo,
+        orden: s.orden,
+        datos: s.datos
+      }))
+    };
+    
+    this.pagesService.update(pageToUpdate.id, updateData).subscribe({
+      next: () => {
+        // Actualizar el estado local después de guardar exitosamente
+        if (newMostrarEnNavbar) {
+          selected.add(pageId);
+          this.toastService.success('Noticia agregada al navbar');
+        } else {
+          selected.delete(pageId);
+          this.toastService.success('Noticia removida del navbar');
+        }
+        this.selectedPagesForNavbar.set(selected);
+        // Recargar para asegurar consistencia
+        this.loadPagesForNavbar();
+      },
+      error: (error) => {
+        console.error('Error updating page for navbar:', error);
+        this.toastService.error('Error al actualizar visibilidad en navbar');
+      }
+    });
   }
 
-  closeShippingRateForm(): void {
-    this.showShippingRateForm.set(false);
-    this.editingShippingRate.set(null);
-    this.resetShippingRateForm();
+  toggleEnableNewsInNavbar(): void {
+    const newValue = !this.enableNewsInNavbar();
+    this.enableNewsInNavbar.set(newValue);
+    
+    // Guardar inmediatamente la configuración global
+    const setting: UpdateSystemSettings = {
+      key: 'enable_news_in_navbar',
+      value: newValue ? 'true' : 'false',
+      description: 'Activar o desactivar la funcionalidad de mostrar noticias en el navbar',
+      isActive: true
+    };
+    
+    this.settingsService.update('enable_news_in_navbar', setting).subscribe({
+      next: () => {
+        this.toastService.success(newValue ? 'Noticias en navbar activadas' : 'Noticias en navbar desactivadas');
+      },
+      error: (error) => {
+        console.error('Error saving enable_news_in_navbar setting:', error);
+        this.toastService.error('Error al guardar configuración');
+        // Revertir el cambio
+        this.enableNewsInNavbar.set(!newValue);
+      }
+    });
   }
 
-  resetShippingRateForm(): void {
-    this.zoneName.set('');
-    this.basePrice.set(0);
-    this.pricePerKm.set(0);
-    this.pricePerKg.set(0);
-    this.minDistance.set(0);
-    this.maxDistance.set(0);
-    this.minWeight.set(0);
-    this.maxWeight.set(0);
-    this.freeShippingThreshold.set(0);
-    this.isActiveRate.set(true);
-  }
-
-  saveShippingRate(): void {
-    if (!this.zoneName().trim()) {
-      this.toastService.error('El nombre de la zona es requerido');
+  saveNavbarNewsSettings(): void {
+    // Si la funcionalidad global está desactivada, no permitir guardar
+    if (!this.enableNewsInNavbar()) {
+      this.toastService.error('Primero debes activar la funcionalidad "Mostrar Noticias en Navbar"');
+      return;
+    }
+    
+    const selectedIds = this.selectedPagesForNavbar();
+    
+    // Validar que haya al menos una noticia seleccionada
+    if (selectedIds.size === 0) {
+      this.toastService.error('Debe seleccionar al menos una noticia para mostrar en el navbar. Si no tienes noticias, crea una primero en el módulo "Blog de Noticias".');
       return;
     }
 
-    const rateData: CreateShippingRate | UpdateShippingRate = {
-      zoneName: this.zoneName(),
-      basePrice: this.basePrice(),
-      pricePerKm: this.pricePerKm(),
-      pricePerKg: this.pricePerKg(),
-      minDistance: this.minDistance(),
-      maxDistance: this.maxDistance(),
-      minWeight: this.minWeight(),
-      maxWeight: this.maxWeight(),
-      freeShippingThreshold: this.freeShippingThreshold(),
-      isActive: this.isActiveRate()
-    };
-
-    const rate = this.editingShippingRate();
-    if (rate) {
-      this.shippingService.updateRate(rate.id, rateData).subscribe({
-        next: () => {
-          this.toastService.success('Tarifa de envío actualizada correctamente');
-          this.loadShippingRates();
-          this.closeShippingRateForm();
-        },
-        error: (error) => {
-          console.error('Error updating shipping rate:', error);
-          this.toastService.error('Error al actualizar tarifa de envío');
-        }
-      });
-    } else {
-      this.shippingService.createRate(rateData).subscribe({
-        next: () => {
-          this.toastService.success('Tarifa de envío creada correctamente');
-          this.loadShippingRates();
-          this.closeShippingRateForm();
-        },
-        error: (error) => {
-          console.error('Error creating shipping rate:', error);
-          this.toastService.error('Error al crear tarifa de envío');
-        }
-      });
+    // Validar que haya noticias activas disponibles
+    const activePages = this.pages().filter(p => p.activa);
+    if (activePages.length === 0) {
+      this.toastService.error('No hay noticias activas. Por favor, crea al menos una noticia en el módulo "Blog de Noticias" y actívala primero.');
+      return;
     }
+
+    this.isLoadingPages.set(true);
+    
+    // Actualizar cada noticia
+    let updatedCount = 0;
+    let errorCount = 0;
+    const totalPages = activePages.length;
+
+    activePages.forEach(page => {
+      const shouldShowInNavbar = selectedIds.has(page.id);
+      
+      // Solo actualizar si cambió el valor
+      if (page.mostrarEnNavbar !== shouldShowInNavbar) {
+        const updateData: UpdatePage = {
+          titulo: page.titulo,
+          slug: page.slug,
+          tipoPlantilla: page.tipoPlantilla,
+          metaDescription: page.metaDescription,
+          keywords: page.keywords,
+          orden: page.orden,
+          activa: page.activa,
+          mostrarEnNavbar: shouldShowInNavbar,
+          sections: page.sections.map(s => ({
+            id: s.id,
+            seccionTipo: s.seccionTipo,
+            orden: s.orden,
+            datos: s.datos
+          }))
+        };
+
+        this.pagesService.update(page.id, updateData).subscribe({
+          next: () => {
+            updatedCount++;
+            if (updatedCount + errorCount === totalPages) {
+              this.isLoadingPages.set(false);
+              if (errorCount === 0) {
+                this.toastService.success('Configuración del navbar guardada correctamente');
+                this.loadPagesForNavbar(); // Recargar para reflejar cambios
+              } else {
+                this.toastService.warning(`Se guardaron ${updatedCount} noticias, pero ${errorCount} tuvieron errores`);
+              }
+            }
+          },
+          error: (error) => {
+            errorCount++;
+            console.error(`Error updating page ${page.id}:`, error);
+            if (updatedCount + errorCount === totalPages) {
+              this.isLoadingPages.set(false);
+              this.toastService.error(`Error al guardar algunas noticias. ${errorCount} error(es)`);
+            }
+          }
+        });
+      } else {
+        // Si no cambió, contar como actualizado
+        updatedCount++;
+        if (updatedCount + errorCount === totalPages) {
+          this.isLoadingPages.set(false);
+          if (errorCount === 0) {
+            this.toastService.success('Configuración del navbar guardada correctamente');
+          }
+        }
+      }
+    });
   }
 
-  deleteShippingRate(rate: ShippingRate): void {
-    if (confirm(`¿Está seguro de eliminar la tarifa "${rate.zoneName}"?`)) {
-      this.shippingService.deleteRate(rate.id).subscribe({
-        next: () => {
-          this.toastService.success('Tarifa de envío eliminada correctamente');
-          this.loadShippingRates();
-        },
-        error: (error) => {
-          console.error('Error deleting shipping rate:', error);
-          this.toastService.error('Error al eliminar tarifa de envío');
-        }
-      });
-    }
+  goToBlogNews(): void {
+    this.router.navigate(['/admin/blog-noticias']);
   }
-
 
   // Helper methods for template
   parseInt = parseInt;
   parseFloat = parseFloat;
+  formatDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString('es-PE');
+  }
 
   showResetWarning = signal(false);
 

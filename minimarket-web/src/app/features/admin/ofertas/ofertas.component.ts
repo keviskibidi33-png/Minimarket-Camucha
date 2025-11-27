@@ -32,8 +32,10 @@ export class OfertasComponent implements OnInit {
   productosIds = signal<string[]>([]);
   fechaInicio = signal('');
   fechaFin = signal('');
+  fechaPreset = signal<string>(''); // Opción predefinida seleccionada
   activa = signal(true);
   orden = signal(0);
+  imagenUrl = signal('');
 
   constructor(
     private ofertasService: OfertasService,
@@ -98,8 +100,10 @@ export class OfertasComponent implements OnInit {
       this.aplicarA.set(oferta.categoriasIds.length > 0 ? 'categorias' : 'productos');
       this.fechaInicio.set(new Date(oferta.fechaInicio).toISOString().split('T')[0]);
       this.fechaFin.set(new Date(oferta.fechaFin).toISOString().split('T')[0]);
+      this.fechaPreset.set(''); // Limpiar preset al editar
       this.activa.set(oferta.activa);
       this.orden.set(oferta.orden);
+      this.imagenUrl.set(oferta.imagenUrl || '');
     } else {
       this.resetForm();
     }
@@ -122,8 +126,53 @@ export class OfertasComponent implements OnInit {
     this.productosIds.set([]);
     this.fechaInicio.set('');
     this.fechaFin.set('');
+    this.fechaPreset.set('');
     this.activa.set(true);
     this.orden.set(0);
+    this.imagenUrl.set('');
+  }
+
+  applyDatePreset(preset: string): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (preset) {
+      case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        break;
+      case '3days':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 2); // Hoy + 2 días = 3 días total
+        break;
+      case '1week':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 6); // Hoy + 6 días = 7 días total
+        break;
+      case '1month':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(endDate.getDate() - 1); // Un mes completo desde hoy
+        break;
+      default:
+        return;
+    }
+
+    // Formatear fechas como YYYY-MM-DD para el input type="date"
+    this.fechaInicio.set(startDate.toISOString().split('T')[0]);
+    this.fechaFin.set(endDate.toISOString().split('T')[0]);
+    this.fechaPreset.set(preset);
+  }
+
+  onDateChange(): void {
+    // Si el usuario edita manualmente las fechas, limpiar el preset
+    this.fechaPreset.set('');
   }
 
   toggleCategoria(categoriaId: string): void {
@@ -169,7 +218,8 @@ export class OfertasComponent implements OnInit {
       fechaInicio: new Date(this.fechaInicio()).toISOString(),
       fechaFin: new Date(this.fechaFin()).toISOString(),
       activa: this.activa(),
-      orden: this.orden()
+      orden: this.orden(),
+      imagenUrl: this.imagenUrl().trim() || undefined
     };
 
     const oferta = this.editingOferta();
@@ -224,6 +274,53 @@ export class OfertasComponent implements OnInit {
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+  }
+
+  getDescuentoText(): string {
+    if (this.descuentoTipo() === 0) {
+      return `${this.descuentoValor()}% OFF`;
+    } else {
+      return `S/ ${this.descuentoValor()} OFF`;
+    }
+  }
+
+  formatPreviewDate(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  getPreviewAplicacionText(): string {
+    if (this.aplicarA() === 'categorias') {
+      const count = this.categoriasIds().length;
+      return count > 0 ? `Aplica a ${count} categoría${count !== 1 ? 's' : ''}` : 'No hay categorías seleccionadas';
+    } else {
+      const count = this.productosIds().length;
+      return count > 0 ? `Aplica a ${count} producto${count !== 1 ? 's' : ''}` : 'No hay productos seleccionados';
+    }
+  }
+
+  isPreviewActive(): boolean {
+    if (!this.fechaInicio() || !this.fechaFin()) return false;
+    const now = new Date();
+    const inicio = new Date(this.fechaInicio());
+    const fin = new Date(this.fechaFin());
+    return this.activa() && now >= inicio && now <= fin;
+  }
+
+  getOrdenText(): string {
+    const ordenValue = this.orden();
+    if (ordenValue === 0) {
+      return 'Aparecerá al final';
+    } else if (ordenValue === 1) {
+      return 'Aparecerá primero';
+    } else {
+      return `Aparecerá en posición ${ordenValue}`;
+    }
   }
 }
 

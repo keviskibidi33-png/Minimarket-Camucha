@@ -1,48 +1,118 @@
 <div class="flex-1 p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
-    <!-- Page Heading -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Page Builder</h1>
-      <button
-        (click)="openForm()"
-        class="px-4 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90">
-        <span class="material-symbols-outlined inline-block mr-2">add</span>
-        Nueva Página
-      </button>
+    <!-- Blog Heading -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Blog de Noticias</h1>
+          <p class="text-gray-600 dark:text-gray-400 mt-1">Gestiona las noticias y artículos de tu marca</p>
+        </div>
+        <button
+          (click)="openForm()"
+          class="px-4 py-2 rounded-lg bg-primary-admin text-white font-semibold hover:bg-primary-admin/90 flex items-center gap-2">
+          <span class="material-symbols-outlined">add</span>
+          Nueva Noticia
+        </button>
+      </div>
+      
+      <!-- Control Global: Mostrar Noticias en Navbar -->
+      <div class="bg-white dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                [checked]="enableNewsInNavbar()"
+                (change)="toggleEnableNewsInNavbar()"
+                class="w-5 h-5 text-primary-admin rounded border-gray-300 focus:ring-primary-admin">
+              <div>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white block">Mostrar Noticias en Navbar</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  Activa o desactiva la funcionalidad de mostrar noticias en el menú de navegación
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Pages List -->
+    <!-- Articles List -->
     @if (isLoading()) {
-      <div class="text-center py-12 text-gray-500">Cargando páginas...</div>
+      <div class="text-center py-12 text-gray-500">Cargando noticias...</div>
     } @else if (pages().length === 0) {
       <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-12 text-center">
-        <p class="text-gray-500 dark:text-gray-400">No hay páginas creadas</p>
+        <span class="material-symbols-outlined text-6xl text-gray-400 mb-4 block">article</span>
+        <p class="text-gray-500 dark:text-gray-400 text-lg mb-2">No hay noticias publicadas</p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm">Comienza creando tu primera noticia</p>
       </div>
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (page of pages(); track page.id) {
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <div class="flex items-start justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ page.titulo }}</h3>
-              @if (page.activa) {
-                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activa</span>
-              } @else {
-                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">Inactiva</span>
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-md transition-shadow">
+            <!-- Imagen destacada (si existe) -->
+            @if (getFeaturedImage(page)) {
+              <div class="w-full h-48 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                <img [src]="getFeaturedImage(page)" [alt]="page.titulo" class="w-full h-full object-cover">
+              </div>
+            } @else {
+              <div class="w-full h-48 bg-gradient-to-br from-primary-admin/20 to-primary-admin/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-6xl text-primary-admin/50">article</span>
+              </div>
+            }
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">{{ page.titulo }}</h3>
+                @if (page.activa) {
+                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full ml-2 flex-shrink-0">Publicada</span>
+                } @else {
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full ml-2 flex-shrink-0">Borrador</span>
+                }
+              </div>
+              @if (page.metaDescription) {
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{{ page.metaDescription }}</p>
               }
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Slug: <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{{ page.slug }}</code></p>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ page.sections.length }} secciones</p>
-            <div class="flex gap-2">
-              <button
-                (click)="openForm(page)"
-                class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100">
-                Editar
-              </button>
-              <button
-                (click)="deletePage(page)"
-                class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100">
-                Eliminar
-              </button>
+              <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-4">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">calendar_today</span>
+                  {{ formatDate(page.createdAt) }}
+                </span>
+                @if (page.sections && page.sections.length > 0) {
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    {{ getContentPreview(page) }}
+                  </span>
+                }
+              </div>
+
+              <!-- Opción rápida: Publicada -->
+              <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [checked]="page.activa"
+                    (change)="toggleActiva(page)"
+                    class="w-4 h-4 text-primary-admin rounded border-gray-300 focus:ring-primary-admin">
+                  <div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 block">Publicada</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">La noticia estará disponible</span>
+                  </div>
+                </label>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  (click)="openForm(page)"
+                  class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 text-sm">
+                  <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span>
+                  Editar
+                </button>
+                <button
+                  (click)="deletePage(page)"
+                  class="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 dark:bg-red-900 dark:text-red-100 text-sm">
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -55,15 +125,42 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
           <div class="p-6">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              {{ editingPage() ? 'Editar Página' : 'Nueva Página' }}
+              {{ editingPage() ? 'Editar Noticia' : 'Nueva Noticia' }}
             </h2>
+
+            <!-- Preview Section -->
+            @if (showPreview()) {
+              <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Vista Previa del Artículo</h3>
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-h-96 overflow-y-auto">
+                  @if (previewData().imagenDestacada) {
+                    <img [src]="previewData().imagenDestacada" [alt]="previewData().titulo" class="w-full h-48 object-cover rounded-lg mb-4">
+                  }
+                  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ previewData().titulo || 'Sin título' }}</h1>
+                  @if (previewData().fechaPublicacion) {
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      <span class="material-symbols-outlined text-sm align-middle mr-1">calendar_today</span>
+                      {{ formatDate(previewData().fechaPublicacion) }}
+                    </p>
+                  }
+                  @if (previewData().metaDescription) {
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ previewData().metaDescription }}</p>
+                  }
+                  @if (previewData().contenido) {
+                    <div class="prose dark:prose-invert max-w-none" [innerHTML]="getSafeHtml(previewData().contenido)"></div>
+                  } @else {
+                    <p class="text-gray-400 dark:text-gray-500 italic text-sm">Escribe contenido para ver la vista previa</p>
+                  }
+                </div>
+              </div>
+            }
 
             <form (ngSubmit)="savePage()">
               <!-- Título y Slug -->
               <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Título <span class="text-red-500">*</span>
+                    Título de la Noticia <span class="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -71,141 +168,185 @@
                     name="titulo"
                     (blur)="generateSlug()"
                     required
+                    placeholder="Ej: Nueva promoción de verano"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Slug <span class="text-red-500">*</span>
+                    URL (Slug) <span class="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     [(ngModel)]="slug"
                     name="slug"
                     required
+                    placeholder="nueva-promocion-verano"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                 </div>
               </div>
 
-              <!-- Tipo de Plantilla -->
+              <!-- Imagen Destacada y Fecha -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Imagen Destacada (URL)
+                  </label>
+                  <input
+                    type="url"
+                    [(ngModel)]="imagenDestacada"
+                    name="imagenDestacada"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  @if (imagenDestacada()) {
+                    <img [src]="imagenDestacada()" [alt]="titulo()" class="mt-2 w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700">
+                  }
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Fecha de Publicación
+                  </label>
+                  <input
+                    type="date"
+                    [(ngModel)]="fechaPublicacion"
+                    name="fechaPublicacion"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                </div>
+              </div>
+
+              <!-- Contenido Principal -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Plantilla</label>
-                <select
-                  [(ngModel)]="tipoPlantilla"
-                  name="tipoPlantilla"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                  <option [value]="0">Home</option>
-                  <option [value]="1">Producto Detalle</option>
-                  <option [value]="2">Genérica</option>
-                </select>
+                <div class="flex justify-between items-center mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Contenido de la Noticia <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                    <button
+                      type="button"
+                      (click)="setViewMode('edit')"
+                      [class.bg-white]="viewMode() === 'edit'"
+                      [class.dark:bg-gray-700]="viewMode() === 'edit'"
+                      [class.text-primary-admin]="viewMode() === 'edit'"
+                      class="px-3 py-1.5 rounded text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-colors">
+                      <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span>
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      (click)="setViewMode('split')"
+                      [class.bg-white]="viewMode() === 'split'"
+                      [class.dark:bg-gray-700]="viewMode() === 'split'"
+                      [class.text-primary-admin]="viewMode() === 'split'"
+                      class="px-3 py-1.5 rounded text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-colors">
+                      <span class="material-symbols-outlined text-sm align-middle mr-1">view_sidebar</span>
+                      Dividir
+                    </button>
+                    <button
+                      type="button"
+                      (click)="setViewMode('preview')"
+                      [class.bg-white]="viewMode() === 'preview'"
+                      [class.dark:bg-gray-700]="viewMode() === 'preview'"
+                      [class.text-primary-admin]="viewMode() === 'preview'"
+                      class="px-3 py-1.5 rounded text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-colors">
+                      <span class="material-symbols-outlined text-sm align-middle mr-1">preview</span>
+                      Preview
+                    </button>
+                  </div>
+                </div>
+                
+                @if (viewMode() === 'split') {
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <quill-editor
+                        [modules]="quillModules"
+                        [(ngModel)]="contenido"
+                        name="contenido"
+                        [placeholder]="'Escribe el contenido de tu noticia aquí...'"
+                        class="quill-editor-custom">
+                      </quill-editor>
+                    </div>
+                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 max-h-[400px] overflow-y-auto">
+                      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Vista Previa</h3>
+                      @if (imagenDestacada()) {
+                        <img [src]="imagenDestacada()" [alt]="titulo()" class="w-full h-48 object-cover rounded-lg mb-4">
+                      }
+                      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ titulo() || 'Título de la noticia' }}</h2>
+                      @if (contenido()) {
+                        <div class="prose dark:prose-invert max-w-none text-sm" [innerHTML]="getSafeHtml(contenido())"></div>
+                      } @else {
+                        <p class="text-gray-400 dark:text-gray-500 italic text-sm">Escribe contenido para ver la vista previa</p>
+                      }
+                    </div>
+                  </div>
+                } @else if (viewMode() === 'edit') {
+                  <quill-editor
+                    [modules]="quillModules"
+                    [(ngModel)]="contenido"
+                    name="contenido"
+                    [placeholder]="'Escribe el contenido de tu noticia aquí...'"
+                    class="quill-editor-custom">
+                  </quill-editor>
+                } @else {
+                  <div class="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    @if (imagenDestacada()) {
+                      <img [src]="imagenDestacada()" [alt]="titulo()" class="w-full h-64 object-cover rounded-lg mb-4">
+                    }
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{{ titulo() || 'Título de la noticia' }}</h2>
+                    @if (fechaPublicacion()) {
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <span class="material-symbols-outlined text-sm align-middle mr-1">calendar_today</span>
+                        {{ formatDate(fechaPublicacion()) }}
+                      </p>
+                    }
+                    @if (contenido()) {
+                      <div class="prose dark:prose-invert max-w-none" [innerHTML]="getSafeHtml(contenido())"></div>
+                    } @else {
+                      <p class="text-gray-400 dark:text-gray-500 italic">Escribe contenido para ver la vista previa</p>
+                    }
+                  </div>
+                }
               </div>
 
               <!-- SEO -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meta Description</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Descripción (Meta Description)
+                </label>
                 <textarea
                   [(ngModel)]="metaDescription"
                   name="metaDescription"
                   rows="2"
+                  placeholder="Breve descripción para motores de búsqueda..."
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
               </div>
 
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Keywords</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Palabras Clave (Keywords)
+                </label>
                 <input
                   type="text"
                   [(ngModel)]="keywords"
                   name="keywords"
-                  placeholder="palabra1, palabra2, palabra3"
+                  placeholder="promoción, verano, descuento, oferta"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
               </div>
 
-              <!-- Secciones -->
+              <!-- Orden -->
               <div class="mb-6">
-                <div class="flex justify-between items-center mb-4">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Secciones</label>
-                  <button
-                    type="button"
-                    (click)="addSection()"
-                    class="px-3 py-1 rounded-lg bg-primary-admin text-white text-sm font-semibold hover:bg-primary-admin/90">
-                    Agregar Sección
-                  </button>
-                </div>
-
-                <div class="space-y-4">
-                  @for (section of sections(); track $index) {
-                    <div class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
-                      <div class="flex items-center justify-between mb-3">
-                        <select
-                          [(ngModel)]="section.seccionTipo"
-                          name="seccionTipo{{$index}}"
-                          class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                          @for (tipo of seccionTipos; track tipo.value) {
-                            <option [value]="tipo.value">{{ tipo.label }}</option>
-                          }
-                        </select>
-                        <div class="flex gap-2 ml-2">
-                          <button
-                            type="button"
-                            (click)="moveSection($index, 'up')"
-                            [disabled]="$index === 0"
-                            class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50">
-                            ↑
-                          </button>
-                          <button
-                            type="button"
-                            (click)="moveSection($index, 'down')"
-                            [disabled]="$index === sections().length - 1"
-                            class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50">
-                            ↓
-                          </button>
-                          <button
-                            type="button"
-                            (click)="removeSection($index)"
-                            class="px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100">
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
-                      <!-- Configuración básica de datos según tipo de sección -->
-                      <div class="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Título (opcional)"
-                          [value]="section.datos['titulo'] || ''"
-                          (input)="updateSectionData($index, 'titulo', $any($event.target).value)"
-                          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                        <textarea
-                          placeholder="Contenido (opcional)"
-                          [value]="section.datos['contenido'] || ''"
-                          (input)="updateSectionData($index, 'contenido', $any($event.target).value)"
-                          rows="3"
-                          class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
-                      </div>
-                    </div>
-                  }
-                </div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
+                <input
+                  type="number"
+                  [(ngModel)]="orden"
+                  name="orden"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">El orden determina la posición de la noticia en las listas</p>
               </div>
 
-              <!-- Orden y Estado -->
-              <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="orden"
-                    name="orden"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-                <div>
-                  <label class="flex items-center gap-2 mt-6">
-                    <input
-                      type="checkbox"
-                      [(ngModel)]="activa"
-                      name="activa"
-                      class="w-4 h-4 text-primary-admin">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Activa</span>
-                  </label>
-                </div>
+              <!-- Nota sobre opciones rápidas -->
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Nota:</strong> Puedes cambiar el estado "Publicada" y "Mostrar en Navbar" directamente desde la lista de noticias usando los checkboxes en cada card.
+                </p>
               </div>
 
               <!-- Actions -->

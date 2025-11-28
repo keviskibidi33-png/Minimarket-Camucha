@@ -10,6 +10,7 @@ public class PageDto
     public string? Keywords { get; set; }
     public int Orden { get; set; }
     public bool Activa { get; set; }
+    public bool MostrarEnNavbar { get; set; }
     public List<PageSectionDto> Sections { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

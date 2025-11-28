@@ -16,6 +16,7 @@ public class Page : BaseEntity
     public string? Keywords { get; set; }
     public int Orden { get; set; } = 0;
     public bool Activa { get; set; } = true;
+    public bool MostrarEnNavbar { get; set; } = false; // Controla si aparece en el navbar (independiente de Activa)
 
     // Navigation properties
     public virtual ICollection<PageSection> Sections { get; set; } = new List<PageSection>();

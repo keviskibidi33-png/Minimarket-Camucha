@@ -8,15 +8,17 @@ import { CategoriesService, CategoryDto } from '../../core/services/categories.s
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
+import { DocumentSettingsService, DocumentViewSettings } from '../../core/services/document-settings.service';
 import { SendReceiptDialogComponent } from '../../shared/components/send-receipt-dialog/send-receipt-dialog.component';
 import { ConcentrationModeService } from '../../core/services/concentration-mode.service';
 import { QRPaymentModalComponent, QRPaymentData } from '../../shared/components/qr-payment-modal/qr-payment-modal.component';
 import { BrandSettingsService, BrandSettings } from '../../core/services/brand-settings.service';
+import { DocumentTypeDialogComponent } from '../../shared/components/document-type-dialog/document-type-dialog.component';
 
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SendReceiptDialogComponent, QRPaymentModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SendReceiptDialogComponent, QRPaymentModalComponent, DocumentTypeDialogComponent],
   templateUrl: './pos.component.html',
   styleUrl: './pos.component.css'
 })
@@ -50,8 +52,12 @@ export class PosComponent implements OnInit {
   showSendReceiptDialog = signal(false);
   showQRPaymentModal = signal(false);
   showCreateCustomerModal = signal(false);
+  showDocumentTypeDialog = signal(false);
   lastSale = signal<Sale | null>(null);
   activeService = signal<'ventas' | 'consultas' | 'reportes'>('ventas');
+  receiptEmailSent = signal(false); // Indica si el email se envió automáticamente
+  lastCustomerEmail = signal<string | null>(null); // Guarda el email del cliente antes de limpiar
+  documentViewSettings = signal<DocumentViewSettings | null>(null); // Configuración de visualización de documentos
   
   // Brand Settings
   brandSettings = signal<BrandSettings | null>(null);
@@ -178,6 +184,7 @@ export class PosComponent implements OnInit {
     private router: Router,
     public concentrationModeService: ConcentrationModeService,
     private brandSettingsService: BrandSettingsService,
+    private documentSettingsService: DocumentSettingsService,
     private fb: FormBuilder
   ) {
     this.createCustomerForm = this.fb.group({
@@ -185,7 +192,7 @@ export class PosComponent implements OnInit {
       documentNumber: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
       name: ['', [Validators.required, Validators.maxLength(200)]],
       email: ['', [Validators.email, Validators.maxLength(100)]],
-      phone: ['+51 ', [Validators.maxLength(20)]],
+      phone: ['+51 ', [Validators.maxLength(20), Validators.pattern(/^(\+51)?\s*9\d{8}$/)]],
       address: ['', [Validators.maxLength(500)]]
     });
 
@@ -215,6 +222,7 @@ export class PosComponent implements OnInit {
     this.loadCustomers();
     this.loadCategories();
     this.loadBrandSettings();
+    this.loadDocumentViewSettings();
 
     // Cargar datos si el servicio activo es consultas o reportes
     if (this.activeService() === 'consultas') {
@@ -226,21 +234,28 @@ export class PosComponent implements OnInit {
     // Observar cambios en total para actualizar amountPaid automáticamente
     // Se ejecuta después del siguiente renderizado para asegurar que todo esté inicializado
     afterNextRender(() => {
-      // Observar cambios en total para actualizar amountPaid automáticamente
+      // Observar cambios en total y cartItems para actualizar amountPaid automáticamente
       // Para métodos que no son efectivo, siempre debe ser igual al total
       this.paymentEffectCleanup = effect(() => {
+        // Observar cartItems para que el effect se dispare cuando cambie
+        const items = this.cartItems();
         const total = this.total();
         const method = this.paymentMethod();
         
         if (method !== 'Efectivo') {
+          // Para métodos que no son efectivo, siempre igual al total
           this.amountPaid.set(total);
-        } else if (this.amountPaid() < total) {
-          this.amountPaid.set(total);
+        } else {
+          // Para efectivo, actualizar solo si el monto pagado es menor al total
+          // Esto permite que el usuario ingrese un monto mayor manualmente
+          if (this.amountPaid() < total) {
+            this.amountPaid.set(total);
+          }
         }
       }, { allowSignalWrites: true });
     });
 
-    // Limpiar los effects cuando el componente se destruya
+    // Limpiar los effects cuando el componente se destruya (fuera del callback de afterNextRender)
     this.destroyRef.onDestroy(() => {
       this.paymentEffectCleanup?.destroy();
     });
@@ -851,10 +866,33 @@ export class PosComponent implements OnInit {
     });
 
     this.cartItems.set(updatedItems);
+
+    // Actualizar amountPaid automáticamente cuando cambia la cantidad
+    // Para métodos que no son efectivo, siempre debe ser igual al total
+    if (this.paymentMethod() !== 'Efectivo') {
+      this.amountPaid.set(this.total());
+    } else if (this.amountPaid() < this.total()) {
+      // Para efectivo, solo actualizar si el monto pagado es menor al nuevo total
+      this.amountPaid.set(this.total());
+    }
   }
 
   removeFromCart(productId: string): void {
     this.cartItems.set(this.cartItems().filter(item => item.productId !== productId));
+    
+    // Actualizar amountPaid automáticamente cuando se elimina un producto
+    if (this.paymentMethod() !== 'Efectivo') {
+      this.amountPaid.set(this.total());
+    } else if (this.amountPaid() < this.total()) {
+      this.amountPaid.set(this.total());
+    }
+  }
+
+  setQuickAmount(amount: number): void {
+    // Solo permitir establecer montos rápidos si el método de pago es Efectivo
+    if (this.paymentMethod() === 'Efectivo') {
+      this.amountPaid.set(amount);
+    }
   }
 
   clearCart(): void {
@@ -1020,12 +1058,42 @@ export class PosComponent implements OnInit {
       return;
     }
 
-    if (this.documentType() === 'Factura' && !this.selectedCustomer()) {
-      this.toastService.warning('Las facturas requieren un cliente');
+    // Mostrar diálogo para seleccionar tipo de comprobante
+    this.showDocumentTypeDialog.set(true);
+  }
+
+  onDocumentTypeSelected(type: 'Boleta' | 'Factura'): void {
+    this.documentType.set(type);
+    this.showDocumentTypeDialog.set(false);
+    
+    // Validar que si es Factura, el cliente tenga RUC válido
+    if (type === 'Factura') {
+      const customer = this.selectedCustomer();
+      if (!customer) {
+        this.toastService.warning('Las facturas requieren un cliente con RUC válido');
       this.showCustomerSearch.set(true);
+        this.documentType.set('Boleta'); // Revertir a Boleta
       return;
     }
 
+      // Validar que el cliente tenga RUC (11 dígitos)
+      if (customer.documentType !== 'RUC' || customer.documentNumber.length !== 11) {
+        this.toastService.error('Las facturas requieren un cliente con RUC válido (11 dígitos)');
+        this.showCustomerSearch.set(true);
+        this.documentType.set('Boleta'); // Revertir a Boleta
+        return;
+      }
+    }
+
+    // Continuar con el proceso de venta
+    this.continueSaleProcess();
+  }
+
+  onDocumentTypeCancelled(): void {
+    this.showDocumentTypeDialog.set(false);
+  }
+
+  continueSaleProcess(): void {
     if (this.amountPaid() < this.total()) {
       this.toastService.warning('El monto pagado es menor al total');
       return;
@@ -1034,6 +1102,12 @@ export class PosComponent implements OnInit {
     // Si es YapePlin y el modal no está abierto, mostrar modal primero
     if (this.paymentMethod() === 'YapePlin' && !this.showQRPaymentModal()) {
       this.showQRPaymentModalForYapePlin();
+      return;
+    }
+
+    // Validar límite de items (500 máximo para prevenir problemas de memoria en PDF)
+    if (this.cartItems().length > 500) {
+      this.toastService.error('El carrito no puede tener más de 500 productos. Por favor, divida la venta en múltiples transacciones.');
       return;
     }
 
@@ -1069,17 +1143,63 @@ export class PosComponent implements OnInit {
         this.toastService.success(`Venta ${sale.documentNumber} creada exitosamente`);
         // Cerrar modal QR si estaba abierto
         this.showQRPaymentModal.set(false);
+        
+        // IMPORTANTE: Guardar el email del cliente ANTES de limpiar el carrito
+        const customerEmail = this.selectedCustomer()?.email;
+        const hasCustomerEmail = customerEmail && customerEmail.trim() !== '';
+        
+        // Guardar el email para mostrarlo en el modal de confirmación
+        this.lastCustomerEmail.set(hasCustomerEmail ? customerEmail : null);
+        
         // Recargar productos para actualizar stock
         this.loadProducts();
         this.clearCart();
         this.isLoading.set(false);
-        // Mostrar opciones para enviar comprobante
-        this.showSendReceiptDialog.set(true);
+        
+        // Verificar si el cliente tiene email para determinar qué mostrar
+        if (hasCustomerEmail) {
+          // Cliente tiene email: se enviará automáticamente
+          this.receiptEmailSent.set(true);
+          this.toastService.success(`El comprobante se enviará automáticamente a ${customerEmail}`);
+        } else {
+          // Cliente no tiene email: mostrar modal para ingresar correo alternativo
+          this.receiptEmailSent.set(false);
+          this.showSendReceiptDialog.set(true);
+        }
       },
       error: (error) => {
         console.error('Error creating sale:', error);
-        this.toastService.error(error.error?.errors?.[0] || 'Error al procesar la venta');
+        
+        // Manejo robusto de errores con mensajes específicos
+        let errorMessage = 'Error al procesar la venta';
+        
+        // Errores de timeout o memoria (ventas grandes)
+        if (error.status === 0 || error.status === 504) {
+          errorMessage = 'La operación está tomando demasiado tiempo. Por favor, intente con menos productos o contacte al administrador.';
+        } else if (error.status === 413 || error.message?.includes('memory') || error.message?.includes('out of memory')) {
+          errorMessage = 'La venta es demasiado grande. Por favor, divida la venta en múltiples transacciones (máximo 500 productos por venta).';
+        } else if (error.error?.errors && Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+          errorMessage = error.error.errors.join('. ');
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.errors && typeof error.error.errors === 'object') {
+          // Si errors es un objeto con campos
+          const errorMessages = Object.values(error.error.errors).flat();
+          if (errorMessages.length > 0) {
+            errorMessage = errorMessages.join('. ');
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.toastService.error(errorMessage);
         this.isLoading.set(false);
+        
+        // Si el error es crítico, no limpiar el carrito para que el usuario pueda reintentar
+        if (error.status !== 400 && error.status !== 422) {
+          // Errores de servidor: mantener el carrito
+          console.warn('Error de servidor. El carrito se mantiene para permitir reintento.');
+        }
       }
     });
   }
@@ -1090,7 +1210,8 @@ export class PosComponent implements OnInit {
 
     this.salesService.sendReceipt(sale.id, event.email, sale.documentType).subscribe({
       next: () => {
-        this.toastService.success('Comprobante enviado exitosamente');
+        this.toastService.success(`Comprobante enviado exitosamente a ${event.email}`);
+        this.showSendReceiptDialog.set(false);
       },
       error: (error) => {
         console.error('Error sending receipt:', error);
@@ -1103,8 +1224,51 @@ export class PosComponent implements OnInit {
     const sale = this.lastSale();
     if (!sale) return;
 
-    const url = this.salesService.getPdfUrl(sale.id, sale.documentType);
-    window.open(url, '_blank');
+    this.viewDocument(sale.id, sale.documentType);
+  }
+
+  loadDocumentViewSettings(): void {
+    this.documentSettingsService.getViewSettings().subscribe({
+      next: (settings) => {
+        this.documentViewSettings.set(settings);
+      },
+      error: (error) => {
+        console.error('Error loading document view settings:', error);
+        // Usar valores por defecto si hay error (incluyendo 404)
+        this.documentViewSettings.set({
+          defaultViewMode: 'preview',
+          directPrint: false,
+          boletaTemplateActive: true,
+          facturaTemplateActive: true
+        });
+      }
+    });
+  }
+
+  viewDocument(saleId: string, documentType: 'Boleta' | 'Factura'): void {
+    const settings = this.documentViewSettings();
+    
+    // Validar que la plantilla esté activa
+    if (documentType === 'Boleta' && settings && !settings.boletaTemplateActive) {
+      this.toastService.error('La plantilla de Boleta no está disponible');
+      return;
+    }
+    
+    if (documentType === 'Factura' && settings && !settings.facturaTemplateActive) {
+      this.toastService.error('La plantilla de Factura no está disponible');
+      return;
+    }
+
+    const url = this.salesService.getPdfUrl(saleId, documentType);
+    
+    // Lógica condicional: Si está configurado para vista directa o impresión directa, abrir PDF directamente
+    if (settings && (settings.defaultViewMode === 'direct' || settings.directPrint)) {
+      // Abrir PDF directamente sin vista previa
+      window.open(url, '_blank');
+    } else {
+      // Mantener comportamiento actual: abrir en nueva pestaña (puede mostrar vista previa del navegador)
+      window.open(url, '_blank');
+    }
   }
 
   getProductImageUrl(product: Product): string {
@@ -1113,14 +1277,19 @@ export class PosComponent implements OnInit {
 
   getFilteredCustomers(): Customer[] {
     const term = this.customerSearchTerm().toLowerCase().trim();
-    if (!term) return this.customers().filter(c => c.isActive).slice(0, 5);
+    if (!term) return this.customers().filter(c => c.isActive).slice(0, 10);
+    
+    // Limpiar el término de búsqueda (remover espacios y caracteres especiales para búsqueda de documento)
+    const cleanTerm = term.replace(/\s+/g, '');
+    
     return this.customers()
       .filter(c => c.isActive && (
         c.name.toLowerCase().includes(term) ||
+        c.documentNumber.replace(/\s+/g, '').includes(cleanTerm) ||
         c.documentNumber.includes(term) ||
         (c.documentType && c.documentType.toLowerCase().includes(term))
       ))
-      .slice(0, 5);
+      .slice(0, 10);
   }
 
   // Shortcuts de teclado

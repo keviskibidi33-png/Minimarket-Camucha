@@ -14,13 +14,14 @@ export default defineConfig({
   
   use: {
     baseURL: 'http://localhost:4200',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
     actionTimeout: 15000,
     navigationTimeout: 30000,
   },
   
-  timeout: 60000, // Timeout global de 60 segundos por test
+  timeout: 120000, // Timeout global de 120 segundos por test (aumentado para pruebas de estrés)
 
   projects: [
     {

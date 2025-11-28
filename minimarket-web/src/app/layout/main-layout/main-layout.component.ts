@@ -34,26 +34,23 @@ export class MainLayoutComponent implements OnInit {
     // Sincronizar el sidebar con el modo de concentración
     // Usar afterNextRender para asegurar contexto de inyección válido
     afterNextRender(() => {
-      // Usar setTimeout para asegurar que el componente esté completamente inicializado
-      setTimeout(() => {
-        this.concentrationEffectCleanup = effect(() => {
-          if (this.concentrationModeService.isConcentrationMode()) {
-            this.sidebarOpen = false;
-          } else {
-            // Al salir del modo concentración, restaurar el estado anterior del sidebar
-            // (mantenerlo cerrado si estaba cerrado antes, o abrirlo si estaba abierto)
-            // Por defecto, lo dejamos abierto al salir del modo concentración
-            if (!this.sidebarOpen) {
-              this.sidebarOpen = true;
-            }
+      this.concentrationEffectCleanup = effect(() => {
+        if (this.concentrationModeService.isConcentrationMode()) {
+          this.sidebarOpen = false;
+        } else {
+          // Al salir del modo concentración, restaurar el estado anterior del sidebar
+          // (mantenerlo cerrado si estaba cerrado antes, o abrirlo si estaba abierto)
+          // Por defecto, lo dejamos abierto al salir del modo concentración
+          if (!this.sidebarOpen) {
+            this.sidebarOpen = true;
           }
-        });
+        }
+      });
 
-        // Limpiar el effect cuando el componente se destruya
-        this.destroyRef.onDestroy(() => {
-          this.concentrationEffectCleanup?.destroy();
-        });
-      }, 0);
+      // Limpiar el effect cuando el componente se destruya
+      this.destroyRef.onDestroy(() => {
+        this.concentrationEffectCleanup?.destroy();
+      });
     });
   }
 

@@ -33,7 +33,8 @@ public class CreatePageCommandHandler : IRequestHandler<CreatePageCommand, Resul
             MetaDescription = request.Page.MetaDescription,
             Keywords = request.Page.Keywords,
             Orden = request.Page.Orden,
-            Activa = request.Page.Activa
+            Activa = request.Page.Activa,
+            MostrarEnNavbar = request.Page.MostrarEnNavbar
         };
 
         await _unitOfWork.Pages.AddAsync(page, cancellationToken);
@@ -80,6 +81,7 @@ public class CreatePageCommandHandler : IRequestHandler<CreatePageCommand, Resul
             Keywords = page.Keywords,
             Orden = page.Orden,
             Activa = page.Activa,
+            MostrarEnNavbar = page.MostrarEnNavbar,
             Sections = sections,
             CreatedAt = page.CreatedAt,
             UpdatedAt = page.UpdatedAt

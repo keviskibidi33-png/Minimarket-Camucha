@@ -23,7 +23,23 @@ public class DeletePageCommandHandler : IRequestHandler<DeletePageCommand, Resul
             throw new NotFoundException("Page", request.Id);
         }
 
-        // Las secciones se eliminan automáticamente por cascade delete
+        // Validar que siempre haya al menos una noticia activa
+        var allPages = await _unitOfWork.Pages.GetAllAsync(cancellationToken);
+        var activePages = allPages.Where(p => p.Activa && p.Id != request.Id).ToList();
+        
+        if (page.Activa && activePages.Count == 0)
+        {
+            throw new BusinessRuleViolationException("No se puede eliminar la última noticia activa. Debe haber al menos una noticia activa en el sistema.");
+        }
+
+        // Eliminar todas las secciones asociadas manualmente
+        var sections = await _unitOfWork.PageSections.FindAsync(ps => ps.PageId == request.Id, cancellationToken);
+        foreach (var section in sections)
+        {
+            await _unitOfWork.PageSections.DeleteAsync(section, cancellationToken);
+        }
+
+        // Eliminar la página
         await _unitOfWork.Pages.DeleteAsync(page, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

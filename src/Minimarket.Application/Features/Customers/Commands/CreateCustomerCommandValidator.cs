@@ -8,7 +8,8 @@ namespace Minimarket.Application.Features.Customers.Commands;
 public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private static readonly Regex PeruvianPhoneRegex = new(@"^9\d{8}$", RegexOptions.Compiled);
+    // Acepta formato peruano: +51 seguido de 9 dígitos (empezando con 9) o solo 9 dígitos
+    private static readonly Regex PeruvianPhoneRegex = new(@"^(\+51)?\s*9\d{8}$", RegexOptions.Compiled);
 
     public CreateCustomerCommandValidator(IUnitOfWork unitOfWork)
     {
@@ -42,7 +43,7 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
         RuleFor(x => x.Customer.Phone)
             .MaximumLength(20).WithMessage("El teléfono no puede exceder 20 caracteres")
             .Must(phone => string.IsNullOrWhiteSpace(phone) || ValidatePeruvianPhone(phone))
-            .WithMessage("El teléfono debe tener 9 dígitos y empezar con 9 (formato peruano)");
+            .WithMessage("El teléfono debe tener 9 dígitos empezando con 9. Puede incluir el prefijo +51 (formato: +51 9XXXXXXXX o 9XXXXXXXX)");
 
         RuleFor(x => x.Customer.Address)
             .MaximumLength(500).WithMessage("La dirección no puede exceder 500 caracteres");
@@ -53,9 +54,11 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
         if (string.IsNullOrWhiteSpace(phone))
             return true;
 
-        // Eliminar espacios, guiones y otros caracteres para validar solo dígitos
+        // Normalizar: eliminar espacios, guiones y paréntesis, pero mantener +51 si existe
         var cleanedPhone = Regex.Replace(phone, @"[\s\-\(\)]", "");
         
+        // Aceptar formato con +51 o sin él
+        // Formato esperado: +519XXXXXXXX o 9XXXXXXXX (9 dígitos empezando con 9)
         return PeruvianPhoneRegex.IsMatch(cleanedPhone);
     }
 

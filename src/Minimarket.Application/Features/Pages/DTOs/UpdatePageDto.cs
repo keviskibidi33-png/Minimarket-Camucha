@@ -9,6 +9,7 @@ public class UpdatePageDto
     public string? Keywords { get; set; }
     public int Orden { get; set; }
     public bool Activa { get; set; }
+    public bool MostrarEnNavbar { get; set; }
     public List<UpdatePageSectionDto> Sections { get; set; } = new();
 }
 

@@ -12,5 +12,6 @@ public class UpdateOfertaDto
     public DateTime FechaFin { get; set; }
     public bool Activa { get; set; }
     public int Orden { get; set; }
+    public string? ImagenUrl { get; set; }
 }
 

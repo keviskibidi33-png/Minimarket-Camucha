@@ -80,7 +80,7 @@
   @if (activeService() === 'ventas') {
     <main class="flex-1 grid grid-cols-12 gap-3 p-3 overflow-hidden min-h-0">
     <!-- Left Column: Product Search and Results -->
-    <div class="col-span-12 lg:col-span-7 flex flex-col gap-2 min-h-0 overflow-hidden">
+    <div class="col-span-12 lg:col-span-7 flex flex-col gap-2 min-h-0 overflow-hidden relative z-10">
       <!-- SearchBar -->
       <div class="flex-shrink-0">
         <label class="flex flex-col min-w-40 h-10 w-full">
@@ -184,18 +184,18 @@
     </div>
 
     <!-- Right Column: Sales Cart and Actions -->
-    <div class="col-span-12 lg:col-span-5 flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm min-h-0 overflow-hidden">
+    <div class="col-span-12 lg:col-span-5 flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm min-h-0 overflow-hidden relative z-0">
       <!-- PageHeading -->
-      <div class="flex flex-wrap justify-between gap-2 p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <div class="flex flex-wrap justify-between gap-2 p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 relative z-0">
         <p class="text-gray-900 dark:text-white text-lg font-bold tracking-tight">
           {{ documentType() === 'Boleta' ? 'Boleta' : 'Factura' }} de Venta
         </p>
-        <div class="flex gap-2">
+        <div class="flex gap-2 relative z-0">
           <select
             [value]="documentType()"
             (change)="documentType.set($any($event.target).value); onDocumentTypeChange()"
             data-cy="document-type"
-            class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin">
+            class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin relative z-0">
             <option value="Boleta">Boleta</option>
             <option value="Factura">Factura</option>
           </select>
@@ -219,7 +219,7 @@
             </div>
           } @else {
             <div class="space-y-2">
-              <div class="relative">
+              <div class="relative z-50">
                 <input
                   type="text"
                   [value]="customerSearchTerm()"
@@ -230,23 +230,42 @@
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-admin"
                   placeholder="Buscar cliente por nombre o documento...">
                 @if (showCustomerSearch()) {
-                  <div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto">
+                  <div class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto">
                     @if (getFilteredCustomers().length > 0) {
                       @for (customer of getFilteredCustomers(); track customer.id) {
                         <button
                           (click)="selectCustomer(customer)"
                           [attr.data-cy]="'customer-option-' + customer.id"
-                          class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                          class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border-b border-gray-100 dark:border-gray-700">
                           <p class="font-medium text-gray-900 dark:text-white">{{ customer.name }}</p>
                           <p class="text-xs text-gray-500 dark:text-gray-400">{{ customer.documentType }}: {{ customer.documentNumber }}</p>
                         </button>
                       }
+                      <!-- Botón de crear siempre visible cuando hay resultados -->
+                      <div class="border-t border-gray-200 dark:border-gray-700 p-2">
+                        <button
+                          (click)="openCreateCustomerModal()"
+                          class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary-admin text-white text-xs font-medium hover:bg-primary-admin/90 transition-colors">
+                          <span class="material-symbols-outlined text-sm">person_add</span>
+                          <span>Crear Nuevo Cliente</span>
+                        </button>
+                      </div>
                     } @else {
-                      <p class="px-4 py-2 text-sm text-gray-500 text-center">No se encontraron clientes</p>
+                      <!-- Cuando no hay resultados, mostrar mensaje y botón de crear -->
+                      <div class="p-4 text-center">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">No se encontraron clientes</p>
+                        <button
+                          (click)="openCreateCustomerModal()"
+                          class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white text-sm font-medium hover:bg-primary-admin/90 transition-colors">
+                          <span class="material-symbols-outlined text-base">person_add</span>
+                          <span>Crear Nuevo Cliente</span>
+                        </button>
+                      </div>
                     }
                   </div>
                 }
               </div>
+              <!-- Botón de crear también visible fuera del dropdown para acceso rápido -->
               <button
                 (click)="openCreateCustomerModal()"
                 class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white text-sm font-medium hover:bg-primary-admin/90 transition-colors">
@@ -371,6 +390,43 @@
               <span class="text-gray-500 dark:text-gray-400 text-[10px] block mt-0.5">Para otros métodos, el monto debe ser igual al total</span>
             }
           </label>
+          
+          <!-- Botones de acceso rápido (solo para Efectivo) -->
+          @if (paymentMethod() === 'Efectivo') {
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button
+                type="button"
+                (click)="setQuickAmount(10)"
+                class="px-2 py-1 text-[10px] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                S/ 10
+              </button>
+              <button
+                type="button"
+                (click)="setQuickAmount(20)"
+                class="px-2 py-1 text-[10px] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                S/ 20
+              </button>
+              <button
+                type="button"
+                (click)="setQuickAmount(50)"
+                class="px-2 py-1 text-[10px] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                S/ 50
+              </button>
+              <button
+                type="button"
+                (click)="setQuickAmount(100)"
+                class="px-2 py-1 text-[10px] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                S/ 100
+              </button>
+              <button
+                type="button"
+                (click)="setQuickAmount(200)"
+                class="px-2 py-1 text-[10px] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                S/ 200
+              </button>
+            </div>
+          }
+          
           <input
             type="number"
             step="0.01"
@@ -415,7 +471,16 @@
     </div>
     </main>
 
-    <!-- Send Receipt Dialog (solo para ventas) -->
+    <!-- Diálogo de selección de tipo de comprobante -->
+    @if (showDocumentTypeDialog()) {
+      <app-document-type-dialog
+        [selectedCustomer]="selectedCustomer()"
+        (documentTypeSelected)="onDocumentTypeSelected($event)"
+        (cancelled)="onDocumentTypeCancelled()">
+      </app-document-type-dialog>
+    }
+
+    <!-- Send Receipt Dialog (solo para ventas cuando el cliente NO tiene email) -->
     <app-send-receipt-dialog
       [isOpen]="showSendReceiptDialog()"
       [saleNumber]="lastSale()?.documentNumber || ''"
@@ -424,6 +489,41 @@
       (onClose)="showSendReceiptDialog.set(false)"
       (onSend)="onSendReceipt($event)">
     </app-send-receipt-dialog>
+
+    <!-- Confirmación de envío automático (cuando el cliente tiene email) -->
+    @if (lastSale() && receiptEmailSent()) {
+      <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="receiptEmailSent.set(false)">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full" (click)="$event.stopPropagation()">
+          <div class="p-6">
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/20">
+              <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-4xl">check_circle</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+              Comprobante Enviado
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4 text-center">
+              El {{ lastSale()?.documentType === 'Factura' ? 'comprobante' : 'comprobante' }} <strong>{{ lastSale()?.documentNumber }}</strong> se enviará automáticamente a:
+            </p>
+            @if (lastCustomerEmail()) {
+              <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">email</span>
+                  <span class="text-blue-900 dark:text-blue-100 font-semibold">{{ lastCustomerEmail() }}</span>
+                </div>
+              </div>
+            }
+            <div class="flex justify-end">
+              <button
+                type="button"
+                (click)="receiptEmailSent.set(false)"
+                class="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- QR Payment Modal -->
     @if (showQRPaymentModal()) {
@@ -570,7 +670,7 @@
     }
 
     <!-- Success Actions (after sale) -->
-    @if (lastSale() && !showSendReceiptDialog()) {
+    @if (lastSale() && !showSendReceiptDialog() && !receiptEmailSent()) {
       <div class="fixed bottom-4 right-4 flex gap-2">
         <button
           (click)="downloadReceipt()"
@@ -771,6 +871,7 @@
                       <th class="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Total</th>
                       <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Método Pago</th>
                       <th class="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Estado</th>
+                      <th class="px-4 py-2 text-center text-gray-700 dark:text-gray-300">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -785,6 +886,14 @@
                           <span [class.text-green-600]="sale.status === 'Pagado'" [class.text-yellow-600]="sale.status === 'Pendiente'" [class.text-red-600]="sale.status === 'Anulado'">
                             {{ sale.status }}
                           </span>
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                          <button
+                            (click)="viewDocument(sale.id, sale.documentType)"
+                            class="px-3 py-1 rounded-lg bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 flex items-center gap-1 mx-auto">
+                            <span class="material-symbols-outlined text-sm">visibility</span>
+                            Ver
+                          </button>
                         </td>
                       </tr>
                     }

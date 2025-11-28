@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, NgZone, effect, afterNextRender } from '@angular/core';
+import { Component, OnInit, signal, computed, NgZone, effect, afterNextRender, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -80,6 +80,9 @@ export class ShippingComponent implements OnInit {
   });
   total = computed(() => this.subtotal() + this.shippingCost());
 
+  private destroyRef = inject(DestroyRef);
+  private shippingEffectCleanup?: ReturnType<typeof effect>;
+
   constructor(
     private cartService: CartService,
     private shippingService: ShippingService,
@@ -160,7 +163,7 @@ export class ShippingComponent implements OnInit {
     // Efecto para recalcular precio estimado cuando cambia el subtotal
     // Solo si no hay dirección y el método es delivery
     afterNextRender(() => {
-      effect(() => {
+      this.shippingEffectCleanup = effect(() => {
         const subtotalValue = this.subtotal();
         const method = this.shippingMethod();
         const hasAddress = this.address();
@@ -173,6 +176,11 @@ export class ShippingComponent implements OnInit {
             this.fixedShippingPrice() > 0 && this.freeShippingThreshold() > 0) {
           this.calculateEstimatedShipping();
         }
+      });
+
+      // Limpiar el effect cuando el componente se destruya
+      this.destroyRef.onDestroy(() => {
+        this.shippingEffectCleanup?.destroy();
       });
     });
   }

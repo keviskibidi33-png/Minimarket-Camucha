@@ -46,7 +46,8 @@ public class GetAllSedesQueryHandler : IRequestHandler<GetAllSedesQuery, Result<
             LogoUrl = sede.LogoUrl,
             Estado = sede.Estado,
             IsOpen = sede.IsOpen(DateTime.Now),
-            NextOpenTime = sede.GetNextOpenTime()
+            NextOpenTime = sede.GetNextOpenTime(),
+            GoogleMapsUrl = sede.GoogleMapsUrl
         };
     }
 }

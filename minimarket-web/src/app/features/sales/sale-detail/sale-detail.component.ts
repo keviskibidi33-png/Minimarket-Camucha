@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SalesService, Sale } from '../../../core/services/sales.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { SendReceiptDialogComponent } from '../../../shared/components/send-receipt-dialog/send-receipt-dialog.component';
+import { DocumentSettingsService, DocumentViewSettings } from '../../../core/services/document-settings.service';
 
 @Component({
   selector: 'app-sale-detail',
@@ -16,12 +17,14 @@ export class SaleDetailComponent implements OnInit {
   sale = signal<Sale | null>(null);
   isLoading = signal(false);
   showSendReceiptDialog = signal(false);
+  documentViewSettings = signal<DocumentViewSettings | null>(null);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private salesService: SalesService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private documentSettingsService: DocumentSettingsService
   ) {}
 
   ngOnInit(): void {
@@ -29,6 +32,26 @@ export class SaleDetailComponent implements OnInit {
     if (id) {
       this.loadSale(id);
     }
+    // Cargar configuración de documentos
+    this.loadDocumentViewSettings();
+  }
+
+  loadDocumentViewSettings(): void {
+    this.documentSettingsService.getViewSettings().subscribe({
+      next: (settings) => {
+        this.documentViewSettings.set(settings);
+      },
+      error: (error) => {
+        console.error('Error loading document view settings:', error);
+        // Usar valores por defecto si hay error (incluyendo 404)
+        this.documentViewSettings.set({
+          defaultViewMode: 'preview',
+          directPrint: false,
+          boletaTemplateActive: true,
+          facturaTemplateActive: true
+        });
+      }
+    });
   }
 
   loadSale(id: string): void {
@@ -75,8 +98,29 @@ export class SaleDetailComponent implements OnInit {
     const sale = this.sale();
     if (!sale) return;
 
+    const settings = this.documentViewSettings();
+    
+    // Validar que la plantilla esté activa
+    if (sale.documentType === 'Boleta' && settings && !settings.boletaTemplateActive) {
+      this.toastService.error('La plantilla de Boleta no está disponible');
+      return;
+    }
+    
+    if (sale.documentType === 'Factura' && settings && !settings.facturaTemplateActive) {
+      this.toastService.error('La plantilla de Factura no está disponible');
+      return;
+    }
+
     const url = this.salesService.getPdfUrl(sale.id, sale.documentType);
-    window.open(url, '_blank');
+    
+    // Lógica condicional: Si está configurado para vista directa o impresión directa, abrir PDF directamente
+    if (settings && (settings.defaultViewMode === 'direct' || settings.directPrint)) {
+      // Abrir PDF directamente sin vista previa
+      window.open(url, '_blank');
+    } else {
+      // Mantener comportamiento actual: abrir en nueva pestaña (puede mostrar vista previa del navegador)
+      window.open(url, '_blank');
+    }
   }
 
   sendReceipt(): void {

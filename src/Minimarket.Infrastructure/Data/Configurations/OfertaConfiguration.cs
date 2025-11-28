@@ -51,6 +51,9 @@ public class OfertaConfiguration : IEntityTypeConfiguration<Oferta>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(o => o.ImagenUrl)
+            .HasMaxLength(500);
+
         builder.HasIndex(o => o.Orden);
         builder.HasIndex(o => new { o.FechaInicio, o.FechaFin });
     }

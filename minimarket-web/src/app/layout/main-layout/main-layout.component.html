@@ -103,6 +103,13 @@
           </a>
         }
         @if (permissions.isAdmin()) {
+          <a routerLink="/admin/modelo-documento" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">description</span>
+            <p class="text-sm font-medium leading-normal">Modelo Boleta/Factura</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
           <a routerLink="/admin/analytics" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">analytics</span>

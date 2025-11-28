@@ -33,6 +33,7 @@ public class UpdateSedeCommandHandler : IRequestHandler<UpdateSedeCommand, Resul
         sede.Telefono = request.Sede.Telefono;
         sede.LogoUrl = request.Sede.LogoUrl;
         sede.Estado = request.Sede.Estado;
+        sede.GoogleMapsUrl = request.Sede.GoogleMapsUrl;
         sede.SetHorarios(request.Sede.Horarios);
         sede.UpdatedAt = DateTime.UtcNow;
 

@@ -18,6 +18,7 @@ public class Oferta : BaseEntity
     public DateTime FechaFin { get; set; }
     public bool Activa { get; set; } = true;
     public int Orden { get; set; } = 0;
+    public string? ImagenUrl { get; set; }
 
     // Helper methods
     public List<Guid> GetCategoriasIds()

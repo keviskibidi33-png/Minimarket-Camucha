@@ -111,3 +111,21 @@ _ReSharper*/
 .env
 .env.local
 
+# Test results and reports
+test-results/
+playwright-report/
+*.png
+*.webm
+*.zip
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Angular build
+dist/
+.angular/
+
+# Playwright
+playwright/.cache/
+

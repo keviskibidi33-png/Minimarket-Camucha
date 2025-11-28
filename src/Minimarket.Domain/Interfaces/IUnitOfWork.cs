@@ -42,5 +42,11 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);
     Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Ejecuta una operación dentro de una transacción usando la estrategia de ejecución para soportar reintentos.
+    /// Esto es necesario cuando se usa EnableRetryOnFailure en la configuración de SQL Server.
+    /// </summary>
+    Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> operation, CancellationToken cancellationToken = default);
 }
 

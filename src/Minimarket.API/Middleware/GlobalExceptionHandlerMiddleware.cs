@@ -46,17 +46,26 @@ public class GlobalExceptionHandlerMiddleware
             ?? Activity.Current?.Id 
             ?? context.TraceIdentifier;
 
-        var response = exception switch
+        ErrorResponse response;
+        
+        if (exception is ValidationException validationEx)
         {
-            ValidationException validationEx => new ErrorResponse
+            var errors = validationEx.Errors.SelectMany(e => e.Value).ToList();
+            _logger.LogWarning("Validation failed. Errors: {Errors}", string.Join("; ", errors));
+            response = new ErrorResponse
             {
                 StatusCode = StatusCodes.Status400BadRequest,
-                Message = "Validation failed",
-                Errors = validationEx.Errors.SelectMany(e => e.Value).ToList(),
+                Message = "Error de validación",
+                Errors = errors,
                 TraceId = Activity.Current?.Id ?? context.TraceIdentifier,
                 CorrelationId = correlationId,
                 Timestamp = DateTime.UtcNow
-            },
+            };
+        }
+        else
+        {
+            response = exception switch
+            {
             NotFoundException notFoundEx => new ErrorResponse
             {
                 StatusCode = StatusCodes.Status404NotFound,
@@ -81,17 +90,18 @@ public class GlobalExceptionHandlerMiddleware
                 CorrelationId = correlationId,
                 Timestamp = DateTime.UtcNow
             },
-            _ => new ErrorResponse
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Message = _environment.IsDevelopment() 
-                    ? exception.Message 
-                    : "An internal server error occurred. Please try again later.",
-                TraceId = Activity.Current?.Id ?? context.TraceIdentifier,
-                CorrelationId = correlationId,
-                Timestamp = DateTime.UtcNow
-            }
-        };
+                _ => new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Message = _environment.IsDevelopment() 
+                        ? exception.Message 
+                        : "An internal server error occurred. Please try again later.",
+                    TraceId = Activity.Current?.Id ?? context.TraceIdentifier,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                }
+            };
+        }
 
         // Logging con correlation ID
         _logger.LogError(exception, 

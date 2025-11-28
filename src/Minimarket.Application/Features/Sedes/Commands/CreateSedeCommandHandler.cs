@@ -27,7 +27,8 @@ public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Resul
             Longitud = request.Sede.Longitud,
             Telefono = request.Sede.Telefono,
             LogoUrl = request.Sede.LogoUrl,
-            Estado = request.Sede.Estado
+            Estado = request.Sede.Estado,
+            GoogleMapsUrl = request.Sede.GoogleMapsUrl
         };
 
         sede.SetHorarios(request.Sede.Horarios);
@@ -55,7 +56,8 @@ public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Resul
             LogoUrl = sede.LogoUrl,
             Estado = sede.Estado,
             IsOpen = sede.IsOpen(DateTime.Now),
-            NextOpenTime = sede.GetNextOpenTime()
+            NextOpenTime = sede.GetNextOpenTime(),
+            GoogleMapsUrl = sede.GoogleMapsUrl
         };
     }
 }

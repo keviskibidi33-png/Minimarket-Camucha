@@ -18,21 +18,28 @@
       <!-- Control Global: Mostrar Noticias en Navbar -->
       <div class="bg-white dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                [checked]="enableNewsInNavbar()"
-                (change)="toggleEnableNewsInNavbar()"
-                class="w-5 h-5 text-primary-admin rounded border-gray-300 focus:ring-primary-admin">
-              <div>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white block">Mostrar Noticias en Navbar</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">
-                  Activa o desactiva la funcionalidad de mostrar noticias en el menú de navegación
-                </span>
-              </div>
-            </label>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">Mostrar Noticias en Navbar</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Activa o desactiva la funcionalidad de mostrar noticias en el menú de navegación
+            </p>
           </div>
+          <button
+            type="button"
+            (click)="toggleEnableNewsInNavbar()"
+            class="px-6 py-3 rounded-lg font-semibold text-sm transition-all hover:opacity-90 shadow-sm flex items-center gap-2 min-w-[140px] justify-center"
+            [ngClass]="{
+              'bg-primary-admin text-white hover:bg-primary-admin/90': enableNewsInNavbar(),
+              'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600': !enableNewsInNavbar()
+            }">
+            @if (enableNewsInNavbar()) {
+              <span class="material-symbols-outlined text-lg">toggle_on</span>
+              <span>Activado</span>
+            } @else {
+              <span class="material-symbols-outlined text-lg">toggle_off</span>
+              <span>Desactivado</span>
+            }
+          </button>
         </div>
       </div>
     </div>
@@ -85,19 +92,54 @@
                 }
               </div>
 
-              <!-- Opción rápida: Publicada -->
-              <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    [checked]="page.activa"
-                    (change)="toggleActiva(page)"
-                    class="w-4 h-4 text-primary-admin rounded border-gray-300 focus:ring-primary-admin">
-                  <div>
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 block">Publicada</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">La noticia estará disponible</span>
+              <!-- Opciones rápidas: Publicada y Mostrar en Navbar -->
+              <div class="mb-4 space-y-2">
+                <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="page.activa"
+                      (change)="toggleActiva(page)"
+                      class="w-4 h-4 text-primary-admin rounded border-gray-300 focus:ring-primary-admin">
+                    <div>
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300 block">Publicada</span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400">La noticia estará disponible</span>
+                    </div>
+                  </label>
+                </div>
+                <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300 block">Mostrar en Navbar</span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400">
+                        @if (!enableNewsInNavbar()) {
+                          Activa el control superior primero
+                        } @else if (!page.activa) {
+                          Debe estar publicada
+                        } @else {
+                          Aparecerá en el menú de navegación
+                        }
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="toggleMostrarEnNavbar(page)"
+                      [disabled]="!enableNewsInNavbar() || !page.activa"
+                      class="px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                      [ngClass]="{
+                        'bg-primary-admin text-white hover:bg-primary-admin/90': page.mostrarEnNavbar && enableNewsInNavbar() && !(!enableNewsInNavbar() || !page.activa),
+                        'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600': !(page.mostrarEnNavbar && enableNewsInNavbar()) && !(!enableNewsInNavbar() || !page.activa)
+                      }">
+                      @if (page.mostrarEnNavbar && enableNewsInNavbar()) {
+                        <span class="material-symbols-outlined text-sm">visibility</span>
+                        <span>Visible en Navbar</span>
+                      } @else {
+                        <span class="material-symbols-outlined text-sm">visibility_off</span>
+                        <span>Oculto</span>
+                      }
+                    </button>
                   </div>
-                </label>
+                </div>
               </div>
 
               <div class="flex gap-2">

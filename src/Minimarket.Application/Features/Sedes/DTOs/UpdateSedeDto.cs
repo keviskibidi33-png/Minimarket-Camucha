@@ -12,5 +12,6 @@ public class UpdateSedeDto
     public Dictionary<string, Dictionary<string, string>> Horarios { get; set; } = new();
     public string? LogoUrl { get; set; }
     public bool Estado { get; set; }
+    public string? GoogleMapsUrl { get; set; }
 }
 

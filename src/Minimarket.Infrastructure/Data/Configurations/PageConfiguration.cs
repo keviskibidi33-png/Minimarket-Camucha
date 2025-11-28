@@ -38,6 +38,10 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(p => p.MostrarEnNavbar)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.HasIndex(p => p.Slug)
             .IsUnique();
 

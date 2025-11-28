@@ -180,18 +180,15 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
 
     // Guardar paso actual cuando cambie (usando afterNextRender para contexto de inyección)
     afterNextRender(() => {
-      // Usar setTimeout para asegurar que el componente esté completamente inicializado
-      setTimeout(() => {
-        this.stepEffectCleanup = effect(() => {
-          const step = this.currentStep();
-          localStorage.setItem(this.STEP_STORAGE_KEY, step.toString());
-        });
+      this.stepEffectCleanup = effect(() => {
+        const step = this.currentStep();
+        localStorage.setItem(this.STEP_STORAGE_KEY, step.toString());
+      });
 
-        // Limpiar el effect cuando el componente se destruya
-        this.destroyRef.onDestroy(() => {
-          this.stepEffectCleanup?.destroy();
-        });
-      }, 0);
+      // Limpiar el effect cuando el componente se destruya
+      this.destroyRef.onDestroy(() => {
+        this.stepEffectCleanup?.destroy();
+      });
     });
 
     // Verificar que el usuario sea admin

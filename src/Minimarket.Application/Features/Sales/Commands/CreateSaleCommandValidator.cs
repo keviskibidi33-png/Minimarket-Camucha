@@ -71,6 +71,19 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
             .WithMessage("El cliente especificado no existe")
             .When(x => x.Sale.CustomerId.HasValue);
 
+        // Validar que Factura requiere RUC válido
+        RuleFor(x => x.Sale)
+            .MustAsync(async (sale, cancellation) => await ValidateInvoiceRequiresRUC(sale, cancellation))
+            .WithMessage("Las facturas requieren un cliente con RUC válido")
+            .When(x => x.Sale.DocumentType == Domain.Enums.DocumentType.Factura);
+
+        // Validar que Boleta puede ser DNI o Público General
+        RuleFor(x => x.Sale)
+            .Must(sale => sale.DocumentType == Domain.Enums.DocumentType.Boleta || 
+                         (sale.CustomerId.HasValue && sale.DocumentType == Domain.Enums.DocumentType.Factura))
+            .WithMessage("Las boletas pueden ser para DNI o Público General (sin cliente)")
+            .When(x => x.Sale.DocumentType == Domain.Enums.DocumentType.Boleta);
+
         // Validar que AmountPaid >= Total
         RuleFor(x => x.Sale.AmountPaid)
             .Must((command, amountPaid) => ValidateAmountPaidSufficient(command, amountPaid))
@@ -152,6 +165,25 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
         var total = Math.Round(subtotalAfterDiscount + tax, 2, MidpointRounding.AwayFromZero);
         
         return amountPaid >= total;
+    }
+
+    private async Task<bool> ValidateInvoiceRequiresRUC(DTOs.CreateSaleDto sale, CancellationToken cancellationToken)
+    {
+        // Si es Factura, debe tener un cliente con RUC
+        if (sale.DocumentType != Domain.Enums.DocumentType.Factura)
+            return true;
+
+        if (!sale.CustomerId.HasValue)
+            return false;
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value, cancellationToken);
+        if (customer == null)
+            return false;
+
+        // Validar que el cliente tenga RUC (11 dígitos)
+        return customer.DocumentType == "RUC" && 
+               customer.DocumentNumber.Length == 11 && 
+               customer.DocumentNumber.All(char.IsDigit);
     }
 }
 

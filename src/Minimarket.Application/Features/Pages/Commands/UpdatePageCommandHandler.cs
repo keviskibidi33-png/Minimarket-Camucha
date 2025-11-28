@@ -32,6 +32,17 @@ public class UpdatePageCommandHandler : IRequestHandler<UpdatePageCommand, Resul
             throw new BusinessRuleViolationException($"Ya existe otra página con el slug '{request.Page.Slug}'");
         }
 
+        // Validar que siempre haya al menos una noticia activa
+        // Si se está desactivando esta página y es la única activa, no permitirlo
+        if (page.Activa && !request.Page.Activa)
+        {
+            var activePages = existingPages.Where(p => p.Activa && p.Id != request.Id).ToList();
+            if (activePages.Count == 0)
+            {
+                throw new BusinessRuleViolationException("No se puede desactivar la última noticia activa. Debe haber al menos una noticia activa en el sistema.");
+            }
+        }
+
         page.Titulo = request.Page.Titulo;
         page.Slug = request.Page.Slug;
         page.TipoPlantilla = (TipoPlantilla)request.Page.TipoPlantilla;
@@ -39,6 +50,7 @@ public class UpdatePageCommandHandler : IRequestHandler<UpdatePageCommand, Resul
         page.Keywords = request.Page.Keywords;
         page.Orden = request.Page.Orden;
         page.Activa = request.Page.Activa;
+        page.MostrarEnNavbar = request.Page.MostrarEnNavbar;
         page.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.Pages.UpdateAsync(page, cancellationToken);

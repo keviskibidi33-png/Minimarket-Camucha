@@ -190,6 +190,14 @@ public static class DatabaseSeeder
                 Description = "Aplicar IGV (18%) al carrito de compras. Si está activado, el IGV se mostrará y aplicará en el carrito.",
                 Category = "cart",
                 IsActive = true
+            },
+            new SystemSettings
+            {
+                Key = "enable_news_in_navbar",
+                Value = "true",
+                Description = "Activar o desactivar la funcionalidad de mostrar noticias en el navbar. Si está desactivado, ninguna noticia aparecerá en el navbar.",
+                Category = "navbar",
+                IsActive = true
             }
         };
 

@@ -112,7 +112,8 @@ export class BannersService {
   }
 
   create(banner: CreateBanner): Observable<Banner> {
-    return this.http.post<Banner>(this.apiUrl, { banner });
+    // El backend espera { Banner: ... } con mayúscula
+    return this.http.post<Banner>(this.apiUrl, { Banner: banner });
   }
 
   update(id: string, banner: UpdateBanner): Observable<Banner> {

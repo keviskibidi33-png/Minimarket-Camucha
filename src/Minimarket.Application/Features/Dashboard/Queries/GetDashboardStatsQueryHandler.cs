@@ -22,43 +22,43 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
         var monthStart = new DateTime(today.Year, today.Month, 1);
         var monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
-        // Obtener todas las ventas
-        var allSales = (await _unitOfWork.Sales.GetAllAsync(cancellationToken))
+        // OPTIMIZACIÓN: Usar consultas específicas en lugar de cargar todo en memoria
+        // Ventas de hoy (consulta optimizada)
+        var todaySales = (await _unitOfWork.SaleRepository.GetByDateRangeAsync(today, today.AddDays(1).AddTicks(-1), cancellationToken))
             .Where(s => s.Status == SaleStatus.Pagado)
             .ToList();
-
-        // Ventas de hoy
-        var todaySales = allSales.Where(s => s.SaleDate.Date == today).ToList();
         var todayTotal = todaySales.Sum(s => s.Total);
         var todayCount = todaySales.Count;
 
-        // Ventas del mes
-        var monthSales = allSales.Where(s => s.SaleDate.Date >= monthStart && s.SaleDate.Date <= monthEnd).ToList();
+        // Ventas del mes (consulta optimizada)
+        var monthSales = (await _unitOfWork.SaleRepository.GetByDateRangeAsync(monthStart, monthEnd, cancellationToken))
+            .Where(s => s.Status == SaleStatus.Pagado)
+            .ToList();
         var monthTotal = monthSales.Sum(s => s.Total);
         var monthCount = monthSales.Count;
 
-        // Productos
-        var allProducts = (await _unitOfWork.Products.GetAllAsync(cancellationToken))
-            .Where(p => p.IsActive)
-            .ToList();
-        var totalProducts = allProducts.Count;
-        var lowStockProducts = allProducts.Count(p => p.Stock <= p.MinimumStock);
+        // Productos (consulta optimizada: solo activos)
+        var activeProducts = (await _unitOfWork.Products.FindAsync(p => p.IsActive, cancellationToken)).ToList();
+        var totalProducts = activeProducts.Count;
+        var lowStockProducts = activeProducts.Count(p => p.Stock <= p.MinimumStock);
 
-        // Clientes
-        var totalCustomers = (await _unitOfWork.Customers.GetAllAsync(cancellationToken))
-            .Count(c => c.IsActive);
+        // Clientes (consulta optimizada: solo activos)
+        var activeCustomers = (await _unitOfWork.Customers.FindAsync(c => c.IsActive, cancellationToken)).ToList();
+        var totalCustomers = activeCustomers.Count;
 
-        // Top productos vendidos (últimos 30 días)
+        // Top productos vendidos (últimos 30 días) - consulta optimizada
         var thirtyDaysAgo = today.AddDays(-30);
-        var recentSales = allSales.Where(s => s.SaleDate.Date >= thirtyDaysAgo).ToList();
-        var saleDetails = (await _unitOfWork.SaleDetails.GetAllAsync(cancellationToken))
-            .Where(sd => recentSales.Any(s => s.Id == sd.SaleId))
+        var recentSales = (await _unitOfWork.SaleRepository.GetByDateRangeAsync(thirtyDaysAgo, today.AddDays(1).AddTicks(-1), cancellationToken))
+            .Where(s => s.Status == SaleStatus.Pagado)
             .ToList();
+        
+        // Obtener detalles de ventas recientes (solo IDs de ventas)
+        var recentSaleIds = recentSales.Select(s => s.Id).ToList();
+        var saleDetails = (await _unitOfWork.SaleDetails.FindAsync(sd => recentSaleIds.Contains(sd.SaleId), cancellationToken)).ToList();
 
-        // Obtener productos para mapear nombres
+        // Obtener productos para mapear nombres (solo los que se vendieron)
         var productIds = saleDetails.Select(sd => sd.ProductId).Distinct().ToList();
-        var products = (await _unitOfWork.Products.GetAllAsync(cancellationToken))
-            .Where(p => productIds.Contains(p.Id))
+        var products = (await _unitOfWork.Products.FindAsync(p => productIds.Contains(p.Id), cancellationToken))
             .ToDictionary(p => p.Id, p => p.Name);
 
         var topProducts = saleDetails
@@ -74,12 +74,16 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
             .Take(5)
             .ToList();
 
-        // Ventas diarias (últimos 7 días)
+        // Ventas diarias (últimos 7 días) - consultas optimizadas por día
         var dailySales = new List<DailySalesDto>();
         for (int i = 6; i >= 0; i--)
         {
             var date = today.AddDays(-i);
-            var daySales = allSales.Where(s => s.SaleDate.Date == date).ToList();
+            var dayStart = date;
+            var dayEnd = date.AddDays(1).AddTicks(-1);
+            var daySales = (await _unitOfWork.SaleRepository.GetByDateRangeAsync(dayStart, dayEnd, cancellationToken))
+                .Where(s => s.Status == SaleStatus.Pagado)
+                .ToList();
             dailySales.Add(new DailySalesDto
             {
                 Date = date,

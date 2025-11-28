@@ -48,6 +48,9 @@ public class SedeConfiguration : IEntityTypeConfiguration<Sede>
         builder.Property(s => s.Estado)
             .IsRequired()
             .HasDefaultValue(true);
+
+        builder.Property(s => s.GoogleMapsUrl)
+            .HasMaxLength(1000);
     }
 }
 

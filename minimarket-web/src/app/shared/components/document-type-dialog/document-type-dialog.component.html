@@ -1,0 +1,82 @@
+<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="cancel()">
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full" (click)="$event.stopPropagation()">
+    <div class="p-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        Seleccionar Tipo de Comprobante
+      </h2>
+
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        ¿Qué tipo de comprobante desea generar para esta venta?
+      </p>
+
+      <div class="space-y-4 mb-6">
+        <!-- Opción Boleta -->
+        <div [ngClass]="{
+          'flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all': true,
+          'border-blue-500 bg-blue-50 dark:bg-blue-900/20': selectedType() === 'Boleta',
+          'border-gray-300 dark:border-gray-700': selectedType() !== 'Boleta'
+        }" (click)="selectedType.set('Boleta')">
+          <input type="radio" name="documentType" value="Boleta" [checked]="selectedType() === 'Boleta'" (change)="selectedType.set('Boleta')" class="mt-1 mr-3 w-4 h-4 text-blue-600">
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 dark:text-white">Boleta de Venta</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Para DNI o Público General</div>
+          </div>
+        </div>
+
+        <!-- Opción Factura -->
+        <div [ngClass]="{
+          'flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all': true,
+          'border-blue-500 bg-blue-50 dark:bg-blue-900/20': selectedType() === 'Factura',
+          'border-gray-300 dark:border-gray-700': selectedType() !== 'Factura',
+          'opacity-50 cursor-not-allowed': !canSelectFactura()
+        }" (click)="canSelectFactura() && selectedType.set('Factura')">
+          <input type="radio" name="documentType" value="Factura" [checked]="selectedType() === 'Factura'" [disabled]="!canSelectFactura()" (change)="selectedType.set('Factura')" class="mt-1 mr-3 w-4 h-4 text-blue-600">
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 dark:text-white">Factura</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Requiere cliente con RUC válido</div>
+            @if (!canSelectFactura()) {
+              <div class="text-xs text-red-600 dark:text-red-400 mt-1">⚠️ El cliente seleccionado no tiene RUC válido</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del cliente si está seleccionado -->
+      @if (selectedCustomer()) {
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cliente seleccionado:</div>
+          <div class="text-sm text-gray-900 dark:text-white font-semibold">{{ selectedCustomer()!.name }}</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400">
+            {{ selectedCustomer()!.documentType }}: {{ selectedCustomer()!.documentNumber }}
+          </div>
+        </div>
+      } @else {
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 mb-6">
+          <div class="text-sm text-yellow-800 dark:text-yellow-200">
+            ℹ️ No hay cliente seleccionado. Se generará una Boleta para "Público General".
+          </div>
+        </div>
+      }
+
+      <!-- Botones -->
+      <div class="flex justify-end gap-4">
+        <button
+          type="button"
+          (click)="cancel()"
+          class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirm()"
+          [disabled]="selectedType() === 'Factura' && !canSelectFactura()"
+          [class.opacity-50]="selectedType() === 'Factura' && !canSelectFactura()"
+          [class.cursor-not-allowed]="selectedType() === 'Factura' && !canSelectFactura()"
+          class="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

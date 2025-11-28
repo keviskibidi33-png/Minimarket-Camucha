@@ -12,6 +12,7 @@ public class Sede : BaseEntity
     public string HorariosJson { get; set; } = "{}"; // JSON string con horarios por día
     public string? LogoUrl { get; set; }
     public bool Estado { get; set; } = true; // Activo/Inactivo
+    public string? GoogleMapsUrl { get; set; } // URL de Google Maps para la ubicación de la sede
 
     // Métodos helper para trabajar con horarios
     public Dictionary<string, Dictionary<string, string>> GetHorarios()
@@ -83,6 +84,23 @@ public class Sede : BaseEntity
             { DayOfWeek.Sunday, "domingo" }
         };
 
+        var nombresDias = new Dictionary<string, string>
+        {
+            { "lunes", "Lunes" },
+            { "martes", "Martes" },
+            { "miercoles", "Miércoles" },
+            { "jueves", "Jueves" },
+            { "viernes", "Viernes" },
+            { "sabado", "Sábado" },
+            { "domingo", "Domingo" }
+        };
+
+        // Si está abierto ahora, no hay próxima apertura
+        if (IsOpen(ahora))
+        {
+            return null;
+        }
+
         // Buscar en los próximos 7 días
         for (int i = 0; i < 7; i++)
         {
@@ -91,13 +109,39 @@ public class Sede : BaseEntity
 
             if (horarios.TryGetValue(diaKey, out var horarioDia))
             {
-                if (horarioDia.TryGetValue("abre", out var horaAbre))
+                if (horarioDia.TryGetValue("abre", out var horaAbre) && 
+                    horarioDia.TryGetValue("cierra", out var horaCierra))
                 {
-                    if (i == 0 && IsOpen(fecha))
+                    // Si es el día actual
+                    if (i == 0)
                     {
-                        return null; // Ya está abierto
+                        var horaActual = ahora.TimeOfDay;
+                        if (TimeSpan.TryParse(horaAbre, out var abre) && 
+                            TimeSpan.TryParse(horaCierra, out var cierra))
+                        {
+                            // Si ya pasó la hora de cierre de hoy, buscar el próximo día
+                            if (horaActual > cierra)
+                            {
+                                continue; // Continuar buscando en el próximo día
+                            }
+                            // Si aún no ha llegado la hora de apertura de hoy
+                            if (horaActual < abre)
+                            {
+                                return $"Hoy a las {horaAbre}";
+                            }
+                        }
                     }
-                    return i == 0 ? $"Hoy a las {horaAbre}" : $"Mañana a las {horaAbre}";
+                    // Si es mañana
+                    else if (i == 1)
+                    {
+                        return $"Mañana a las {horaAbre}";
+                    }
+                    // Si es otro día de la semana
+                    else
+                    {
+                        var nombreDia = nombresDias.TryGetValue(diaKey, out var nombre) ? nombre : diaKey;
+                        return $"{nombre} a las {horaAbre}";
+                    }
                 }
             }
         }

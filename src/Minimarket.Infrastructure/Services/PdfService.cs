@@ -27,21 +27,75 @@ public class PdfService : IPdfService
     {
         try
         {
+            // Validar que el tipo de documento sea válido
+            if (documentType != "Boleta" && documentType != "Factura")
+            {
+                _logger.LogError("Tipo de documento inválido: {DocumentType}", documentType);
+                throw new ArgumentException($"Tipo de documento inválido: {documentType}. Debe ser 'Boleta' o 'Factura'");
+            }
+
+            // Validar que la plantilla esté activa
+            var templateKey = documentType == "Factura" 
+                ? "document_factura_template_active" 
+                : "document_boleta_template_active";
+            
+            var templateSetting = (await _unitOfWork.SystemSettings.FindAsync(
+                s => s.Key == templateKey))
+                .FirstOrDefault();
+            
+            var isTemplateActive = templateSetting == null || 
+                templateSetting.Value?.ToLower() != "false";
+            
+            if (!isTemplateActive)
+            {
+                _logger.LogError("Template {TemplateType} is not active. Cannot generate PDF for sale {SaleId}", 
+                    documentType, saleId);
+                throw new InvalidOperationException($"La plantilla de {documentType} no está activa. Por favor, active la plantilla en Configuraciones.");
+            }
+
+            _logger.LogInformation("Generando {DocumentType} para venta {SaleId}", documentType, saleId);
+
             var sale = await _unitOfWork.Sales.GetByIdAsync(saleId);
             if (sale == null)
             {
+                _logger.LogWarning("Venta no encontrada: {SaleId}", saleId);
                 throw new Exception("Venta no encontrada");
             }
 
+            // Validar que el tipo de documento de la venta coincida con el solicitado
+            var expectedDocumentType = documentType == "Factura" ? DocumentType.Factura : DocumentType.Boleta;
+            if (sale.DocumentType != expectedDocumentType)
+            {
+                _logger.LogWarning("Tipo de documento de la venta ({SaleType}) no coincide con el solicitado ({RequestType})", 
+                    sale.DocumentType, documentType);
+                throw new Exception($"El tipo de documento de la venta ({sale.DocumentType}) no coincide con el solicitado ({documentType})");
+            }
+
+            // Optimizar consultas: cargar detalles y productos en una sola consulta
             var saleDetails = (await _unitOfWork.SaleDetails.FindAsync(sd => sd.SaleId == sale.Id)).ToList();
+            
+            // Validar que hay detalles (protección contra ventas vacías)
+            if (saleDetails == null || !saleDetails.Any())
+            {
+                _logger.LogWarning("Sale {SaleId} has no details. Cannot generate PDF.", saleId);
+                throw new InvalidOperationException("La venta no tiene detalles. No se puede generar el documento.");
+            }
+
+            // Validar límite de items para prevenir problemas de memoria (500 items máximo)
+            if (saleDetails.Count > 500)
+            {
+                _logger.LogWarning("Sale {SaleId} has {ItemCount} items (max 500). PDF generation may fail due to memory constraints.", 
+                    saleId, saleDetails.Count);
+                // Continuar pero con advertencia
+            }
+
             var customer = sale.CustomerId.HasValue 
                 ? await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value) 
                 : null;
 
-            // Obtener productos para mapear nombres y códigos
+            // Obtener productos para mapear nombres y códigos (optimizado: una sola consulta)
             var productIds = saleDetails.Select(sd => sd.ProductId).Distinct().ToList();
-            var products = (await _unitOfWork.Products.GetAllAsync())
-                .Where(p => productIds.Contains(p.Id))
+            var products = (await _unitOfWork.Products.FindAsync(p => productIds.Contains(p.Id)))
                 .ToDictionary(p => p.Id, p => new { p.Name, p.Code });
 
             static IContainer CellStyle(IContainer container)
@@ -97,9 +151,26 @@ public class PdfService : IPdfService
                                 {
                                     if (customer != null)
                                     {
-                                        c.Item().Text($"Cliente: {customer.Name}").FontSize(11);
+                                        c.Item().Text($"Cliente: {customer.Name}").FontSize(11).Bold();
                                         c.Item().Text($"{customer.DocumentType}: {customer.DocumentNumber}").FontSize(11);
-                                        c.Item().Text($"Dirección: {customer.Address ?? "-"}").FontSize(11);
+                                        if (!string.IsNullOrWhiteSpace(customer.Address))
+                                        {
+                                            c.Item().Text($"Dirección: {customer.Address}").FontSize(11);
+                                        }
+                                        if (!string.IsNullOrWhiteSpace(customer.Email))
+                                        {
+                                            c.Item().Text($"Email: {customer.Email}").FontSize(10).FontColor(Colors.Grey.Medium);
+                                        }
+                                    }
+                                    else if (documentType == "Factura")
+                                    {
+                                        // Las facturas siempre deben tener cliente, pero por seguridad mostramos un mensaje
+                                        c.Item().Text("Cliente: No especificado").FontSize(11).FontColor(Colors.Red.Medium);
+                                    }
+                                    else
+                                    {
+                                        // Para boletas sin cliente
+                                        c.Item().Text("Cliente: Público General").FontSize(11).FontColor(Colors.Grey.Medium);
                                     }
                                 });
                             });
@@ -181,11 +252,12 @@ public class PdfService : IPdfService
                             // Información de pago
                             column.Item().PaddingTop(5).Column(payment =>
                             {
+                                payment.Item().PaddingBottom(3).Text("INFORMACIÓN DE PAGO").FontSize(10).Bold().FontColor(Colors.Grey.Darken1);
                                 payment.Item().Text($"Método de pago: {GetPaymentMethodText(sale.PaymentMethod)}").FontSize(10);
                                 payment.Item().Text($"Monto pagado: S/ {sale.AmountPaid:F2}").FontSize(10);
                                 if (sale.Change > 0)
                                 {
-                                    payment.Item().Text($"Vuelto: S/ {sale.Change:F2}").FontSize(10);
+                                    payment.Item().Text($"Vuelto: S/ {sale.Change:F2}").FontSize(10).FontColor(Colors.Green.Medium);
                                 }
                             });
                         });

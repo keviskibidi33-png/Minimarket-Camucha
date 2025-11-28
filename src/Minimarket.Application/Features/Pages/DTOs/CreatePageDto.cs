@@ -9,6 +9,7 @@ public class CreatePageDto
     public string? Keywords { get; set; }
     public int Orden { get; set; } = 0;
     public bool Activa { get; set; } = true;
+    public bool MostrarEnNavbar { get; set; } = false;
     public List<CreatePageSectionDto> Sections { get; set; } = new();
 }
 

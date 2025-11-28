@@ -116,20 +116,36 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet("{id}/pdf")]
+    [AllowAnonymous] // Permitir acceso público para visualización de documentos
     public async Task<IActionResult> GetPdf(Guid id, [FromQuery] string documentType = "Boleta")
     {
-        var pdfService = HttpContext.RequestServices.GetRequiredService<IPdfService>();
-        var pdfPath = await pdfService.GenerateSaleReceiptAsync(id, documentType);
-
-        if (!System.IO.File.Exists(pdfPath))
+        try
         {
-            throw new NotFoundException("PDF", id);
+            var pdfService = HttpContext.RequestServices.GetRequiredService<IPdfService>();
+            
+            // Validar que el tipo de documento sea válido
+            if (documentType != "Boleta" && documentType != "Factura")
+            {
+                return BadRequest(new { message = "Tipo de documento inválido. Debe ser 'Boleta' o 'Factura'" });
+            }
+
+            // Validar que la plantilla esté disponible (validación interna)
+            var pdfPath = await pdfService.GenerateSaleReceiptAsync(id, documentType);
+
+            if (!System.IO.File.Exists(pdfPath))
+            {
+                return NotFound(new { message = "El documento PDF no pudo ser generado" });
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(pdfPath);
+            var fileName = Path.GetFileName(pdfPath);
+
+            return File(fileBytes, "application/pdf", fileName);
         }
-
-        var fileBytes = await System.IO.File.ReadAllBytesAsync(pdfPath);
-        var fileName = Path.GetFileName(pdfPath);
-
-        return File(fileBytes, "application/pdf", fileName);
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al generar el documento PDF", error = ex.Message });
+        }
     }
 }
 

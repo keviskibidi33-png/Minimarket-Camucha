@@ -65,7 +65,8 @@ export class SalesService {
   constructor(private http: HttpClient) {}
 
   create(sale: CreateSaleDto): Observable<Sale> {
-    return this.http.post<Sale>(this.apiUrl, sale);
+    // El backend espera { Sale: {...} } con mayúscula
+    return this.http.post<Sale>(this.apiUrl, { Sale: sale });
   }
 
   getAll(params?: any): Observable<import('./products.service').PagedResult<Sale>> {

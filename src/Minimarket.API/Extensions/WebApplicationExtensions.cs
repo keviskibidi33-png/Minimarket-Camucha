@@ -17,9 +17,12 @@ public static class WebApplicationExtensions
             var context = services.GetRequiredService<MinimarketDbContext>();
             var userManager = services.GetRequiredService<UserManager<IdentityUser<Guid>>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            var logger = services.GetRequiredService<ILogger<Program>>();
 
             // Aplicar migraciones pendientes
+            logger.LogInformation("Aplicando migraciones pendientes...");
             await context.Database.MigrateAsync();
+            logger.LogInformation("Migraciones aplicadas exitosamente");
 
             // Seed datos iniciales
             await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
@@ -27,7 +30,10 @@ public static class WebApplicationExtensions
         catch (Exception ex)
         {
             var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "Error al inicializar la base de datos");
+            logger.LogError(ex, "Error al inicializar la base de datos: {Message}", ex.Message);
+            logger.LogError(ex, "Stack trace: {StackTrace}", ex.StackTrace);
+            // No lanzar la excepción para que la aplicación pueda iniciar
+            // pero registrar el error para debugging
         }
     }
 }

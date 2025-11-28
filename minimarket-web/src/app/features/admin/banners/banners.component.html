@@ -265,111 +265,129 @@
                   </select>
                 </div>
 
-                <!-- Fechas -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha de Inicio</label>
-                  <input
-                    type="date"
-                    [(ngModel)]="fechaInicio"
-                    name="fechaInicio"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha de Fin</label>
-                  <input
-                    type="date"
-                    [(ngModel)]="fechaFin"
-                    name="fechaFin"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-
-                <!-- Dimensiones -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ancho Máximo (px)</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="anchoMaximo"
-                    name="anchoMaximo"
-                    min="0"
-                    placeholder="Opcional"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Alto Máximo (px)</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="altoMaximo"
-                    name="altoMaximo"
-                    min="0"
-                    placeholder="Opcional"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-
-                <!-- Orden y Límite -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="orden"
-                    name="orden"
-                    min="0"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Menor número = aparece primero</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Límite de Visualizaciones</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="maxVisualizaciones"
-                    name="maxVisualizaciones"
-                    min="0"
-                    placeholder="Sin límite"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                </div>
-
-                <!-- Clases CSS -->
+                <!-- Estado Activo -->
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clases CSS Personalizadas</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="clasesCss"
-                    name="clasesCss"
-                    placeholder="ej: rounded-lg shadow-md"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="activo"
+                      name="activo"
+                      class="w-4 h-4 text-primary-admin">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Banner Activo</span>
+                  </label>
                 </div>
 
-                <!-- Opciones de Dispositivo -->
-                <div class="md:col-span-2 space-y-2">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Opciones de Dispositivo</label>
-                  <div class="flex gap-4">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="soloMovil"
-                        name="soloMovil"
-                        class="w-4 h-4 text-primary-admin">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Solo Móvil</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="soloDesktop"
-                        name="soloDesktop"
-                        class="w-4 h-4 text-primary-admin">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Solo Desktop</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="activo"
-                        name="activo"
-                        class="w-4 h-4 text-primary-admin">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Activo</span>
-                    </label>
-                  </div>
+                <!-- Opciones Avanzadas (Colapsable) -->
+                <div class="md:col-span-2">
+                  <details class="group">
+                    <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 py-2">
+                      <span class="material-symbols-outlined text-sm transition-transform group-open:rotate-90">chevron_right</span>
+                      Opciones Avanzadas
+                    </summary>
+                    <div class="mt-4 space-y-4 pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                      <!-- Fechas -->
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha de Inicio</label>
+                          <input
+                            type="date"
+                            [(ngModel)]="fechaInicio"
+                            name="fechaInicio"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha de Fin</label>
+                          <input
+                            type="date"
+                            [(ngModel)]="fechaFin"
+                            name="fechaFin"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                        </div>
+                      </div>
+
+                      <!-- Dimensiones -->
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ancho Máximo (px)</label>
+                          <input
+                            type="number"
+                            [(ngModel)]="anchoMaximo"
+                            name="anchoMaximo"
+                            min="0"
+                            placeholder="Opcional"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Alto Máximo (px)</label>
+                          <input
+                            type="number"
+                            [(ngModel)]="altoMaximo"
+                            name="altoMaximo"
+                            min="0"
+                            placeholder="Opcional"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                        </div>
+                      </div>
+
+                      <!-- Orden y Límite -->
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden</label>
+                          <input
+                            type="number"
+                            [(ngModel)]="orden"
+                            name="orden"
+                            min="0"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Menor número = aparece primero</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Límite de Visualizaciones</label>
+                          <input
+                            type="number"
+                            [(ngModel)]="maxVisualizaciones"
+                            name="maxVisualizaciones"
+                            min="0"
+                            placeholder="Sin límite"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                        </div>
+                      </div>
+
+                      <!-- Clases CSS -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clases CSS Personalizadas</label>
+                        <input
+                          type="text"
+                          [(ngModel)]="clasesCss"
+                          name="clasesCss"
+                          placeholder="ej: rounded-lg shadow-md"
+                          class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                      </div>
+
+                      <!-- Opciones de Dispositivo -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Opciones de Dispositivo</label>
+                        <div class="flex gap-4">
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              [(ngModel)]="soloMovil"
+                              name="soloMovil"
+                              class="w-4 h-4 text-primary-admin">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Solo Móvil</span>
+                          </label>
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              [(ngModel)]="soloDesktop"
+                              name="soloDesktop"
+                              class="w-4 h-4 text-primary-admin">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Solo Desktop</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
 

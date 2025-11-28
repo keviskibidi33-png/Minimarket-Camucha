@@ -243,6 +243,11 @@ export const routes: Routes = [
         path: 'pedidos',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/orders/orders.component').then(m => m.OrdersComponent)
+      },
+      {
+        path: 'modelo-documento',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/document-template/document-template.component').then(m => m.DocumentTemplateComponent)
       }
     ]
   },

@@ -25,11 +25,14 @@ public class GetSettingByKeyQueryHandler : IRequestHandler<GetSettingByKeyQuery,
             return Result<SystemSettingsDto?>.Success(null);
         }
 
+        // Asegurar que el valor nunca sea null
+        var value = setting.Value ?? string.Empty;
+
         var result = new SystemSettingsDto
         {
             Id = setting.Id,
             Key = setting.Key,
-            Value = setting.Value,
+            Value = value,
             Description = setting.Description,
             Category = setting.Category,
             IsActive = setting.IsActive

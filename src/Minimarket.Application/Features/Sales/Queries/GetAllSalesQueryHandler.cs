@@ -17,95 +17,50 @@ public class GetAllSalesQueryHandler : IRequestHandler<GetAllSalesQuery, Result<
 
     public async Task<Result<PagedResult<SaleDto>>> Handle(GetAllSalesQuery request, CancellationToken cancellationToken)
     {
-        var allSales = await _unitOfWork.Sales.GetAllAsync(cancellationToken);
-        var allCustomers = await _unitOfWork.Customers.GetAllAsync(cancellationToken);
-        var allSaleDetails = await _unitOfWork.SaleDetails.GetAllAsync(cancellationToken);
-        var allProducts = await _unitOfWork.Products.GetAllAsync(cancellationToken);
-        
-        var customersDict = allCustomers.ToDictionary(c => c.Id, c => c.Name);
-        var productsDict = allProducts.ToDictionary(p => p.Id, p => new { p.Name, p.Code });
-        
-        // Agrupar detalles por venta
-        var saleDetailsDict = allSaleDetails
-            .GroupBy(sd => sd.SaleId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        // OPTIMIZACIÓN: Usar método optimizado del repositorio que aplica filtros y paginación en la BD
+        // Esto evita cargar todos los registros en memoria (problema N+1 resuelto)
+        var (sales, totalCount) = await _unitOfWork.SaleRepository.GetPagedSalesAsync(
+            startDate: request.StartDate,
+            endDate: request.EndDate,
+            customerId: request.CustomerId,
+            userId: request.UserId,
+            documentNumber: request.DocumentNumber,
+            page: request.Page,
+            pageSize: request.PageSize,
+            cancellationToken: cancellationToken
+        );
 
-        // Aplicar filtros en memoria
-        var filteredSales = allSales.AsEnumerable();
-
-        if (request.StartDate.HasValue)
+        // Mapear a DTOs (los datos ya vienen con Eager Loading, no hay N+1)
+        var saleDtos = sales.Select(sale => new SaleDto
         {
-            filteredSales = filteredSales.Where(s => s.SaleDate >= request.StartDate.Value);
-        }
-
-        if (request.EndDate.HasValue)
-        {
-            filteredSales = filteredSales.Where(s => s.SaleDate <= request.EndDate.Value);
-        }
-
-        if (request.CustomerId.HasValue)
-        {
-            filteredSales = filteredSales.Where(s => s.CustomerId == request.CustomerId.Value);
-        }
-
-        if (request.UserId.HasValue)
-        {
-            filteredSales = filteredSales.Where(s => s.UserId == request.UserId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.DocumentNumber))
-        {
-            filteredSales = filteredSales.Where(s => s.DocumentNumber.Contains(request.DocumentNumber));
-        }
-
-        // Ordenar
-        var sortedSales = filteredSales.OrderByDescending(s => s.SaleDate).ToList();
-
-        var totalCount = sortedSales.Count;
-
-        // Aplicar paginación
-        var sales = sortedSales
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .Select(sale => new SaleDto
+            Id = sale.Id,
+            DocumentNumber = sale.DocumentNumber,
+            DocumentType = sale.DocumentType,
+            SaleDate = sale.SaleDate,
+            CustomerId = sale.CustomerId,
+            CustomerName = sale.Customer?.Name,
+            Subtotal = sale.Subtotal,
+            Tax = sale.Tax,
+            Discount = sale.Discount,
+            Total = sale.Total,
+            PaymentMethod = sale.PaymentMethod,
+            AmountPaid = sale.AmountPaid,
+            Change = sale.Change,
+            Status = sale.Status,
+            CancellationReason = sale.CancellationReason,
+            SaleDetails = sale.SaleDetails.Select(sd => new SaleDetailDto
             {
-                Id = sale.Id,
-                DocumentNumber = sale.DocumentNumber,
-                DocumentType = sale.DocumentType,
-                SaleDate = sale.SaleDate,
-                CustomerId = sale.CustomerId,
-                CustomerName = sale.CustomerId.HasValue && customersDict.TryGetValue(sale.CustomerId.Value, out var customerName) 
-                    ? customerName 
-                    : null,
-                Subtotal = sale.Subtotal,
-                Tax = sale.Tax,
-                Discount = sale.Discount,
-                Total = sale.Total,
-                PaymentMethod = sale.PaymentMethod,
-                AmountPaid = sale.AmountPaid,
-                Change = sale.Change,
-                Status = sale.Status,
-                CancellationReason = sale.CancellationReason,
-                SaleDetails = saleDetailsDict.TryGetValue(sale.Id, out var details)
-                    ? details.Select(sd => new SaleDetailDto
-                    {
-                        Id = sd.Id,
-                        ProductId = sd.ProductId,
-                        ProductName = productsDict.TryGetValue(sd.ProductId, out var product) 
-                            ? product.Name 
-                            : "Producto eliminado",
-                        ProductCode = productsDict.TryGetValue(sd.ProductId, out var productInfo) 
-                            ? productInfo.Code 
-                            : "",
-                        Quantity = sd.Quantity,
-                        UnitPrice = sd.UnitPrice,
-                        Subtotal = sd.Subtotal
-                    }).ToList()
-                    : new List<SaleDetailDto>()
-            })
-            .ToList();
+                Id = sd.Id,
+                ProductId = sd.ProductId,
+                ProductName = sd.Product?.Name ?? "Producto eliminado",
+                ProductCode = sd.Product?.Code ?? "",
+                Quantity = sd.Quantity,
+                UnitPrice = sd.UnitPrice,
+                Subtotal = sd.Subtotal
+            }).ToList()
+        }).ToList();
 
-        var pagedResult = PagedResult<SaleDto>.Create(sales, totalCount, request.Page, request.PageSize);
+        var pagedResult = PagedResult<SaleDto>.Create(saleDtos, totalCount, request.Page, request.PageSize);
 
         return Result<PagedResult<SaleDto>>.Success(pagedResult);
     }

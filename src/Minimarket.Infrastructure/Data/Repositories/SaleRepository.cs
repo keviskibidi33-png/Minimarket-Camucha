@@ -96,5 +96,61 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
 
         return await query.SumAsync(s => s.Total, cancellationToken);
     }
+
+    public async Task<(IEnumerable<Sale> Sales, int TotalCount)> GetPagedSalesAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        Guid? customerId = null,
+        Guid? userId = null,
+        string? documentNumber = null,
+        int page = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        // Construir query base con Eager Loading para evitar N+1
+        var query = _dbSet
+            .Include(s => s.Customer)
+            .Include(s => s.SaleDetails)
+                .ThenInclude(sd => sd.Product)
+            .AsQueryable();
+
+        // Aplicar filtros en la base de datos (no en memoria)
+        if (startDate.HasValue)
+        {
+            query = query.Where(s => s.SaleDate >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(s => s.SaleDate <= endDate.Value);
+        }
+
+        if (customerId.HasValue)
+        {
+            query = query.Where(s => s.CustomerId == customerId.Value);
+        }
+
+        if (userId.HasValue)
+        {
+            query = query.Where(s => s.UserId == userId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(documentNumber))
+        {
+            query = query.Where(s => s.DocumentNumber.Contains(documentNumber));
+        }
+
+        // Obtener total antes de paginar
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Aplicar ordenamiento y paginación
+        var sales = await query
+            .OrderByDescending(s => s.SaleDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (sales, totalCount);
+    }
 }
 

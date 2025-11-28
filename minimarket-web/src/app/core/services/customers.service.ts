@@ -72,7 +72,8 @@ export class CustomersService {
   }
 
   create(customer: CreateCustomerDto): Observable<Customer> {
-    return this.http.post<Customer>(this.apiUrl, customer);
+    // El backend espera { Customer: ... } con mayúscula
+    return this.http.post<Customer>(this.apiUrl, { Customer: customer });
   }
 
   update(customer: UpdateCustomerDto): Observable<Customer> {

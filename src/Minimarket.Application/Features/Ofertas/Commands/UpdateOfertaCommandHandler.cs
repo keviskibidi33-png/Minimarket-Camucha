@@ -39,6 +39,7 @@ public class UpdateOfertaCommandHandler : IRequestHandler<UpdateOfertaCommand, R
         oferta.FechaFin = request.Oferta.FechaFin;
         oferta.Activa = request.Oferta.Activa;
         oferta.Orden = request.Oferta.Orden;
+        oferta.ImagenUrl = request.Oferta.ImagenUrl;
         oferta.SetCategoriasIds(request.Oferta.CategoriasIds);
         oferta.SetProductosIds(request.Oferta.ProductosIds);
         oferta.UpdatedAt = DateTime.UtcNow;

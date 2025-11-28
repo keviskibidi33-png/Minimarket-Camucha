@@ -15,5 +15,6 @@ public class SedeDto
     public bool Estado { get; set; }
     public bool IsOpen { get; set; }
     public string? NextOpenTime { get; set; }
+    public string? GoogleMapsUrl { get; set; }
 }
 

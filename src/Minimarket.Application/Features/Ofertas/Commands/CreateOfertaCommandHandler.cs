@@ -54,7 +54,8 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
             FechaInicio = request.Oferta.FechaInicio,
             FechaFin = request.Oferta.FechaFin,
             Activa = request.Oferta.Activa,
-            Orden = request.Oferta.Orden
+            Orden = request.Oferta.Orden,
+            ImagenUrl = request.Oferta.ImagenUrl
         };
 
         oferta.SetCategoriasIds(request.Oferta.CategoriasIds);
@@ -82,6 +83,7 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
             FechaFin = oferta.FechaFin,
             Activa = oferta.Activa,
             Orden = oferta.Orden,
+            ImagenUrl = oferta.ImagenUrl,
             CreatedAt = oferta.CreatedAt,
             UpdatedAt = oferta.UpdatedAt
         };

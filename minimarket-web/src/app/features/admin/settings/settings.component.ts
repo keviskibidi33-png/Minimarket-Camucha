@@ -8,7 +8,6 @@ import { SettingsNavbarComponent } from '../../../shared/components/settings-nav
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
 import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
-import { PagesService, Page, UpdatePage } from '../../../core/services/pages.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -22,7 +21,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 export class SettingsComponent implements OnInit {
   settings = signal<SystemSettings[]>([]);
   isLoading = signal(false);
-  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'>('cart');
+  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates'>('cart');
   
   private readonly destroyRef = inject(DestroyRef);
   private tabPersistenceEffect?: ReturnType<typeof effect>;
@@ -47,17 +46,10 @@ export class SettingsComponent implements OnInit {
   emailLogoUrl = signal('');
   emailPromotionImageUrl = signal('');
 
-  // Configuraciones de Navbar de Noticias
-  enableNewsInNavbar = signal(true); // Control global para activar/desactivar noticias en navbar
-  pages = signal<Page[]>([]);
-  isLoadingPages = signal(false);
-  selectedPagesForNavbar = signal<Set<string>>(new Set()); // IDs de noticias seleccionadas
-
   constructor(
     private settingsService: SettingsService,
     private shippingService: ShippingService,
     private emailTemplatesService: EmailTemplatesService,
-    private pagesService: PagesService,
     private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute,
@@ -69,14 +61,10 @@ export class SettingsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const tabParam = params['tab'];
       if (tabParam) {
-        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'> = 
-          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates'];
         if (validTabs.includes(tabParam as any)) {
           this.activeTab.set(tabParam as any);
-          // Si es la pestaña de navbar-news, cargar las noticias
-          if (tabParam === 'navbar-news') {
-            this.loadPagesForNavbar();
-          }
         }
       } else {
         // Si no hay query param, cargar desde localStorage
@@ -96,23 +84,18 @@ export class SettingsComponent implements OnInit {
 
     this.loadSettings();
     this.loadEmailTemplateSettings();
-    
-    // Si el tab activo es navbar-news, cargar las noticias
-    if (this.activeTab() === 'navbar-news') {
-      this.loadPagesForNavbar();
-    }
 
-    // Observar cambios en activeTab para persistir (dentro de afterNextRender para evitar NG0203)
+    // Observar cambios en activeTab para persistir
     afterNextRender(() => {
       this.tabPersistenceEffect = effect(() => {
         const tab = this.activeTab();
         localStorage.setItem('settings_active_tab', tab);
       });
+    });
 
-      // Limpiar el effect cuando el componente se destruya
-      this.destroyRef.onDestroy(() => {
-        this.tabPersistenceEffect?.destroy();
-      });
+    // Limpiar el effect cuando el componente se destruya (fuera del callback de afterNextRender)
+    this.destroyRef.onDestroy(() => {
+      this.tabPersistenceEffect?.destroy();
     });
   }
 
@@ -129,8 +112,8 @@ export class SettingsComponent implements OnInit {
 
     // Para las otras pestañas, cargar desde localStorage
     const savedTab = localStorage.getItem('settings_active_tab');
-        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news' | 'categories' | 'payment-methods'> = 
-          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news', 'categories', 'payment-methods'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'categories' | 'payment-methods'> = 
+          ['cart', 'shipping', 'shipping-rates', 'email-templates', 'categories', 'payment-methods'];
     
     if (savedTab && validTabs.includes(savedTab as any)) {
       this.activeTab.set(savedTab as any);
@@ -148,8 +131,8 @@ export class SettingsComponent implements OnInit {
     // Si estamos en /admin/configuraciones, restaurar el último tab guardado
     if (url === '/admin/configuraciones' || url.endsWith('/configuraciones')) {
       const savedTab = localStorage.getItem('settings_active_tab');
-      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news' | 'categories' | 'payment-methods'> = 
-        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'navbar-news', 'categories', 'payment-methods'];
+      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'categories' | 'payment-methods'> = 
+        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'categories', 'payment-methods'];
       
       if (savedTab && validTabs.includes(savedTab as any)) {
         this.activeTab.set(savedTab as any);
@@ -354,12 +337,8 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'navbar-news'): void {
+  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates'): void {
     this.activeTab.set(tab);
-    // Si es navbar-news, cargar las noticias
-    if (tab === 'navbar-news') {
-      this.loadPagesForNavbar();
-    }
     // Actualizar la URL con el query param para mantener consistencia
     this.router.navigate(['/admin/configuraciones'], { queryParams: { tab } });
   }
@@ -522,233 +501,9 @@ export class SettingsComponent implements OnInit {
   }
 
 
-  // Métodos para Navbar de Noticias
-  loadPagesForNavbar(): void {
-    this.isLoadingPages.set(true);
-    
-    // Cargar configuración global primero
-    this.settingsService.getByKey('enable_news_in_navbar').subscribe({
-      next: (setting) => {
-        if (setting) {
-          this.enableNewsInNavbar.set(setting.value.toLowerCase() === 'true' || setting.value === '1');
-        } else {
-          // Por defecto activado
-          this.enableNewsInNavbar.set(true);
-        }
-      },
-      error: () => {
-        this.enableNewsInNavbar.set(true);
-      }
-    });
-    
-    this.pagesService.getAll().subscribe({
-      next: (pages) => {
-        // Filtrar solo noticias activas
-        const activePages = pages.filter(p => p.activa);
-        this.pages.set(activePages);
-        
-        // Cargar las noticias que ya están marcadas para mostrar en navbar
-        const selectedIds = new Set<string>();
-        activePages.forEach(page => {
-          if (page.mostrarEnNavbar) {
-            selectedIds.add(page.id);
-          }
-        });
-        this.selectedPagesForNavbar.set(selectedIds);
-        
-        this.isLoadingPages.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading pages:', error);
-        this.toastService.error('Error al cargar noticias');
-        this.isLoadingPages.set(false);
-      }
-    });
-  }
-
-  togglePageForNavbar(pageId: string): void {
-    // Si la funcionalidad global está desactivada, no permitir cambios
-    if (!this.enableNewsInNavbar()) {
-      this.toastService.error('Primero debes activar la funcionalidad "Mostrar Noticias en Navbar"');
-      return;
-    }
-    
-    const selected = new Set(this.selectedPagesForNavbar());
-    const pageToUpdate = this.pages().find(p => p.id === pageId);
-    
-    if (!pageToUpdate) {
-      this.toastService.error('No se encontró la noticia');
-      return;
-    }
-    
-    // Si se está desmarcando y es la última noticia seleccionada, mostrar error
-    if (selected.has(pageId) && selected.size === 1) {
-      this.toastService.error('Debe haber al menos una noticia visible en el navbar. Crea una noticia primero si no tienes ninguna.');
-      return;
-    }
-    
-    const newMostrarEnNavbar = !selected.has(pageId);
-    
-    // Actualizar inmediatamente en el backend
-    const updateData: UpdatePage = {
-      titulo: pageToUpdate.titulo,
-      slug: pageToUpdate.slug,
-      tipoPlantilla: pageToUpdate.tipoPlantilla,
-      metaDescription: pageToUpdate.metaDescription,
-      keywords: pageToUpdate.keywords,
-      orden: pageToUpdate.orden,
-      activa: pageToUpdate.activa,
-      mostrarEnNavbar: newMostrarEnNavbar,
-      sections: pageToUpdate.sections.map(s => ({
-        id: s.id,
-        seccionTipo: s.seccionTipo,
-        orden: s.orden,
-        datos: s.datos
-      }))
-    };
-    
-    this.pagesService.update(pageToUpdate.id, updateData).subscribe({
-      next: () => {
-        // Actualizar el estado local después de guardar exitosamente
-        if (newMostrarEnNavbar) {
-          selected.add(pageId);
-          this.toastService.success('Noticia agregada al navbar');
-        } else {
-          selected.delete(pageId);
-          this.toastService.success('Noticia removida del navbar');
-        }
-        this.selectedPagesForNavbar.set(selected);
-        // Recargar para asegurar consistencia
-        this.loadPagesForNavbar();
-      },
-      error: (error) => {
-        console.error('Error updating page for navbar:', error);
-        this.toastService.error('Error al actualizar visibilidad en navbar');
-      }
-    });
-  }
-
-  toggleEnableNewsInNavbar(): void {
-    const newValue = !this.enableNewsInNavbar();
-    this.enableNewsInNavbar.set(newValue);
-    
-    // Guardar inmediatamente la configuración global
-    const setting: UpdateSystemSettings = {
-      key: 'enable_news_in_navbar',
-      value: newValue ? 'true' : 'false',
-      description: 'Activar o desactivar la funcionalidad de mostrar noticias en el navbar',
-      isActive: true
-    };
-    
-    this.settingsService.update('enable_news_in_navbar', setting).subscribe({
-      next: () => {
-        this.toastService.success(newValue ? 'Noticias en navbar activadas' : 'Noticias en navbar desactivadas');
-      },
-      error: (error) => {
-        console.error('Error saving enable_news_in_navbar setting:', error);
-        this.toastService.error('Error al guardar configuración');
-        // Revertir el cambio
-        this.enableNewsInNavbar.set(!newValue);
-      }
-    });
-  }
-
-  saveNavbarNewsSettings(): void {
-    // Si la funcionalidad global está desactivada, no permitir guardar
-    if (!this.enableNewsInNavbar()) {
-      this.toastService.error('Primero debes activar la funcionalidad "Mostrar Noticias en Navbar"');
-      return;
-    }
-    
-    const selectedIds = this.selectedPagesForNavbar();
-    
-    // Validar que haya al menos una noticia seleccionada
-    if (selectedIds.size === 0) {
-      this.toastService.error('Debe seleccionar al menos una noticia para mostrar en el navbar. Si no tienes noticias, crea una primero en el módulo "Blog de Noticias".');
-      return;
-    }
-
-    // Validar que haya noticias activas disponibles
-    const activePages = this.pages().filter(p => p.activa);
-    if (activePages.length === 0) {
-      this.toastService.error('No hay noticias activas. Por favor, crea al menos una noticia en el módulo "Blog de Noticias" y actívala primero.');
-      return;
-    }
-
-    this.isLoadingPages.set(true);
-    
-    // Actualizar cada noticia
-    let updatedCount = 0;
-    let errorCount = 0;
-    const totalPages = activePages.length;
-
-    activePages.forEach(page => {
-      const shouldShowInNavbar = selectedIds.has(page.id);
-      
-      // Solo actualizar si cambió el valor
-      if (page.mostrarEnNavbar !== shouldShowInNavbar) {
-        const updateData: UpdatePage = {
-          titulo: page.titulo,
-          slug: page.slug,
-          tipoPlantilla: page.tipoPlantilla,
-          metaDescription: page.metaDescription,
-          keywords: page.keywords,
-          orden: page.orden,
-          activa: page.activa,
-          mostrarEnNavbar: shouldShowInNavbar,
-          sections: page.sections.map(s => ({
-            id: s.id,
-            seccionTipo: s.seccionTipo,
-            orden: s.orden,
-            datos: s.datos
-          }))
-        };
-
-        this.pagesService.update(page.id, updateData).subscribe({
-          next: () => {
-            updatedCount++;
-            if (updatedCount + errorCount === totalPages) {
-              this.isLoadingPages.set(false);
-              if (errorCount === 0) {
-                this.toastService.success('Configuración del navbar guardada correctamente');
-                this.loadPagesForNavbar(); // Recargar para reflejar cambios
-              } else {
-                this.toastService.warning(`Se guardaron ${updatedCount} noticias, pero ${errorCount} tuvieron errores`);
-              }
-            }
-          },
-          error: (error) => {
-            errorCount++;
-            console.error(`Error updating page ${page.id}:`, error);
-            if (updatedCount + errorCount === totalPages) {
-              this.isLoadingPages.set(false);
-              this.toastService.error(`Error al guardar algunas noticias. ${errorCount} error(es)`);
-            }
-          }
-        });
-      } else {
-        // Si no cambió, contar como actualizado
-        updatedCount++;
-        if (updatedCount + errorCount === totalPages) {
-          this.isLoadingPages.set(false);
-          if (errorCount === 0) {
-            this.toastService.success('Configuración del navbar guardada correctamente');
-          }
-        }
-      }
-    });
-  }
-
-  goToBlogNews(): void {
-    this.router.navigate(['/admin/blog-noticias']);
-  }
-
   // Helper methods for template
   parseInt = parseInt;
   parseFloat = parseFloat;
-  formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('es-PE');
-  }
 
   showResetWarning = signal(false);
 

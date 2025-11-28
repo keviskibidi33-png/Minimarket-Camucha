@@ -61,3 +61,14 @@
   height: 100%;
   overflow: hidden;
 }
+
+/* Asegurar que el select nativo no se sobreponga a otros elementos */
+select {
+  position: relative;
+  z-index: 1;
+}
+
+/* El dropdown de búsqueda de clientes debe estar por encima */
+.customer-search-dropdown {
+  z-index: 9999 !important;
+}

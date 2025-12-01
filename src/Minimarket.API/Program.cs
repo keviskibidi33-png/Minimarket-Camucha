@@ -233,6 +233,9 @@ if (app.Environment.IsProduction())
     app.UseHsts();
 }
 
+// Security Headers Middleware - debe ir temprano en el pipeline
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 // Correlation ID Middleware - debe ir antes del exception handler
 app.UseMiddleware<CorrelationIdMiddleware>();
 

@@ -655,6 +655,42 @@ namespace Minimarket.Infrastructure.Migrations
                     b.ToTable("Ofertas", (string)null);
                 });
 
+            modelBuilder.Entity("Minimarket.Domain.Entities.OrderFeedback", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Rating")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("WebOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("WouldRecommend")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WebOrderId");
+
+                    b.ToTable("OrderFeedbacks", (string)null);
+                });
+
             modelBuilder.Entity("Minimarket.Domain.Entities.Page", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1758,6 +1794,17 @@ namespace Minimarket.Infrastructure.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Sale");
+                });
+
+            modelBuilder.Entity("Minimarket.Domain.Entities.OrderFeedback", b =>
+                {
+                    b.HasOne("Minimarket.Domain.Entities.WebOrder", "WebOrder")
+                        .WithMany()
+                        .HasForeignKey("WebOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("WebOrder");
                 });
 
             modelBuilder.Entity("Minimarket.Domain.Entities.PageSection", b =>

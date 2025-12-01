@@ -390,6 +390,45 @@ public class OrdersController : ControllerBase
 
         return Ok(new { success = true, message = "Pedido rechazado correctamente" });
     }
+
+    [HttpPost("{id}/mark-as-picked-up")]
+    [Authorize] // Requiere autenticación
+    public async Task<IActionResult> MarkOrderAsPickedUp(Guid id, [FromBody] MarkOrderAsPickedUpRequest request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new { error = "Los datos de feedback son requeridos" });
+        }
+
+        if (request.Rating < 1 || request.Rating > 5)
+        {
+            return BadRequest(new { error = "La calificación debe estar entre 1 y 5 estrellas" });
+        }
+
+        var command = new MarkOrderAsPickedUpCommand
+        {
+            OrderId = id,
+            Rating = request.Rating,
+            Comment = request.Comment,
+            WouldRecommend = request.WouldRecommend
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Pedido marcado como recogido y feedback guardado correctamente" });
+    }
+}
+
+public class MarkOrderAsPickedUpRequest
+{
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool WouldRecommend { get; set; } = true;
 }
 
 public class UpdateOrderStatusRequest

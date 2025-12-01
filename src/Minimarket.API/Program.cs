@@ -75,6 +75,9 @@ builder.Services.AddControllers(options =>
 // Static files (para servir imágenes)
 builder.Services.AddDirectoryBrowser();
 
+// HttpClient para descargar imágenes
+builder.Services.AddHttpClient();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -171,7 +174,10 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
+        // Configurar el mapeo de roles para que ASP.NET Core reconozca los roles del token
+        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+        NameClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
     };
 })
 .AddGoogle(options =>

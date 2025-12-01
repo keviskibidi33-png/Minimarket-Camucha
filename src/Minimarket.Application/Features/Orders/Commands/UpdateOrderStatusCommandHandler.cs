@@ -31,7 +31,7 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
         }
 
         // Validar estado
-        var validStatuses = new[] { "pending", "confirmed", "preparing", "shipped", "delivered", "ready_for_pickup", "cancelled" };
+        var validStatuses = new[] { "pending", "confirmed", "preparing", "shipped", "delivered", "ready_for_pickup", "picked_up", "cancelled" };
         if (!validStatuses.Contains(request.Status))
         {
             return Result<bool>.Failure("Estado inválido");

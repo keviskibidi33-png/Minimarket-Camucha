@@ -32,6 +32,10 @@ const ORDER_STATUS_MAP: Record<string, OrderStatusConfig> = {
     class: 'bg-success/20 text-success dark:text-green-300',
     text: 'Listo para Retiro'
   },
+  'picked_up': {
+    class: 'bg-success/20 text-success dark:text-green-300',
+    text: 'Recogido'
+  },
   'cancelled': {
     class: 'bg-danger/20 text-danger dark:text-red-300',
     text: 'Cancelado'

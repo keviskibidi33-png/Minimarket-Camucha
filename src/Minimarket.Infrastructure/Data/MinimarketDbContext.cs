@@ -32,6 +32,7 @@ public class MinimarketDbContext : IdentityDbContext<IdentityUser<Guid>, Identit
     public DbSet<ProductView> ProductViews { get; set; }
     public DbSet<WebOrder> WebOrders { get; set; }
     public DbSet<WebOrderItem> WebOrderItems { get; set; }
+    public DbSet<OrderFeedback> OrderFeedbacks { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<UserPaymentMethod> UserPaymentMethods { get; set; }
     public DbSet<PaymentMethodSettings> PaymentMethodSettings { get; set; }

@@ -293,12 +293,21 @@
                         <h3 class="text-2xl font-bold text-text-light dark:text-text-dark">Detalles del Pedido</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pedido: {{ selectedOrder()!.orderNumber }}</p>
                       </div>
-                      <!-- Botón cerrar solo en desktop -->
-                      <button 
-                        (click)="closeOrderDetails()"
-                        class="hidden sm:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                        <span class="material-symbols-outlined text-text-light dark:text-text-dark">close</span>
-                      </button>
+                      <div class="flex items-center gap-2">
+                        <!-- Botón refrescar -->
+                        <button 
+                          (click)="refreshOrderDetails()"
+                          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                          title="Actualizar información del pedido">
+                          <span class="material-symbols-outlined text-text-light dark:text-text-dark">refresh</span>
+                        </button>
+                        <!-- Botón cerrar solo en desktop -->
+                        <button 
+                          (click)="closeOrderDetails()"
+                          class="hidden sm:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                          <span class="material-symbols-outlined text-text-light dark:text-text-dark">close</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- Estado del Pedido -->
@@ -365,12 +374,187 @@
                           @if (selectedOrder()!.walletMethod) {
                             <p><strong class="text-gray-700 dark:text-gray-300">Billetera:</strong> <span class="text-text-light dark:text-text-dark">{{ selectedOrder()!.walletMethod }}</span></p>
                           }
-                          @if (selectedOrder()!.requiresPaymentProof) {
+                          @if (selectedOrder()!.requiresPaymentProof && !selectedOrder()!.paymentProofUrl) {
                             <p class="text-yellow-600 dark:text-yellow-400"><strong>⚠ Requiere comprobante de pago</strong></p>
+                          } @else if (selectedOrder()!.requiresPaymentProof && selectedOrder()!.paymentProofUrl && selectedOrder()!.status === 'pending') {
+                            <p class="text-blue-600 dark:text-blue-400"><strong>✓ Comprobante enviado, esperando verificación</strong></p>
                           }
                         </div>
                       </div>
                     </div>
+
+                    <!-- Comprobante de Pago -->
+                    @if (selectedOrder()!.requiresPaymentProof) {
+                      <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                        <h4 class="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Comprobante de Pago</h4>
+                        
+                        <!-- Si ya hay comprobante subido -->
+                        @if (selectedOrder()!.paymentProofUrl) {
+                          <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+                            <div class="flex items-start gap-3">
+                              <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">check_circle</span>
+                              <div class="flex-1">
+                                <h5 class="font-semibold text-green-900 dark:text-green-300 mb-1">Comprobante Subido</h5>
+                                <p class="text-sm text-green-700 dark:text-green-400 mb-3">
+                                  Tu comprobante ha sido enviado y está siendo verificado por nuestro equipo.
+                                </p>
+                                <div class="mt-3">
+                                  @if (isImageFile(selectedOrder()!.paymentProofUrl!)) {
+                                    <img 
+                                      [src]="selectedOrder()!.paymentProofUrl" 
+                                      alt="Comprobante de pago" 
+                                      class="max-w-full h-auto max-h-64 rounded-lg border border-gray-200 dark:border-gray-700"
+                                      (error)="onProofImageError($event)">
+                                  } @else if (isPdfFile(selectedOrder()!.paymentProofUrl!)) {
+                                    <div class="flex items-center gap-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                      <span class="material-symbols-outlined text-4xl text-red-600">description</span>
+                                      <div>
+                                        <p class="font-medium text-text-light dark:text-text-dark">Documento PDF</p>
+                                        <a 
+                                          [href]="selectedOrder()!.paymentProofUrl" 
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          class="text-sm text-primary hover:underline">
+                                          Ver comprobante
+                                        </a>
+                                      </div>
+                                    </div>
+                                  } @else {
+                                    <a 
+                                      [href]="selectedOrder()!.paymentProofUrl" 
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                                      <span class="material-symbols-outlined text-base">download</span>
+                                      <span>Descargar comprobante</span>
+                                    </a>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        } @else {
+                          <!-- Formulario para subir comprobante -->
+                          <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+                            <div class="flex items-start gap-3 mb-4">
+                              <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">warning</span>
+                              <div>
+                                <h5 class="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">Comprobante Pendiente</h5>
+                                <p class="text-sm text-yellow-700 dark:text-yellow-400">
+                                  Por favor sube el comprobante de pago para que podamos procesar tu pedido.
+                                </p>
+                              </div>
+                            </div>
+
+                            <!-- Código de operación (opcional) -->
+                            <div class="mb-4">
+                              <label for="operation-code" class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Código de Operación (opcional)
+                              </label>
+                              <input
+                                type="text"
+                                id="operation-code"
+                                [(ngModel)]="operationCode"
+                                placeholder="Ingresa el código de operación"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-text-light dark:text-text-dark focus:ring-2 focus:ring-primary focus:border-primary"
+                                [disabled]="paymentProofUploading()">
+                            </div>
+
+                            <!-- Upload de archivo -->
+                            <div class="mb-4">
+                              <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Comprobante de Pago <span class="text-red-500">*</span>
+                              </label>
+                              <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                                <input 
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  (change)="onPaymentProofSelected($event)"
+                                  class="hidden"
+                                  id="payment-proof-input-profile"
+                                  #paymentProofInputProfile
+                                  [disabled]="paymentProofUploading()"/>
+                                
+                                @if (!paymentProofFile()) {
+                                  <div class="flex flex-col items-center">
+                                    <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                      Haz clic para subir el comprobante
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                                      Formatos: JPG, PNG, PDF (máx. 5MB)
+                                    </p>
+                                    <button 
+                                      type="button"
+                                      (click)="paymentProofInputProfile.click()"
+                                      [disabled]="paymentProofUploading()"
+                                      class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                      Seleccionar Archivo
+                                    </button>
+                                  </div>
+                                } @else {
+                                  <div class="space-y-3">
+                                    @if (paymentProofFile() && paymentProofFile()!.type.startsWith('image/') && paymentProofPreview() && paymentProofPreview() !== 'pdf' && paymentProofPreview() !== 'document') {
+                                      <div class="flex justify-center">
+                                        <img 
+                                          [src]="paymentProofPreview()" 
+                                          alt="Vista previa del comprobante" 
+                                          class="max-h-48 rounded-lg border border-gray-200 dark:border-gray-700"
+                                          (error)="onProofImageError($event)">
+                                      </div>
+                                    } @else if (paymentProofFile() && paymentProofFile()!.type === 'application/pdf') {
+                                      <div class="flex items-center justify-center gap-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                        <span class="material-symbols-outlined text-4xl text-red-600">description</span>
+                                        <div>
+                                          <p class="font-medium text-text-light dark:text-text-dark">{{ paymentProofFile()?.name }}</p>
+                                          <p class="text-xs text-gray-500 dark:text-gray-400">Documento PDF</p>
+                                        </div>
+                                      </div>
+                                    } @else if (paymentProofFile()) {
+                                      <div class="flex items-center justify-center gap-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                        <span class="material-symbols-outlined text-4xl text-gray-600">insert_drive_file</span>
+                                        <div>
+                                          <p class="font-medium text-text-light dark:text-text-dark">{{ paymentProofFile()?.name }}</p>
+                                          <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            Tamaño: {{ (paymentProofFile()?.size || 0) / 1024 | number:'1.0-2' }} KB
+                                          </p>
+                                        </div>
+                                      </div>
+                                    }
+                                    
+                                    <div class="flex gap-2 justify-center">
+                                      <button
+                                        type="button"
+                                        (click)="removePaymentProof()"
+                                        [disabled]="paymentProofUploading()"
+                                        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span class="material-symbols-outlined text-base align-middle">delete</span>
+                                        Cambiar
+                                      </button>
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            </div>
+
+                            <!-- Botón de envío -->
+                            <button
+                              type="button"
+                              (click)="uploadPaymentProof()"
+                              [disabled]="!paymentProofFile() || paymentProofUploading()"
+                              class="w-full px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                              @if (paymentProofUploading()) {
+                                <span class="material-symbols-outlined animate-spin text-base">refresh</span>
+                                <span>Enviando...</span>
+                              } @else {
+                                <span class="material-symbols-outlined text-base">upload</span>
+                                <span>Enviar Comprobante</span>
+                              }
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
 
                     <!-- Productos del Pedido -->
                     <div>
@@ -416,6 +600,29 @@
                         </div>
                       </div>
                     </div>
+
+                    <!-- Botón para marcar como recogido (solo para pedidos de recogida listos) -->
+                    @if (selectedOrder()!.status === 'ready_for_pickup' && selectedOrder()!.shippingMethod === 'pickup') {
+                      <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+                          <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">check_circle</span>
+                            <div>
+                              <h4 class="font-semibold text-green-900 dark:text-green-300 mb-1">¡Tu pedido está listo para recoger!</h4>
+                              <p class="text-sm text-green-700 dark:text-green-400">
+                                Puedes pasar a recoger tu pedido en la tienda. Una vez que lo recojas, marca el pedido como recogido.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          (click)="showSatisfactionForm.set(true)"
+                          class="w-full px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-md">
+                          <span class="material-symbols-outlined">shopping_bag</span>
+                          <span>Marcar como Recogido</span>
+                        </button>
+                      </div>
+                    }
                   </div>
                 }
               </div>
@@ -827,4 +1034,13 @@
     </div>
   </main>
 </div>
+
+<!-- Satisfaction Form Modal -->
+@if (showSatisfactionForm() && selectedOrder()) {
+  <app-satisfaction-form
+    [orderNumber]="selectedOrder()!.orderNumber"
+    (submitted)="onSatisfactionSubmitted($event)"
+    (cancelled)="onSatisfactionCancelled()">
+  </app-satisfaction-form>
+}
 

@@ -1,7 +1,7 @@
 import { Component, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'ready_for_pickup' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'ready_for_pickup' | 'picked_up' | 'cancelled';
 
 interface StatusStep {
   key: string;
@@ -24,7 +24,7 @@ export class OrderStatusTrackerComponent {
   // Convertir el string a OrderStatus
   // Maneja cualquier estado que venga del backend, incluso si el admin lo cambia
   private getOrderStatus(): OrderStatus {
-    const validStatuses: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'ready_for_pickup', 'cancelled'];
+    const validStatuses: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'ready_for_pickup', 'picked_up', 'cancelled'];
     const normalizedStatus = this.status?.toLowerCase().trim();
     
     // Si el estado es válido, usarlo
@@ -60,7 +60,8 @@ export class OrderStatusTrackerComponent {
       return [
         { key: 'confirmed', label: 'CONFIRMADO', icon: 'check_circle', status: 'confirmed' },
         { key: 'preparing', label: 'EN PREPARACIÓN', icon: 'inventory_2', status: 'preparing' },
-        { key: 'ready_for_pickup', label: 'LISTO PARA RETIRO', icon: 'store', status: 'ready_for_pickup' }
+        { key: 'ready_for_pickup', label: 'LISTO PARA RETIRO', icon: 'store', status: 'ready_for_pickup' },
+        { key: 'picked_up', label: 'RECOGIDO', icon: 'done_all', status: 'picked_up' }
       ];
     }
   });

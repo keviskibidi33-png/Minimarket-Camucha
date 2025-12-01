@@ -1,2 +1,23 @@
 /* Estilos específicos del home si son necesarios */
 
+/* Mejoras de responsividad para pantallas muy pequeñas */
+@media (max-width: 375px) {
+  .layout-content-container {
+    gap: 1rem;
+  }
+}
+
+/* Mejora de scroll suave en móviles */
+@media (max-width: 768px) {
+  .snap-x {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Asegurar que los elementos no se desborden en móviles */
+@media (max-width: 640px) {
+  .layout-content-container section {
+    overflow-x: hidden;
+  }
+}
+

@@ -39,18 +39,22 @@ export const routes: Routes = [
   },
   {
     path: 'checkout/envio',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/store/checkout/shipping/shipping.component').then(m => m.ShippingComponent)
   },
   {
     path: 'checkout/pago',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/store/checkout/payment/payment.component').then(m => m.PaymentComponent)
   },
   {
     path: 'checkout/confirmacion',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/store/checkout/confirmation/confirmation.component').then(m => m.ConfirmationComponent)
   },
   {
     path: 'checkout/exito',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/store/checkout/success/success.component').then(m => m.SuccessComponent)
   },
   // Rutas de AUTENTICACIÓN (públicas)

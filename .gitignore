@@ -122,6 +122,7 @@ playwright-report/
 node_modules/
 **/node_modules/
 src/**/node_modules/
+src/Minimarket.API/node_modules/
 
 # Angular build
 dist/

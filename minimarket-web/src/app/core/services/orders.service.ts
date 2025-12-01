@@ -235,5 +235,13 @@ export class OrdersService {
       reason
     });
   }
+
+  markOrderAsPickedUp(id: string, rating: number, comment?: string, wouldRecommend: boolean = true): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/mark-as-picked-up`, {
+      rating,
+      comment,
+      wouldRecommend
+    });
+  }
 }
 

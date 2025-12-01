@@ -4,10 +4,12 @@ import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { AuthService, PaymentMethod, UserProfile, UserAddress } from '../../../core/services/auth.service';
 import { OrdersService, WebOrder } from '../../../core/services/orders.service';
+import { PaymentsService } from '../../../core/services/payments.service';
 import { PaymentMethodSettingsService, PaymentMethodSetting } from '../../../core/services/payment-method-settings.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { OrderStatusTrackerComponent } from '../../../shared/components/order-status-tracker/order-status-tracker.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { SatisfactionFormComponent } from '../../../shared/components/satisfaction-form/satisfaction-form.component';
 import { ToastService } from '../../../shared/services/toast.service';
 import { getOrderStatusClass, getOrderStatusText, formatDate, formatPrice, getShippingMethodText, getShippingMethodClass } from '../../../shared/utils/order.utils';
 import { getDepartments, getProvincesByDepartment, getDistrictsByProvince } from '../../../shared/data/peru-locations.data';
@@ -16,7 +18,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule, FormsModule, OrderStatusTrackerComponent, PaginationComponent],
+  imports: [CommonModule, RouterModule, StoreHeaderComponent, ReactiveFormsModule, FormsModule, OrderStatusTrackerComponent, PaginationComponent, SatisfactionFormComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -29,6 +31,14 @@ export class ProfileComponent implements OnInit {
   selectedOrder = signal<WebOrder | null>(null);
   isLoadingOrderDetails = signal(false);
   showOrderDetails = signal(false);
+  showSatisfactionForm = signal(false);
+  isSubmittingFeedback = signal(false);
+  
+  // Payment proof upload
+  paymentProofFile = signal<File | null>(null);
+  paymentProofPreview = signal<string | null>(null);
+  paymentProofUploading = signal(false);
+  operationCode = signal('');
   
   // Filtros
   filterDateFrom = signal<string>('');
@@ -71,6 +81,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private ordersService: OrdersService,
+    private paymentsService: PaymentsService,
     private paymentMethodSettingsService: PaymentMethodSettingsService,
     private router: Router,
     private fb: FormBuilder,
@@ -243,11 +254,11 @@ export class ProfileComponent implements OnInit {
   }
 
   shouldShowStatusTracker(status: string): boolean {
-    // Mostrar el tracker para estados en curso (confirmado, preparando, en camino, listo para retiro)
+    // Mostrar el tracker para estados en curso (confirmado, preparando, en camino, listo para retiro, recogido)
     // También incluir variaciones que el admin pueda usar
     const normalizedStatus = status?.toLowerCase().trim() || '';
     
-    // No mostrar para estados finales o cancelados
+    // No mostrar para estados finales o cancelados (excepto picked_up que sí debe mostrarse)
     const finalStates = ['delivered', 'cancelled', 'completed', 'finished', 'anulado'];
     if (finalStates.some(s => normalizedStatus.includes(s))) {
       return false;
@@ -255,7 +266,7 @@ export class ProfileComponent implements OnInit {
     
     // Estados activos que deben mostrar el tracker
     const activeStates = [
-      'confirmed', 'preparing', 'shipped', 'ready_for_pickup',
+      'confirmed', 'preparing', 'shipped', 'ready_for_pickup', 'picked_up',
       'in_progress', 'processing', 'on_way', 'out_for_delivery',
       'ready', 'available'
     ];
@@ -550,6 +561,168 @@ export class ProfileComponent implements OnInit {
   closeOrderDetails() {
     this.showOrderDetails.set(false);
     this.selectedOrder.set(null);
+  }
+
+  async refreshOrderDetails() {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    await this.viewOrderDetails(order.id);
+  }
+
+  async onSatisfactionSubmitted(feedback: { rating: number; comment: string; wouldRecommend: boolean }) {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    this.isSubmittingFeedback.set(true);
+    try {
+      await firstValueFrom(
+        this.ordersService.markOrderAsPickedUp(
+          order.id,
+          feedback.rating,
+          feedback.comment,
+          feedback.wouldRecommend
+        )
+      );
+
+      this.toastService.success('¡Gracias por tu feedback! Tu pedido ha sido marcado como recogido.');
+      this.showSatisfactionForm.set(false);
+      
+      // Recargar el pedido para actualizar el estado
+      await this.viewOrderDetails(order.id);
+      
+      // Recargar la lista de pedidos
+      await this.loadUserOrders();
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      this.toastService.error(error.error?.message || 'Error al enviar el feedback. Por favor, intenta nuevamente.');
+    } finally {
+      this.isSubmittingFeedback.set(false);
+    }
+  }
+
+  onSatisfactionCancelled() {
+    this.showSatisfactionForm.set(false);
+  }
+
+  // Payment proof upload methods
+  onPaymentProofSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.toastService.error('El archivo es demasiado grande. Máximo 5MB.');
+        return;
+      }
+      
+      this.paymentProofFile.set(file);
+      
+      // Crear preview si es imagen
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.paymentProofPreview.set(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf') {
+        this.paymentProofPreview.set('pdf');
+      } else {
+        this.paymentProofPreview.set('document');
+      }
+    }
+  }
+
+  removePaymentProof() {
+    this.paymentProofFile.set(null);
+    this.paymentProofPreview.set(null);
+    this.operationCode.set('');
+  }
+
+  async uploadPaymentProof() {
+    const order = this.selectedOrder();
+    if (!order) {
+      this.toastService.error('No hay un pedido seleccionado');
+      return;
+    }
+
+    if (!this.paymentProofFile()) {
+      this.toastService.error('Por favor selecciona un archivo');
+      return;
+    }
+
+    if (!order.requiresPaymentProof) {
+      this.toastService.error('Este pedido no requiere comprobante de pago');
+      return;
+    }
+
+    this.paymentProofUploading.set(true);
+
+    try {
+      // Convertir archivo a base64
+      const fileData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(this.paymentProofFile()!);
+      });
+
+      // Preparar datos para enviar
+      const proofData = {
+        orderNumber: order.orderNumber,
+        email: order.customerEmail,
+        phone: order.customerPhone || '',
+        customerName: order.customerName,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        walletMethod: order.walletMethod || null,
+        bankAccount: null,
+        fileName: this.paymentProofFile()?.name || '',
+        fileData: fileData,
+        fileType: this.paymentProofFile()?.type || 'image/jpeg',
+        operationCode: this.operationCode() || null
+      };
+
+      // Enviar comprobante al backend
+      await firstValueFrom(
+        this.paymentsService.sendPaymentProof(proofData)
+      );
+
+      this.toastService.success('Comprobante enviado exitosamente. Te notificaremos cuando sea verificado.');
+      
+      // Recargar el pedido para ver el comprobante actualizado
+      await this.viewOrderDetails(order.id);
+      
+      // Recargar la lista de pedidos para actualizar el estado en la lista
+      await this.loadUserOrders();
+      
+      // Limpiar formulario
+      this.paymentProofFile.set(null);
+      this.paymentProofPreview.set(null);
+      this.operationCode.set('');
+      
+    } catch (error: any) {
+      console.error('Error uploading payment proof:', error);
+      this.toastService.error(error.error?.message || 'Error al subir el comprobante. Por favor intenta de nuevo.');
+    } finally {
+      this.paymentProofUploading.set(false);
+    }
+  }
+
+  isImageFile(url: string): boolean {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) !== null;
+  }
+
+  isPdfFile(url: string): boolean {
+    if (!url) return false;
+    return url.toLowerCase().endsWith('.pdf');
+  }
+
+  onProofImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
   }
 
   // Gestión de direcciones de envío

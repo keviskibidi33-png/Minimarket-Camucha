@@ -14,7 +14,7 @@ public class WebOrder : BaseEntity
     public string PaymentMethod { get; set; } = string.Empty; // "card", "bank", "wallet", "cash"
     public string? WalletMethod { get; set; } // "yape", "plin", "tunki"
     public bool RequiresPaymentProof { get; set; }
-    public string Status { get; set; } = "pending"; // "pending", "confirmed", "preparing", "shipped", "delivered", "ready_for_pickup", "cancelled"
+    public string Status { get; set; } = "pending"; // "pending", "confirmed", "preparing", "shipped", "delivered", "ready_for_pickup", "picked_up", "cancelled"
     public decimal Subtotal { get; set; }
     public decimal ShippingCost { get; set; }
     public decimal Total { get; set; }

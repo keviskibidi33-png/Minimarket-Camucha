@@ -1,9 +1,11 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../../core/services/cart.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 import { SedesService, Sede } from '../../../core/services/sedes.service';
@@ -35,7 +37,10 @@ export class CartComponent implements OnInit {
   constructor(
     private cartService: CartService,
     private settingsService: SettingsService,
-    private sedesService: SedesService
+    private sedesService: SedesService,
+    private authService: AuthService,
+    private router: Router,
+    private toastService: ToastService
   ) {
     // Inicializar cartItems después del constructor
     this.cartItems = this.cartService.getCartItems();
@@ -197,7 +202,21 @@ export class CartComponent implements OnInit {
   }
 
   proceedToPayment() {
-    // La navegación se hace con routerLink en el botón
+    // Verificar que el carrito no esté vacío
+    if (this.cartItems().length === 0) {
+      this.toastService.warning('Tu carrito está vacío');
+      return;
+    }
+
+    // Verificar que el usuario esté autenticado
+    if (!this.authService.isAuthenticated()) {
+      this.toastService.warning('Debes iniciar sesión para realizar un pedido');
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout/envio' } });
+      return;
+    }
+
+    // Navegar al checkout
+    this.router.navigate(['/checkout/envio']);
   }
 
   getPriceFormatted(price: number): string {

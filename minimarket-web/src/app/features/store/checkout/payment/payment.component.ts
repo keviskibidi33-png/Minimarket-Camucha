@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { PaymentsService } from '../../../../core/services/payments.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -71,13 +72,21 @@ export class PaymentComponent implements OnInit, OnDestroy {
     private paymentsService: PaymentsService,
     private router: Router,
     private toastService: ToastService,
-    private brandSettingsService: BrandSettingsService
+    private brandSettingsService: BrandSettingsService,
+    private authService: AuthService
   ) {
     // Inicializar cartItems después del constructor
     this.cartItems = this.cartService.getCartItems();
   }
 
   async ngOnInit() {
+    // Verificar que el usuario esté autenticado
+    if (!this.authService.isAuthenticated()) {
+      this.toastService.warning('Debes iniciar sesión para realizar un pedido');
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout/pago' } });
+      return;
+    }
+
     // Cargar BrandSettings para obtener QR y número de Yape
     this.loadBrandSettings();
     

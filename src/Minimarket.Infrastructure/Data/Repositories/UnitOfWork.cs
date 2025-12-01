@@ -32,6 +32,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<ProductView>? _productViews;
     private IRepository<WebOrder>? _webOrders;
     private IRepository<WebOrderItem>? _webOrderItems;
+    private IRepository<OrderFeedback>? _orderFeedbacks;
     private IRepository<UserProfile>? _userProfiles;
     private IRepository<UserPaymentMethod>? _userPaymentMethods;
     private IRepository<PaymentMethodSettings>? _paymentMethodSettings;
@@ -110,6 +111,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<WebOrderItem> WebOrderItems =>
         _webOrderItems ??= new Repository<WebOrderItem>(_context);
+
+    public IRepository<OrderFeedback> OrderFeedbacks =>
+        _orderFeedbacks ??= new Repository<OrderFeedback>(_context);
 
     public IRepository<UserProfile> UserProfiles =>
         _userProfiles ??= new Repository<UserProfile>(_context);

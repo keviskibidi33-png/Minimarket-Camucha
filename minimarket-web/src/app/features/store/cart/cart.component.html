@@ -173,7 +173,6 @@
         <button 
           (click)="proceedToPayment()"
           [disabled]="cartItems().length === 0"
-          routerLink="/checkout/envio"
           class="w-full mt-6 bg-primary text-white font-bold py-3 px-4 rounded-lg text-base hover:bg-green-600 transition-colors duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
           <span>Proceder al Pago</span>
           <span class="material-symbols-outlined">arrow_forward</span>

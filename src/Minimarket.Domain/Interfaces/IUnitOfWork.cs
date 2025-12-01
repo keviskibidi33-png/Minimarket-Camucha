@@ -25,6 +25,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IRepository<ProductView> ProductViews { get; }
     IRepository<WebOrder> WebOrders { get; }
     IRepository<WebOrderItem> WebOrderItems { get; }
+    IRepository<OrderFeedback> OrderFeedbacks { get; }
     IRepository<UserProfile> UserProfiles { get; }
     IRepository<UserPaymentMethod> UserPaymentMethods { get; }
     IRepository<PaymentMethodSettings> PaymentMethodSettings { get; }

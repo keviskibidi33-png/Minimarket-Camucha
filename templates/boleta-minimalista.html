@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boleta de Venta</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #333; background: #fff;">
+    <table style="width: 100%; border-collapse: collapse; max-width: 800px; margin: 0 auto;">
+        <!-- Encabezado con línea decorativa -->
+        <tr>
+            <td colspan="2" style="padding: 0 0 15px 0; border-top: 3px solid #4A90E2;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <!-- Logo y datos empresa (izquierda) -->
+                        <td style="vertical-align: top; width: 60%;">
+                            <img src="{{LOGO_URL}}" alt="Logo" style="max-height: 50px; margin-bottom: 10px; display: block;">
+                            <div style="color: #333; line-height: 1.4;">
+                                <div style="font-weight: bold; font-size: 12px; margin-bottom: 3px;">{{COMPANY_NAME}}</div>
+                                <div style="font-size: 9px; color: #666;">{{COMPANY_ADDRESS}}</div>
+                                <div style="font-size: 9px; color: #666;">Tel: {{COMPANY_PHONE}}</div>
+                                <div style="font-size: 9px; color: #666;">{{COMPANY_EMAIL}}</div>
+                            </div>
+                        </td>
+                        <!-- RUC y Número de Boleta (derecha) -->
+                        <td style="vertical-align: top; text-align: right; width: 40%;">
+                            <div style="color: #333; line-height: 1.6;">
+                                <div style="font-size: 9px; color: #666; margin-bottom: 5px;">RUC: {{COMPANY_RUC}}</div>
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px;">BOLETA DE VENTA</div>
+                                <div style="font-size: 10px; color: #666;">N° {{DOCUMENT_NUMBER}}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <!-- Información de la venta -->
+        <tr>
+            <td colspan="2" style="padding: 15px 0 10px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; color: #333; font-size: 9px;">
+                            <div style="margin-bottom: 3px;"><strong>Fecha:</strong> {{SALE_DATE}}</div>
+                        </td>
+                        <td style="width: 50%; text-align: right; color: #333; font-size: 9px;">
+                            <div style="margin-bottom: 3px;"><strong>Cliente:</strong> {{CUSTOMER_NAME}}</div>
+                            {{#CUSTOMER_DOCUMENT}}
+                            <div style="margin-bottom: 3px;"><strong>{{CUSTOMER_DOC_TYPE}}:</strong> {{CUSTOMER_DOC_NUMBER}}</div>
+                            {{/CUSTOMER_DOCUMENT}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <!-- Tabla de productos -->
+        <tr>
+            <td colspan="2" style="padding: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <!-- Encabezado de tabla -->
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0; font-weight: bold; font-size: 9px; color: #333; width: 50%;">Producto</td>
+                        <td style="padding: 8px 0; font-weight: bold; font-size: 9px; color: #333; text-align: center; width: 15%;">Cant.</td>
+                        <td style="padding: 8px 0; font-weight: bold; font-size: 9px; color: #333; text-align: right; width: 17.5%;">P. Unit</td>
+                        <td style="padding: 8px 0; font-weight: bold; font-size: 9px; color: #333; text-align: right; width: 17.5%;">Subtotal</td>
+                    </tr>
+                    <!-- Items de productos -->
+                    {{#PRODUCTS}}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0; color: #333; font-size: 9px;">
+                            <div style="font-weight: 500;">{{PRODUCT_NAME}}</div>
+                            {{#PRODUCT_CODE}}
+                            <div style="font-size: 8px; color: #999;">({{PRODUCT_CODE}})</div>
+                            {{/PRODUCT_CODE}}
+                        </td>
+                        <td style="padding: 8px 0; color: #333; font-size: 9px; text-align: center;">{{QUANTITY}}</td>
+                        <td style="padding: 8px 0; color: #333; font-size: 9px; text-align: right;">S/ {{UNIT_PRICE}}</td>
+                        <td style="padding: 8px 0; color: #333; font-size: 9px; text-align: right;">S/ {{SUBTOTAL}}</td>
+                    </tr>
+                    {{/PRODUCTS}}
+                </table>
+            </td>
+        </tr>
+        
+        <!-- Totales -->
+        <tr>
+            <td colspan="2" style="padding: 15px 0 10px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 70%;"></td>
+                        <td style="width: 30%;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right;">Subtotal:</td>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right; width: 80px;">S/ {{SUBTOTAL}}</td>
+                                </tr>
+                                {{#DISCOUNT}}
+                                <tr>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right;">Descuento:</td>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right;">S/ {{DISCOUNT}}</td>
+                                </tr>
+                                {{/DISCOUNT}}
+                                <tr>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right;">IGV (18%):</td>
+                                    <td style="padding: 3px 0; font-size: 9px; color: #333; text-align: right;">S/ {{TAX}}</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; margin-top: 5px;">
+                                    <td style="padding: 8px 0 3px 0; font-size: 11px; font-weight: bold; color: #000; text-align: right;">TOTAL:</td>
+                                    <td style="padding: 8px 0 3px 0; font-size: 11px; font-weight: bold; color: #000; text-align: right;">S/ {{TOTAL}}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <!-- Información de pago -->
+        <tr>
+            <td colspan="2" style="padding: 15px 0 0 0; border-top: 1px solid #eee;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px 0 5px 0; font-size: 9px; color: #666; font-weight: bold;">INFORMACIÓN DE PAGO</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 50%; font-size: 9px; color: #666;">
+                                        <div><strong>Método de pago:</strong> {{PAYMENT_METHOD}}</div>
+                                    </td>
+                                    <td style="width: 50%; font-size: 9px; color: #666;">
+                                        <div><strong>Monto pagado:</strong> S/ {{AMOUNT_PAID}}</div>
+                                    </td>
+                                </tr>
+                                {{#CHANGE}}
+                                <tr>
+                                    <td colspan="2" style="padding-top: 5px; font-size: 9px; color: #666;">
+                                        <div><strong>Vuelto:</strong> S/ {{CHANGE}}</div>
+                                    </td>
+                                </tr>
+                                {{/CHANGE}}
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <!-- Pie de página -->
+        <tr>
+            <td colspan="2" style="padding: 20px 0 0 0; text-align: center; font-size: 8px; color: #999;">
+                Gracias por su compra
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+

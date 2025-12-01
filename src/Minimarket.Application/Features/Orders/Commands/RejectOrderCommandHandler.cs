@@ -52,16 +52,35 @@ public class RejectOrderCommandHandler : IRequestHandler<RejectOrderCommand, Res
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Enviar correo de rechazo en segundo plano con PDF adjunto
+            // Usar Task.Run sin cancellationToken para asegurar que se ejecute
             _ = Task.Run(async () =>
             {
                 string? pdfPath = null;
                 try
                 {
-                    // Generar PDF de la boleta (aunque esté rechazado, el cliente debe tener el documento)
-                    pdfPath = await _pdfService.GenerateWebOrderReceiptAsync(order.Id, "Boleta");
-                    _logger.LogInformation("PDF generado para pedido rechazado {OrderNumber}: {PdfPath}", order.OrderNumber, pdfPath);
+                    _logger.LogInformation("Iniciando envío de correo de rechazo para pedido {OrderNumber}", order.OrderNumber);
+                    
+                    // Validar que el email del cliente existe
+                    if (string.IsNullOrWhiteSpace(order.CustomerEmail))
+                    {
+                        _logger.LogWarning("No se puede enviar correo de rechazo: el cliente no tiene email. OrderNumber: {OrderNumber}", order.OrderNumber);
+                        return;
+                    }
 
-                    await _emailService.SendOrderRejectionAsync(
+                    // Generar PDF de la boleta (aunque esté rechazado, el cliente debe tener el documento)
+                    try
+                    {
+                        pdfPath = await _pdfService.GenerateWebOrderReceiptAsync(order.Id, "Boleta");
+                        _logger.LogInformation("PDF generado para pedido rechazado {OrderNumber}: {PdfPath}", order.OrderNumber, pdfPath);
+                    }
+                    catch (Exception pdfEx)
+                    {
+                        _logger.LogWarning(pdfEx, "Error al generar PDF para pedido rechazado {OrderNumber}. Se enviará el correo sin PDF.", order.OrderNumber);
+                        pdfPath = null; // Continuar sin PDF
+                    }
+
+                    // Enviar correo de rechazo
+                    var emailSent = await _emailService.SendOrderRejectionAsync(
                         order.CustomerEmail,
                         order.CustomerName,
                         order.OrderNumber,
@@ -70,11 +89,18 @@ public class RejectOrderCommandHandler : IRequestHandler<RejectOrderCommand, Res
                         $"Boleta_{order.OrderNumber}.pdf"
                     );
 
-                    _logger.LogInformation("Order rejection email sent with PDF. OrderNumber: {OrderNumber}", order.OrderNumber);
+                    if (emailSent)
+                    {
+                        _logger.LogInformation("Correo de rechazo enviado exitosamente. OrderNumber: {OrderNumber}, Email: {Email}", order.OrderNumber, order.CustomerEmail);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("El método SendOrderRejectionAsync retornó false. OrderNumber: {OrderNumber}, Email: {Email}", order.OrderNumber, order.CustomerEmail);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to send order rejection email. OrderNumber: {OrderNumber}", order.OrderNumber);
+                    _logger.LogError(ex, "Error al enviar correo de rechazo. OrderNumber: {OrderNumber}, Email: {Email}", order.OrderNumber, order.CustomerEmail ?? "N/A");
                 }
                 finally
                 {
@@ -95,7 +121,7 @@ public class RejectOrderCommandHandler : IRequestHandler<RejectOrderCommand, Res
                         });
                     }
                 }
-            }, cancellationToken);
+            });
 
             return Result<bool>.Success(true);
         }

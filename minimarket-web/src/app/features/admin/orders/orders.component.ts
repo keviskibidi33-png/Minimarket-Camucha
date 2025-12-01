@@ -58,6 +58,7 @@ export class OrdersComponent implements OnInit {
     { value: 'shipped', label: 'Enviado' },
     { value: 'delivered', label: 'Entregado' },
     { value: 'ready_for_pickup', label: 'Listo para recoger' },
+    { value: 'picked_up', label: 'Recogido' },
     { value: 'cancelled', label: 'Cancelado' }
   ];
 
@@ -195,6 +196,7 @@ export class OrdersComponent implements OnInit {
       'shipped': 'bg-indigo-100 text-indigo-800',
       'delivered': 'bg-green-100 text-green-800',
       'ready_for_pickup': 'bg-teal-100 text-teal-800',
+      'picked_up': 'bg-green-100 text-green-800',
       'cancelled': 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
@@ -461,6 +463,23 @@ export class OrdersComponent implements OnInit {
       'wallet': 'account_balance_wallet'
     };
     return icons[paymentMethod] || 'payment';
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.toastService.success('Número copiado al portapapeles');
+    }).catch(() => {
+      this.toastService.error('Error al copiar el número');
+    });
+  }
+
+  getWhatsAppUrl(phone: string | null | undefined): string {
+    if (!phone) {
+      return '#';
+    }
+    // Limpiar el número de teléfono (solo números)
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    return `https://wa.me/${cleanPhone}`;
   }
 }
 

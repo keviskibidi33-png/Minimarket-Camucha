@@ -1009,7 +1009,24 @@ public class PdfService : IPdfService
                         var r = Convert.ToByte(hexColor.Substring(0, 2), 16);
                         var g = Convert.ToByte(hexColor.Substring(2, 2), 16);
                         var b = Convert.ToByte(hexColor.Substring(4, 2), 16);
-                        return QuestPDF.Infrastructure.Color.FromRgb(r, g, b);
+                        
+                        // Normalizar a valores entre 0 y 1
+                        var rNorm = r / 255f;
+                        var gNorm = g / 255f;
+                        var bNorm = b / 255f;
+                        
+                        // Crear el color usando el constructor con Reflection
+                        var colorType = typeof(QuestPDF.Infrastructure.Color);
+                        var constructor = colorType.GetConstructor(
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                            null,
+                            new[] { typeof(float), typeof(float), typeof(float) },
+                            null);
+                        
+                        if (constructor != null)
+                        {
+                            return (QuestPDF.Infrastructure.Color)constructor.Invoke(new object[] { rNorm, gNorm, bNorm });
+                        }
                     }
                 }
                 catch { }

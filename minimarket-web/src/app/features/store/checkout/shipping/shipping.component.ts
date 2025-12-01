@@ -98,6 +98,13 @@ export class ShippingComponent implements OnInit {
   }
 
   async ngOnInit() {
+    // Verificar que el usuario esté autenticado
+    if (!this.authService.isAuthenticated()) {
+      this.toastService.warning('Debes iniciar sesión para realizar un pedido');
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout/envio' } });
+      return;
+    }
+
     // Verificar que el carrito no esté vacío
     if (this.cartItems().length === 0) {
       this.router.navigate(['/carrito']);

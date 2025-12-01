@@ -53,6 +53,7 @@ export class SuccessComponent implements OnInit {
   paymentProofUploading = signal(false);
   operationCode = signal<string>('');
   proofUploaded = signal(false);
+  showContactModal = signal(false);
 
   constructor(
     private router: Router,
@@ -481,12 +482,19 @@ export class SuccessComponent implements OnInit {
       this.paymentProofPreview.set(null);
       this.operationCode.set('');
       
+      // Mostrar modal de contacto
+      this.showContactModal.set(true);
+      
     } catch (error: any) {
       console.error('Error uploading payment proof:', error);
       this.toastService.error('Error al subir el comprobante. Por favor intenta de nuevo.');
     } finally {
       this.paymentProofUploading.set(false);
     }
+  }
+
+  closeContactModal() {
+    this.showContactModal.set(false);
   }
 
   // No limpiar datos aquí - se mantendrán hasta que se complete la venta o se limpie el carrito

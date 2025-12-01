@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../../core/services/cart.service';
 import { PaymentsService } from '../../../../core/services/payments.service';
 import { OrdersService } from '../../../../core/services/orders.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { BrandSettingsService } from '../../../../core/services/brand-settings.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
@@ -49,13 +50,21 @@ export class ConfirmationComponent implements OnInit {
     private ordersService: OrdersService,
     private brandSettingsService: BrandSettingsService,
     private toastService: ToastService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     // Inicializar cartItems después del constructor
     this.cartItems = this.cartService.getCartItems();
   }
 
   ngOnInit() {
+    // Verificar que el usuario esté autenticado
+    if (!this.authService.isAuthenticated()) {
+      this.toastService.warning('Debes iniciar sesión para realizar un pedido');
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout/confirmacion' } });
+      return;
+    }
+
     // Si se está confirmando un pedido, no validar (evitar redirección durante la confirmación)
     const isConfirming = localStorage.getItem('order-confirming') === 'true';
     

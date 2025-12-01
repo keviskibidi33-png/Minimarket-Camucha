@@ -875,14 +875,25 @@ public class EmailService : IEmailService
 
     public async Task<bool> SendOrderRejectionAsync(string toEmail, string customerName, string orderNumber, string reason, string? pdfPath = null, string? pdfFileName = null)
     {
-        var subject = $"Pedido #{orderNumber} Rechazado - Minimarket Camucha";
-        
-        var wwwrootPath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", "email-templates");
-        var logoPath = Path.Combine(wwwrootPath, "logo.png");
-        var promotionPath = Path.Combine(wwwrootPath, "promotion.png");
-        
-        var logoCid = "logo@minimarket";
-        var promotionCid = "promotion@minimarket";
+        try
+        {
+            _logger.LogInformation("Iniciando envío de correo de rechazo. OrderNumber: {OrderNumber}, Email: {Email}, PDF: {PdfPath}", 
+                orderNumber, toEmail, pdfPath ?? "Sin PDF");
+            
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                _logger.LogError("No se puede enviar correo de rechazo: email vacío. OrderNumber: {OrderNumber}", orderNumber);
+                return false;
+            }
+
+            var subject = $"Pedido #{orderNumber} Rechazado - Minimarket Camucha";
+            
+            var wwwrootPath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", "email-templates");
+            var logoPath = Path.Combine(wwwrootPath, "logo.png");
+            var promotionPath = Path.Combine(wwwrootPath, "promotion.png");
+            
+            var logoCid = "logo@minimarket";
+            var promotionCid = "promotion@minimarket";
 
         var body = $@"
             <html>
@@ -942,14 +953,34 @@ public class EmailService : IEmailService
             </body>
             </html>";
 
-        // Si hay PDF, usar método con adjunto; si no, usar método sin adjunto
-        if (!string.IsNullOrEmpty(pdfPath) && System.IO.File.Exists(pdfPath))
-        {
-            return await SendEmailWithEmbeddedImagesAndAttachmentAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid, pdfPath, pdfFileName ?? $"Boleta_{orderNumber}.pdf");
+            // Si hay PDF, usar método con adjunto; si no, usar método sin adjunto
+            bool result;
+            if (!string.IsNullOrEmpty(pdfPath) && System.IO.File.Exists(pdfPath))
+            {
+                _logger.LogInformation("Enviando correo de rechazo con PDF adjunto. OrderNumber: {OrderNumber}", orderNumber);
+                result = await SendEmailWithEmbeddedImagesAndAttachmentAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid, pdfPath, pdfFileName ?? $"Boleta_{orderNumber}.pdf");
+            }
+            else
+            {
+                _logger.LogInformation("Enviando correo de rechazo sin PDF adjunto. OrderNumber: {OrderNumber}", orderNumber);
+                result = await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
+            }
+
+            if (result)
+            {
+                _logger.LogInformation("Correo de rechazo enviado exitosamente. OrderNumber: {OrderNumber}, Email: {Email}", orderNumber, toEmail);
+            }
+            else
+            {
+                _logger.LogWarning("El envío de correo de rechazo retornó false. OrderNumber: {OrderNumber}, Email: {Email}", orderNumber, toEmail);
+            }
+
+            return result;
         }
-        else
+        catch (Exception ex)
         {
-            return await SendEmailWithEmbeddedImagesAsync(toEmail, subject, body, logoPath, logoCid, promotionPath, promotionCid);
+            _logger.LogError(ex, "Error en SendOrderRejectionAsync. OrderNumber: {OrderNumber}, Email: {Email}", orderNumber, toEmail ?? "N/A");
+            return false;
         }
     }
 

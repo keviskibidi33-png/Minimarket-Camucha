@@ -4,29 +4,29 @@
     <app-store-header></app-store-header>
 
     <!-- Main Content -->
-    <main class="flex flex-1 justify-center py-5 sm:py-8 md:py-10 px-4 sm:px-6 lg:px-8">
-      <div class="layout-content-container flex flex-col w-full max-w-7xl gap-8 md:gap-12">
+    <main class="flex flex-1 justify-center py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-8">
+      <div class="layout-content-container flex flex-col w-full max-w-7xl gap-6 sm:gap-8 md:gap-10 lg:gap-12">
         <!-- Hero Section / Banner -->
-        <section class="relative w-full h-96 rounded-xl overflow-hidden shadow-lg">
+        <section class="relative w-full h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-xl overflow-hidden shadow-lg">
           @if (brandSettings()?.homeBannerImageUrl) {
             <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + brandSettings()!.homeBannerImageUrl + ')'"></div>
           } @else {
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_oZYC5CocHKGYtVXfYtxEePo7EDEykSPB60TIEuaR7odvwcCuVUg_rL-7aYLmGdJWc-XyyyvYLJAwyXiPRbkPE_LVZCncRuVnT3cNFATUXmJhGZ7MxhrMdHMlmLYSJDT-10RVmiS_21s9DKkrEyzv9xaeo8xg9XqcOQ4vVVvB5F-PLxDq5qwYv48vk6DD7gRNRRfjwk1bVw-P2zHTlkAXTGwdiBvjURfPBm1Q5gspfHyGDC_9PU4OXZh9mVBDnfjQhlGPE3ss3kIa');"></div>
           }
           <div class="absolute inset-0 bg-black/40"></div>
-          <div class="relative h-full flex flex-col items-center justify-center text-center text-white p-6">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">
+          <div class="relative h-full flex flex-col items-center justify-center text-center text-white p-4 sm:p-6 md:p-8">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 md:mb-4 drop-shadow-md px-2">
               {{ brandSettings()?.homeTitle || '¡Bienvenido a ' + (brandSettings()?.storeName || 'nuestra tienda') + '!' }}
             </h1>
-            <p class="text-lg md:text-xl max-w-2xl mb-2 drop-shadow-sm">
+            <p class="text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mb-2 sm:mb-3 drop-shadow-sm px-2">
               {{ brandSettings()?.homeSubtitle || 'Los mejores productos al mejor precio' }}
             </p>
             @if (brandSettings()?.homeDescription) {
-              <p class="text-base max-w-2xl mb-6 drop-shadow-sm opacity-90">
+              <p class="text-xs sm:text-sm md:text-base max-w-2xl mb-4 sm:mb-5 md:mb-6 drop-shadow-sm opacity-90 px-2 hidden sm:block">
                 {{ brandSettings()!.homeDescription }}
               </p>
             }
-            <a routerLink="/tienda/productos" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
+            <a routerLink="/tienda/productos" class="flex min-w-[120px] sm:min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 sm:h-11 md:h-12 px-4 sm:px-5 md:px-6 bg-primary text-white text-sm sm:text-base font-bold tracking-wide hover:bg-primary/90 transition-colors">
               <span class="truncate">Comprar Ahora</span>
             </a>
           </div>
@@ -34,7 +34,7 @@
 
         <!-- Featured Products Section -->
         <section class="relative">
-          <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-4 pt-5">Productos Destacados</h2>
+          <h2 class="text-xl sm:text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-3 sm:pb-4 pt-4 sm:pt-5">Productos Destacados</h2>
           @if (isLoading()) {
             <div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-4 -mx-4 sm:-mx-6">
               <div class="flex items-stretch px-4 sm:px-6 gap-4 min-w-full">
@@ -55,21 +55,21 @@
               <!-- Botón izquierdo (solo escritorio) -->
               <button
                 (click)="scrollProductsLeft()"
-                class="hidden md:flex absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
+                class="hidden md:flex absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
                 aria-label="Desplazar productos a la izquierda">
-                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">chevron_left</span>
+                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">chevron_left</span>
               </button>
               
               <!-- Contenedor con scroll infinito -->
               <div 
                 #productsScrollContainer
                 (scroll)="onProductsScroll()"
-                class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth">
+                class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth snap-x snap-mandatory">
                 <div 
                   #productsWrapper
-                  class="flex items-stretch gap-4 px-4 sm:px-6">
+                  class="flex items-stretch gap-3 sm:gap-4 px-4 sm:px-6">
                   @for (product of duplicatedFeaturedProducts(); track $index) {
-                    <div class="min-w-[200px] sm:min-w-[220px] flex-shrink-0">
+                    <div class="min-w-[180px] xs:min-w-[200px] sm:min-w-[220px] md:min-w-[240px] flex-shrink-0 snap-start">
                       <app-product-card [product]="product"></app-product-card>
                     </div>
                   }
@@ -79,9 +79,9 @@
               <!-- Botón derecho (solo escritorio) -->
               <button
                 (click)="scrollProductsRight()"
-                class="hidden md:flex absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
+                class="hidden md:flex absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
                 aria-label="Desplazar productos a la derecha">
-                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">chevron_right</span>
+                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">chevron_right</span>
               </button>
             </div>
           }
@@ -89,7 +89,7 @@
 
         <!-- Popular Categories Section -->
         <section class="relative">
-          <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-4 pt-5">Categorías Populares</h2>
+          <h2 class="text-xl sm:text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-3 sm:pb-4 pt-4 sm:pt-5">Categorías Populares</h2>
           @if (popularCategories().length === 0) {
             <div class="text-center py-8 px-4 sm:px-6">
               <p class="text-gray-500 dark:text-gray-400">No hay categorías populares disponibles</p>
@@ -102,30 +102,30 @@
               <!-- Botón izquierdo (solo escritorio) -->
               <button
                 (click)="scrollCategoriesLeft()"
-                class="hidden md:flex absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
+                class="hidden md:flex absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
                 aria-label="Desplazar categorías a la izquierda">
-                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">chevron_left</span>
+                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">chevron_left</span>
               </button>
               
               <!-- Contenedor con scroll infinito -->
               <div 
                 #categoriesScrollContainer
                 (scroll)="onCategoriesScroll()"
-                class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth">
+                class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth snap-x snap-mandatory">
                 <div 
                   #categoriesWrapper
-                  class="flex items-stretch gap-4 px-4 sm:px-6 lg:px-8">
+                  class="flex items-stretch gap-3 sm:gap-4 px-4 sm:px-6 lg:px-8">
                   @for (category of duplicatedCategories(); track $index) {
                     <a 
                       [routerLink]="['/tienda/productos']" 
                       [queryParams]="{category: category.id}" 
-                      class="group relative flex flex-col items-center justify-center text-center p-6 sm:p-8 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 aspect-square w-[160px] sm:w-[180px] flex-shrink-0">
+                      class="group relative flex flex-col items-center justify-center text-center p-4 sm:p-6 md:p-8 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 aspect-square w-[140px] xs:w-[160px] sm:w-[180px] md:w-[200px] flex-shrink-0 snap-start">
                       <div class="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
                       <div class="relative z-10 flex flex-col items-center w-full">
-                        <div class="mb-3 sm:mb-4 text-primary text-5xl sm:text-6xl">
+                        <div class="mb-2 sm:mb-3 md:mb-4 text-primary text-4xl sm:text-5xl md:text-6xl">
                           <span class="material-symbols-outlined">{{ getCategoryIcon(category.name) }}</span>
                         </div>
-                        <p class="font-bold text-base sm:text-lg text-text-light dark:text-text-dark text-center">{{ category.name }}</p>
+                        <p class="font-bold text-sm sm:text-base md:text-lg text-text-light dark:text-text-dark text-center px-1">{{ category.name }}</p>
                       </div>
                     </a>
                   }
@@ -135,9 +135,9 @@
               <!-- Botón derecho (solo escritorio) -->
               <button
                 (click)="scrollCategoriesRight()"
-                class="hidden md:flex absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
+                class="hidden md:flex absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 opacity-90 hover:opacity-100 items-center justify-center"
                 aria-label="Desplazar categorías a la derecha">
-                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-2xl">chevron_right</span>
+                <span class="material-symbols-outlined text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">chevron_right</span>
               </button>
             </div>
           }
@@ -146,25 +146,25 @@
         <!-- Special Offers Carousel -->
         @if (activeOfertas().length > 0) {
           <section>
-            <h2 class="text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-4 pt-5">Ofertas Especiales</h2>
-            <div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-4 -mx-4 sm:-mx-6">
-              <div class="flex items-stretch px-4 sm:px-6 gap-4">
+            <h2 class="text-xl sm:text-2xl font-bold leading-tight tracking-tight px-4 sm:px-6 pb-3 sm:pb-4 pt-4 sm:pt-5">Ofertas Especiales</h2>
+            <div class="flex overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-4 -mx-4 sm:-mx-6 snap-x snap-mandatory">
+              <div class="flex items-stretch px-4 sm:px-6 gap-3 sm:gap-4">
                 @for (oferta of activeOfertas(); track oferta.id) {
-                  <div class="flex h-full flex-col gap-4 rounded-lg bg-white dark:bg-gray-800 shadow-md min-w-[280px] sm:min-w-64 flex-shrink-0">
+                  <div class="flex h-full flex-col gap-3 sm:gap-4 rounded-lg bg-white dark:bg-gray-800 shadow-md min-w-[260px] xs:min-w-[280px] sm:min-w-64 md:min-w-72 flex-shrink-0 snap-start">
                     <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg" 
                          [style.background-image]="oferta.imagenUrl ? 'url(' + oferta.imagenUrl + ')' : 'url(https://via.placeholder.com/400x225?text=Oferta)'"
                          [style.background-color]="!oferta.imagenUrl ? '#f3f4f6' : 'transparent'">
                       @if (!oferta.imagenUrl) {
                         <div class="w-full h-full flex items-center justify-center bg-primary/10">
-                          <span class="material-symbols-outlined text-primary text-6xl">local_offer</span>
+                          <span class="material-symbols-outlined text-primary text-4xl sm:text-5xl md:text-6xl">local_offer</span>
                         </div>
                       }
                     </div>
-                    <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                    <div class="flex flex-col flex-1 justify-between p-3 sm:p-4 pt-0 gap-3 sm:gap-4">
                       <div>
-                        <p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">{{ oferta.nombre }}</p>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">{{ oferta.descripcion || 'Oferta especial disponible' }}</p>
-                        <p class="text-primary font-semibold text-sm mt-2">
+                        <p class="text-sm sm:text-base font-medium leading-normal text-text-light dark:text-text-dark">{{ oferta.nombre }}</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-normal leading-normal line-clamp-2">{{ oferta.descripcion || 'Oferta especial disponible' }}</p>
+                        <p class="text-primary font-semibold text-xs sm:text-sm mt-2">
                           @if (oferta.descuentoTipo === 0) {
                             {{ oferta.descuentoValor }}% OFF
                           } @else {
@@ -172,7 +172,7 @@
                           }
                         </p>
                       </div>
-                      <a [routerLink]="['/tienda/ofertas', oferta.id]" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                      <a [routerLink]="['/tienda/ofertas', oferta.id]" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 sm:h-10 px-3 sm:px-4 bg-primary text-white text-xs sm:text-sm font-bold hover:bg-primary/90 transition-colors">
                         <span class="truncate">Ver Oferta</span>
                       </a>
                     </div>

@@ -121,6 +121,7 @@ playwright-report/
 # Node modules
 node_modules/
 **/node_modules/
+src/**/node_modules/
 
 # Angular build
 dist/

@@ -59,8 +59,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   loadCategories(): void {
-    this.categoriesService.getAll().subscribe({
-      next: (categories) => this.categories.set(categories.map(c => ({ id: c.id, name: c.name }))),
+    this.categoriesService.getAllWithoutPagination().subscribe({
+      next: (categories) => this.categories.set(categories.map((c: any) => ({ id: c.id, name: c.name }))),
       error: (error) => console.error('Error loading categories:', error)
     });
   }

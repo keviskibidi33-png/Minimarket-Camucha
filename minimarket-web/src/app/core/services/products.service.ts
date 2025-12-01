@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface Product {
@@ -15,6 +16,7 @@ export interface Product {
   categoryId: string;
   categoryName: string;
   imageUrl?: string;
+  paginas?: { [key: string]: any }; // Para productos destacados: {"home": true, "home_orden": 1}
   isActive: boolean;
   createdAt: string;
   expirationDate?: string; // Fecha de vencimiento
@@ -36,6 +38,7 @@ export interface CreateProductDto {
 export interface UpdateProductDto extends CreateProductDto {
   id: string;
   isActive: boolean;
+  paginas?: { [key: string]: any }; // Para productos destacados
 }
 
 export interface ProductsQueryParams {
@@ -99,7 +102,15 @@ export class ProductsService {
   }
 
   update(product: UpdateProductDto): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/${product.id}`, product);
+    return this.http.put<Product>(`${this.apiUrl}/${product.id}`, product).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // No loguear errores 401 en consola (son esperados cuando no hay sesión)
+        if (error.status !== 401) {
+          console.error('Error updating product:', error);
+        }
+        return throwError(() => error);
+      })
+    );
   }
 
   delete(id: string): Observable<void> {

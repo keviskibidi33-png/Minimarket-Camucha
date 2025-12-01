@@ -48,9 +48,11 @@ En Coolify, las variables de entorno se configuran directamente en la **interfaz
 2. Selecciona tu aplicación
 3. Ve a la sección **"Environment Variables"** o **"Variables de Entorno"**
 
-### Paso 2: Configurar variables obligatorias
+### Paso 2: Configurar TODAS las variables en Coolify
 
-Agrega estas variables en Coolify (las demás ya tienen valores por defecto):
+**⚠️ IMPORTANTE:** En producción, TODAS las variables deben configurarse explícitamente. No hay valores por defecto por seguridad.
+
+#### Variables Obligatorias:
 
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
@@ -60,17 +62,24 @@ Agrega estas variables en Coolify (las demás ya tienen valores por defecto):
 | `FRONTEND_URL` | URL de tu frontend | `https://tudominio.com` |
 | `CORS_ORIGINS` | URLs permitidas (separadas por coma) | `https://tudominio.com,https://www.tudominio.com` |
 
-### Paso 3: Variables opcionales (ya configuradas por defecto)
+#### Variables de Email (Obligatorias):
 
-Estas variables **ya tienen valores por defecto** del sistema. Solo configúralas si necesitas cambiarlas:
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `SMTP_SERVER` | Servidor SMTP | `smtp.gmail.com` |
+| `SMTP_PORT` | Puerto SMTP | `587` |
+| `SMTP_USER` | Usuario SMTP | `tu-email@gmail.com` |
+| `SMTP_PASSWORD` | Contraseña SMTP o App Password | `tu-contraseña` |
+| `FROM_EMAIL` | Email remitente | `tu-email@gmail.com` |
+| `FROM_NAME` | Nombre remitente | `Minimarket Camucha` |
 
-| Variable | Valor por Defecto | ¿Cuándo cambiar? |
-|----------|-------------------|------------------|
-| `SMTP_SERVER` | `smtp.gmail.com` | Si usas otro servidor SMTP |
-| `SMTP_USER` | `minimarket.camucha@gmail.com` | Si cambias el email |
-| `SMTP_PASSWORD` | `xzloatedigfqgyxi` | Si cambias la contraseña |
-| `GOOGLE_CLIENT_ID` | `259590059487-...` | Si usas otras credenciales OAuth |
-| `GOOGLE_CLIENT_SECRET` | `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` | Si usas otras credenciales OAuth |
+#### Variables de Google OAuth (Obligatorias):
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth | `GOCSPX-xxx` |
+| `GOOGLE_REDIRECT_URI` | Redirect URI completo | `https://tu-api.com/api/auth/google-callback` |
 
 ### Paso 4: Google OAuth Redirect URI
 
@@ -85,25 +94,15 @@ Estas variables **ya tienen valores por defecto** del sistema. Solo configúrala
 
 ---
 
-## 📝 Variables con Valores por Defecto
+## 📝 Nota sobre Valores por Defecto
 
-El sistema ya tiene configuradas estas variables, **no necesitas configurarlas** a menos que quieras cambiarlas:
+**⚠️ IMPORTANTE:** En producción, NO hay valores por defecto por seguridad. Todas las variables deben configurarse explícitamente en Coolify.
 
-### Email SMTP (Gmail)
-- ✅ `SMTP_SERVER=smtp.gmail.com`
-- ✅ `SMTP_PORT=587`
-- ✅ `SMTP_USER=minimarket.camucha@gmail.com`
-- ✅ `SMTP_PASSWORD=xzloatedigfqgyxi`
-- ✅ `FROM_EMAIL=minimarket.camucha@gmail.com`
-- ✅ `FROM_NAME=Minimarket Camucha`
+Los valores que ves en `appsettings.json` son **solo para desarrollo local**. En producción, todas las claves y credenciales deben configurarse a través de variables de entorno en Coolify.
 
-### Google OAuth
-- ✅ `GOOGLE_CLIENT_ID=259590059487-5k8bk2sor6r9oa02pojkhj5nrd8c9h2e.apps.googleusercontent.com`
-- ✅ `GOOGLE_CLIENT_SECRET=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`
-
-### Resend API
-- El sistema usa Resend automáticamente como fallback si SMTP falla
-- Solo configura `RESEND_API_KEY` si quieres usarlo como método principal
+### Resend API (Opcional)
+- El sistema puede usar Resend automáticamente como fallback si SMTP falla
+- Solo configura `RESEND_API_KEY` si quieres usarlo como método principal o fallback
 
 ---
 
@@ -126,9 +125,10 @@ En Coolify, las variables se almacenan de forma segura y encriptada. No las comp
 - [ ] Configurar `BASE_URL` con tu dominio de producción
 - [ ] Configurar `FRONTEND_URL` con tu dominio de producción
 - [ ] Configurar `CORS_ORIGINS` con tus dominios permitidos
-- [ ] Actualizar Redirect URI en Google Cloud Console
-- [ ] Configurar `GOOGLE_REDIRECT_URI` en Coolify (si aplica)
-- [ ] Verificar que las variables de Email y Google OAuth funcionen (ya están configuradas por defecto)
+- [ ] Configurar todas las variables de Email SMTP (`SMTP_SERVER`, `SMTP_USER`, `SMTP_PASSWORD`, etc.)
+- [ ] Configurar todas las variables de Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`)
+- [ ] Actualizar Redirect URI en Google Cloud Console para que coincida con `GOOGLE_REDIRECT_URI`
+- [ ] (Opcional) Configurar `RESEND_API_KEY` si quieres usar Resend como fallback
 
 ---
 

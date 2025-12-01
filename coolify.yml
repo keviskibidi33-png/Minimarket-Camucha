@@ -19,16 +19,23 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-MinimarketAPI}
       - JwtSettings__Audience=${JWT_AUDIENCE:-MinimarketWeb}
-      - EmailSettings__SmtpServer=${SMTP_SERVER}
+      # Email Settings - Usa los valores por defecto del sistema (Gmail SMTP)
+      - EmailSettings__SmtpServer=${SMTP_SERVER:-smtp.gmail.com}
       - EmailSettings__SmtpPort=${SMTP_PORT:-587}
-      - EmailSettings__SmtpUser=${SMTP_USER}
-      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
-      - EmailSettings__FromEmail=${FROM_EMAIL}
+      - EmailSettings__SmtpUser=${SMTP_USER:-minimarket.camucha@gmail.com}
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD:-xzloatedigfqgyxi}
+      - EmailSettings__FromEmail=${FROM_EMAIL:-minimarket.camucha@gmail.com}
       - EmailSettings__FromName=${FROM_NAME:-Minimarket Camucha}
-      - EmailSettings__ApiKey=${RESEND_API_KEY}
+      - EmailSettings__ApiKey=${RESEND_API_KEY:-}
+      - EmailSettings__ApiUrl=https://api.resend.com/emails
+      # URLs - Deben configurarse en producción
       - BaseUrl=${BASE_URL}
       - FrontendUrl=${FRONTEND_URL}
       - Cors__AllowedOrigins=${CORS_ORIGINS}
+      # Google OAuth - Usa los valores por defecto del sistema
+      - GoogleOAuth__ClientId=${GOOGLE_CLIENT_ID:-259590059487-5k8bk2sor6r9oa02pojkhj5nrd8c9h2e.apps.googleusercontent.com}
+      - GoogleOAuth__ClientSecret=${GOOGLE_CLIENT_SECRET:-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}
+      - GoogleOAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
     volumes:
       - uploads:/app/wwwroot/uploads
       - logs:/app/logs

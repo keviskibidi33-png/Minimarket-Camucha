@@ -1,23 +1,52 @@
 version: '3.8'
 
 services:
-  # Backend API
-  api:
+  # SQL Server 2022 Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: minimarket-db
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+      - MSSQL_PID=Express
+    # Exponemos el puerto solo si quieres conectar tu SQL Management Studio desde tu PC.
+    # Si no lo necesitas, puedes borrar estas dos líneas de 'ports' por seguridad.
+    ports:
+      - "1433:1433"
+    volumes:
+      - db_data:/var/opt/mssql/data
+      - db_log:/var/opt/mssql/log
+      - db_secrets:/var/opt/mssql/secrets
+    networks:
+      - minimarket-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Backend API (.NET)
+  app:
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
     container_name: minimarket-api
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    # CAMBIO CLAVE: Usamos 'expose' en lugar de 'ports' para no chocar con Coolify/Traefik
+    expose:
+      - "8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      # Conexión interna directa al servicio 'db'
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=${DB_NAME:-MinimarketDB};User Id=${DB_USER:-SA};Password=${DB_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Connection Timeout=30;
+      # JWT Settings
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-MinimarketAPI}
       - JwtSettings__Audience=${JWT_AUDIENCE:-MinimarketWeb}
-      # Email Settings - Valores por defecto para desarrollo local (.env)
+      # Email Settings - Valores por defecto (pueden sobrescribirse)
       - EmailSettings__SmtpServer=${SMTP_SERVER:-smtp.gmail.com}
       - EmailSettings__SmtpPort=${SMTP_PORT:-587}
       - EmailSettings__SmtpUser=${SMTP_USER:-minimarket.camucha@gmail.com}
@@ -26,17 +55,20 @@ services:
       - EmailSettings__FromName=${FROM_NAME:-Minimarket Camucha}
       - EmailSettings__ApiKey=${RESEND_API_KEY:-}
       - EmailSettings__ApiUrl=https://api.resend.com/emails
-      # URLs - Configurar en .env para desarrollo local
+      # URLs - Configurar en Coolify
       - BaseUrl=${BASE_URL}
       - FrontendUrl=${FRONTEND_URL}
       - Cors__AllowedOrigins=${CORS_ORIGINS}
-      # Google OAuth - Valores por defecto para desarrollo local (.env)
+      # Google OAuth - Valores por defecto (pueden sobrescribirse)
       - GoogleOAuth__ClientId=${GOOGLE_CLIENT_ID:-259590059487-5k8bk2sor6r9oa02pojkhj5nrd8c9h2e.apps.googleusercontent.com}
       - GoogleOAuth__ClientSecret=${GOOGLE_CLIENT_SECRET:-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}
       - GoogleOAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
     volumes:
       - ./uploads:/app/wwwroot/uploads
       - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - minimarket-network
     healthcheck:
@@ -46,17 +78,19 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend
+  # Frontend (Angular)
   web:
     build:
       context: ./minimarket-web
       dockerfile: Dockerfile
     container_name: minimarket-web
     restart: unless-stopped
-    ports:
-      - "80:80"
+    # CAMBIO CLAVE: Usamos 'expose' para que Coolify/Traefik maneje el dominio.
+    # El puerto 80 interno del contenedor es correcto para Nginx.
+    expose:
+      - "80"
     depends_on:
-      - api
+      - app
     networks:
       - minimarket-network
     healthcheck:
@@ -66,7 +100,14 @@ services:
       retries: 3
       start_period: 10s
 
+volumes:
+  db_data:
+    driver: local
+  db_log:
+    driver: local
+  db_secrets:
+    driver: local
+
 networks:
   minimarket-network:
     driver: bridge
-

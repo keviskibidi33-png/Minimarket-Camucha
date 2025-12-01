@@ -223,5 +223,17 @@ export class OrdersService {
       paymentProofUrl
     });
   }
+
+  approveOrder(orderId: string, sendPaymentVerifiedEmail: boolean = false): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${orderId}/approve`, {
+      sendPaymentVerifiedEmail
+    });
+  }
+
+  rejectOrder(orderId: string, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${orderId}/reject`, {
+      reason
+    });
+  }
 }
 

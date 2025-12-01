@@ -18,6 +18,19 @@ export interface GenerateCashClosureRequest {
   endDate: string;
 }
 
+export interface CashClosureHistory {
+  closureDate: string;
+  salesStartDate: string;
+  salesEndDate: string;
+  totalSales: number;
+  totalAmount: number;
+  byPaymentMethod: Array<{
+    method: string;
+    total: number;
+    count: number;
+  }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,6 +49,28 @@ export class CashClosureService {
 
   generatePdf(request: GenerateCashClosureRequest): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/generate`, request, {
+      responseType: 'blob'
+    });
+  }
+
+  getHistory(startDate?: Date, endDate?: Date): Observable<CashClosureHistory[]> {
+    let params = new HttpParams();
+    if (startDate) {
+      params = params.set('startDate', startDate.toISOString());
+    }
+    if (endDate) {
+      params = params.set('endDate', endDate.toISOString());
+    }
+    
+    return this.http.get<CashClosureHistory[]>(`${this.apiUrl}/history`, { params });
+  }
+
+  downloadPdf(closureDate: Date): Observable<Blob> {
+    let params = new HttpParams();
+    params = params.set('closureDate', closureDate.toISOString());
+    
+    return this.http.get(`${this.apiUrl}/download-pdf`, { 
+      params,
       responseType: 'blob'
     });
   }

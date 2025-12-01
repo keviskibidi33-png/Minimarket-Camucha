@@ -5,6 +5,8 @@ import { StoreHeaderComponent } from '../../../../shared/components/store-header
 import { CartService } from '../../../../core/services/cart.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { BrandSettingsService } from '../../../../core/services/brand-settings.service';
+import { PaymentsService } from '../../../../core/services/payments.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -35,8 +37,8 @@ export class SuccessComponent implements OnInit {
   bankAccountNumber = '193-12345678-0-00';
   bankAccountName = 'Minimarket Camucha S.A.C.';
   
-  // Digital wallet info (solo Yape)
-  yapeNumber = '999 888 777'; // TODO: Mover a configuración
+  // Digital wallet info (Yape/Plin) - se carga desde BrandSettings
+  yapeNumber = signal<string>('999 888 777'); // Fallback si no hay configuración
   yapeQR = signal<string>('');
 
   // Shipping settings
@@ -45,11 +47,20 @@ export class SuccessComponent implements OnInit {
   pickupDays = signal(2);
   pickupTime = signal('16:00');
 
+  // Payment proof upload
+  paymentProofFile = signal<File | null>(null);
+  paymentProofPreview = signal<string | null>(null);
+  paymentProofUploading = signal(false);
+  operationCode = signal<string>('');
+  proofUploaded = signal(false);
+
   constructor(
     private router: Router,
     private cartService: CartService,
     private settingsService: SettingsService,
-    private brandSettingsService: BrandSettingsService
+    private brandSettingsService: BrandSettingsService,
+    private paymentsService: PaymentsService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -80,9 +91,9 @@ export class SuccessComponent implements OnInit {
         this.subtotal.set(this.orderItems.reduce((sum, item) => sum + (item.subtotal || 0), 0));
       }
       
-      // Si requiere comprobante y es billetera digital, generar QR de Yape
+      // Cargar configuración de Yape/Plin desde BrandSettings
       if (this.requiresProof() && this.paymentData?.paymentMethod === 'wallet') {
-        this.generateYapeQR();
+        this.loadYapeSettings();
       }
 
       // Cargar configuraciones de envío desde el backend
@@ -117,12 +128,49 @@ export class SuccessComponent implements OnInit {
     }
   }
 
+  loadYapeSettings(): void {
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        if (settings) {
+          // Cargar número de Yape/Plin desde BrandSettings (unificado)
+          // Priorizar yapePhone, pero usar plinPhone como fallback
+          const phoneNumber = settings.yapePhone || settings.plinPhone;
+          if (phoneNumber) {
+            this.yapeNumber.set(phoneNumber);
+          }
+          
+          // Cargar QR de Yape/Plin desde BrandSettings (unificado)
+          // Priorizar yapeQRUrl, pero usar plinQRUrl como fallback
+          const qrUrl = settings.yapeQRUrl || settings.plinQRUrl;
+          if (qrUrl) {
+            this.yapeQR.set(qrUrl);
+          } else {
+            // Si no hay QR en BrandSettings, generar uno dinámico como fallback
+            this.generateYapeQR();
+          }
+        } else {
+          // Si no hay settings, generar QR dinámico como fallback
+          this.generateYapeQR();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading Yape settings:', error);
+        // En caso de error, generar QR dinámico como fallback
+        this.generateYapeQR();
+      }
+    });
+  }
+
   generateYapeQR() {
-    // Generar QR dinámico de Yape con el monto
+    // Generar QR dinámico de Yape con el monto (solo si no hay QR en BrandSettings)
     const amount = this.total();
-    const qrData = `yape://payment?phone=${this.yapeNumber.replace(/\s/g, '')}&amount=${amount.toFixed(2)}`;
+    const phoneNumber = this.yapeNumber().replace(/\s/g, '');
+    const qrData = `yape://payment?phone=${phoneNumber}&amount=${amount.toFixed(2)}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
-    this.yapeQR.set(qrUrl);
+    // Solo establecer si no hay QR ya cargado desde BrandSettings
+    if (!this.yapeQR()) {
+      this.yapeQR.set(qrUrl);
+    }
   }
 
   async sendWhatsAppToCustomer(): Promise<void> {
@@ -131,14 +179,14 @@ export class SuccessComponent implements OnInit {
       const settings = await firstValueFrom(this.brandSettingsService.get());
       const businessWhatsApp = settings?.whatsAppPhone || settings?.phone;
       if (!businessWhatsApp) {
-        console.warn('No hay número de WhatsApp configurado en el admin');
+        // No es crítico, solo un warning
         return;
       }
 
       // Obtener teléfono del cliente desde shippingData
       const customerPhone = this.shippingData?.phone;
       if (!customerPhone) {
-        console.warn('No hay teléfono del cliente');
+        // No es crítico si no hay teléfono, solo no se envía WhatsApp automático
         return;
       }
 
@@ -220,7 +268,7 @@ export class SuccessComponent implements OnInit {
   }
 
   getWalletName(): string {
-    return 'Yape'; // Siempre Yape
+    return 'Yape/Plin'; // Unificado
   }
 
   isStripePayment(): boolean {
@@ -323,6 +371,122 @@ export class SuccessComponent implements OnInit {
       return 'correo electrónico';
     }
     return 'WhatsApp';
+  }
+
+  // Payment proof upload methods
+  onPaymentProofSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validar tamaño (5MB máximo)
+      if (file.size > 5 * 1024 * 1024) {
+        this.toastService.error('El archivo es demasiado grande. Máximo 5MB');
+        return;
+      }
+      
+      this.paymentProofFile.set(file);
+      
+      // Crear preview si es imagen (para PDFs no hay preview, pero se muestra el ícono)
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.paymentProofPreview.set(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf') {
+        // Para PDFs, establecer un indicador especial
+        this.paymentProofPreview.set('pdf');
+      } else {
+        this.paymentProofPreview.set('document');
+      }
+    }
+  }
+
+  removePaymentProof() {
+    this.paymentProofFile.set(null);
+    this.paymentProofPreview.set(null);
+    this.operationCode.set('');
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    // Mostrar un placeholder si la imagen falla
+    console.warn('Error al cargar la imagen del comprobante');
+  }
+
+  getFileTypeLabel(fileType: string): string {
+    if (fileType.startsWith('image/')) {
+      if (fileType.includes('jpeg') || fileType.includes('jpg')) return 'JPG';
+      if (fileType.includes('png')) return 'PNG';
+      if (fileType.includes('gif')) return 'GIF';
+      return 'Imagen';
+    }
+    if (fileType === 'application/pdf') return 'PDF';
+    if (fileType.includes('document') || fileType.includes('word')) return 'Documento';
+    return 'Archivo';
+  }
+
+  async uploadPaymentProof() {
+    if (!this.paymentProofFile()) {
+      this.toastService.error('Por favor selecciona un archivo');
+      return;
+    }
+
+    if (!this.orderNumber()) {
+      this.toastService.error('No hay un pedido creado');
+      return;
+    }
+
+    this.paymentProofUploading.set(true);
+
+    try {
+      // Convertir archivo a base64
+      const fileData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(this.paymentProofFile()!);
+      });
+
+      // Preparar datos para enviar
+      const proofData = {
+        orderNumber: this.orderNumber(),
+        email: this.shippingData?.email || '',
+        phone: this.shippingData?.phone || '',
+        customerName: `${this.shippingData?.firstName || ''} ${this.shippingData?.lastName || ''}`.trim(),
+        total: this.total(),
+        paymentMethod: this.paymentData.paymentMethod,
+        walletMethod: this.paymentData.walletMethod || null,
+        bankAccount: this.paymentData.bankAccountNumber || null,
+        fileName: this.paymentProofFile()?.name || '',
+        fileData: fileData,
+        fileType: this.paymentProofFile()?.type || 'image/jpeg',
+        operationCode: this.operationCode() || null
+      };
+
+      // Enviar comprobante al backend
+      await firstValueFrom(
+        this.paymentsService.sendPaymentProof(proofData)
+      );
+
+      this.toastService.success('Comprobante enviado exitosamente. Te notificaremos cuando sea verificado.');
+      
+      // Marcar como subido
+      this.proofUploaded.set(true);
+      
+      // Limpiar formulario
+      this.paymentProofFile.set(null);
+      this.paymentProofPreview.set(null);
+      this.operationCode.set('');
+      
+    } catch (error: any) {
+      console.error('Error uploading payment proof:', error);
+      this.toastService.error('Error al subir el comprobante. Por favor intenta de nuevo.');
+    } finally {
+      this.paymentProofUploading.set(false);
+    }
   }
 
   // No limpiar datos aquí - se mantendrán hasta que se complete la venta o se limpie el carrito

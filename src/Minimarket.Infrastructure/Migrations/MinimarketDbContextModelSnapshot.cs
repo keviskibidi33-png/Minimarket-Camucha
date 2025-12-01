@@ -219,64 +219,6 @@ namespace Minimarket.Infrastructure.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Minimarket.Domain.Entities.Banner", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LinkUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Position")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DisplayOrder");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("Position");
-
-                    b.ToTable("Banners", (string)null);
-                });
-
             modelBuilder.Entity("Minimarket.Domain.Entities.BrandSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -680,6 +622,10 @@ namespace Minimarket.Infrastructure.Migrations
                     b.Property<DateTime>("FechaInicio")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -730,6 +676,11 @@ namespace Minimarket.Infrastructure.Migrations
                     b.Property<string>("MetaDescription")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("MostrarEnNavbar")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("Orden")
                         .ValueGeneratedOnAdd()
@@ -1063,6 +1014,9 @@ namespace Minimarket.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<DateTime?>("CashClosureDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("Change")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1087,6 +1041,11 @@ namespace Minimarket.Infrastructure.Migrations
                     b.Property<string>("DocumentType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsClosed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
@@ -1123,6 +1082,8 @@ namespace Minimarket.Infrastructure.Migrations
 
                     b.HasIndex("DocumentNumber")
                         .IsUnique();
+
+                    b.HasIndex("IsClosed");
 
                     b.HasIndex("SaleDate");
 
@@ -1194,6 +1155,10 @@ namespace Minimarket.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<string>("GoogleMapsUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("HorariosJson")
                         .IsRequired()

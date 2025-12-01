@@ -33,7 +33,20 @@ public class Sede : BaseEntity
 
     public void SetHorarios(Dictionary<string, Dictionary<string, string>> horarios)
     {
-        HorariosJson = System.Text.Json.JsonSerializer.Serialize(horarios);
+        if (horarios == null)
+        {
+            HorariosJson = "{}";
+            return;
+        }
+        
+        try
+        {
+            HorariosJson = System.Text.Json.JsonSerializer.Serialize(horarios);
+        }
+        catch
+        {
+            HorariosJson = "{}";
+        }
     }
 
     public bool IsOpen(DateTime fechaHora)

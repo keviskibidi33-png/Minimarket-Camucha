@@ -72,7 +72,9 @@ public class CreateWebOrderCommandHandler : IRequestHandler<CreateWebOrderComman
                 PaymentMethod = request.Order.PaymentMethod,
                 WalletMethod = request.Order.WalletMethod,
                 RequiresPaymentProof = request.Order.RequiresPaymentProof,
-                Status = "confirmed",
+                // Todos los pedidos empiezan como "pending" hasta que el admin los apruebe
+                // Esto permite revisar y validar todos los pedidos antes de confirmarlos
+                Status = "pending",
                 Subtotal = request.Order.Subtotal,
                 ShippingCost = request.Order.ShippingCost,
                 Total = request.Order.Total,

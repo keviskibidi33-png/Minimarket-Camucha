@@ -7,7 +7,8 @@ import { filter } from 'rxjs/operators';
 import { SettingsNavbarComponent } from '../../../shared/components/settings-navbar/settings-navbar.component';
 import { SettingsService, SystemSettings, UpdateSystemSettings } from '../../../core/services/settings.service';
 import { ShippingService, ShippingRate, CreateShippingRate, UpdateShippingRate } from '../../../core/services/shipping.service';
-import { EmailTemplatesService, UpdateEmailTemplateSettings } from '../../../core/services/email-templates.service';
+import { BrandSettingsService, BrandSettings, UpdateBrandSettings } from '../../../core/services/brand-settings.service';
+import { FilesService } from '../../../core/services/files.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -21,7 +22,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 export class SettingsComponent implements OnInit {
   settings = signal<SystemSettings[]>([]);
   isLoading = signal(false);
-  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'email-templates'>('cart');
+  activeTab = signal<'cart' | 'shipping' | 'shipping-rates' | 'payment-methods'>('cart');
   
   private readonly destroyRef = inject(DestroyRef);
   private tabPersistenceEffect?: ReturnType<typeof effect>;
@@ -42,14 +43,30 @@ export class SettingsComponent implements OnInit {
   fixedShippingPrice = signal(8.00);
   freeShippingThreshold = signal(20.00);
   
-  // Configuraciones de templates de email
-  emailLogoUrl = signal('');
-  emailPromotionImageUrl = signal('');
+
+  // Configuraciones de métodos de pago y comunicación
+  phone = signal('');
+  whatsAppPhone = signal('');
+  email = signal('');
+  yapePhone = signal('');
+  plinPhone = signal('');
+  yapeQRUrl = signal('');
+  plinQRUrl = signal('');
+  yapeEnabled = signal(false);
+  plinEnabled = signal(false);
+  bankName = signal('');
+  bankAccountType = signal('');
+  bankAccountNumber = signal('');
+  bankCCI = signal('');
+  bankAccountVisible = signal(false);
+  isUploadingYapeQR = signal(false);
+  isUploadingPlinQR = signal(false);
 
   constructor(
     private settingsService: SettingsService,
     private shippingService: ShippingService,
-    private emailTemplatesService: EmailTemplatesService,
+    private brandSettingsService: BrandSettingsService,
+    private filesService: FilesService,
     private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute,
@@ -61,8 +78,8 @@ export class SettingsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const tabParam = params['tab'];
       if (tabParam) {
-        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates'> = 
-          ['cart', 'shipping', 'shipping-rates', 'email-templates'];
+        const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'payment-methods'> = 
+          ['cart', 'shipping', 'shipping-rates', 'payment-methods'];
         if (validTabs.includes(tabParam as any)) {
           this.activeTab.set(tabParam as any);
         }
@@ -83,7 +100,7 @@ export class SettingsComponent implements OnInit {
     this.updateTabFromRoute();
 
     this.loadSettings();
-    this.loadEmailTemplateSettings();
+    this.loadPaymentMethodsSettings();
 
     // Observar cambios en activeTab para persistir
     afterNextRender(() => {
@@ -102,11 +119,8 @@ export class SettingsComponent implements OnInit {
   private initializeActiveTab(): void {
     // Primero intentar detectar desde la ruta
     const url = this.router.url;
-    if (url.includes('/configuraciones/marca')) {
-      // Marca y Permisos son rutas separadas, no necesitan persistencia de tab
-      return;
-    }
     if (url.includes('/configuraciones/permisos')) {
+      // Permisos es una ruta separada, no necesita persistencia de tab
       return;
     }
 
@@ -122,17 +136,17 @@ export class SettingsComponent implements OnInit {
 
   private updateTabFromRoute(): void {
     const url = this.router.url;
-    // Si estamos en una ruta específica (marca o permisos), no hacer nada
-    // porque esas son rutas separadas
-    if (url.includes('/configuraciones/marca') || url.includes('/configuraciones/permisos')) {
+    // Si estamos en una ruta específica (permisos), no hacer nada
+    // porque es una ruta separada
+    if (url.includes('/configuraciones/permisos')) {
       return;
     }
     
     // Si estamos en /admin/configuraciones, restaurar el último tab guardado
     if (url === '/admin/configuraciones' || url.endsWith('/configuraciones')) {
       const savedTab = localStorage.getItem('settings_active_tab');
-      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'email-templates' | 'categories' | 'payment-methods'> = 
-        ['cart', 'shipping', 'shipping-rates', 'email-templates', 'categories', 'payment-methods'];
+      const validTabs: Array<'cart' | 'shipping' | 'shipping-rates' | 'categories' | 'payment-methods'> = 
+        ['cart', 'shipping', 'shipping-rates', 'categories', 'payment-methods'];
       
       if (savedTab && validTabs.includes(savedTab as any)) {
         this.activeTab.set(savedTab as any);
@@ -337,129 +351,12 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'email-templates'): void {
+  setTab(tab: 'cart' | 'shipping' | 'shipping-rates' | 'payment-methods'): void {
     this.activeTab.set(tab);
     // Actualizar la URL con el query param para mantener consistencia
     this.router.navigate(['/admin/configuraciones'], { queryParams: { tab } });
   }
   
-  // Email Templates Management
-  loadEmailTemplateSettings(): void {
-    this.emailTemplatesService.getTemplate('order_confirmation').subscribe({
-      next: (template) => {
-        this.emailLogoUrl.set(template.logoUrl);
-        this.emailPromotionImageUrl.set(template.promotionImageUrl);
-      },
-      error: (error: any) => {
-        // Solo loguear si no es un 404 (endpoint no existe aún)
-        if (error.status !== 404) {
-          console.error('Error loading email template settings:', error);
-        }
-        // Establecer valores por defecto si el endpoint no existe
-        this.emailLogoUrl.set('');
-        this.emailPromotionImageUrl.set('');
-      }
-    });
-  }
-
-  saveEmailTemplateSettings(): void {
-    const settings: UpdateEmailTemplateSettings = {
-      logoUrl: this.emailLogoUrl(),
-      promotionImageUrl: this.emailPromotionImageUrl()
-    };
-
-    this.emailTemplatesService.updateSettings(settings).subscribe({
-      next: () => {
-        this.toastService.success('Configuración de templates de email guardada correctamente');
-      },
-      error: (error) => {
-        console.error('Error saving email template settings:', error);
-        this.toastService.error('Error al guardar configuración de templates de email');
-      }
-    });
-  }
-
-  testConfirmationEmail(): void {
-    const testEmail = prompt('Ingresa tu correo electrónico para recibir el email de prueba:');
-    if (!testEmail) return;
-
-    this.emailTemplatesService.sendTestConfirmationEmail({
-      email: testEmail,
-      customerName: 'Cliente de Prueba',
-      orderNumber: 'TEST-001',
-      total: 150.00,
-      shippingMethod: 'delivery',
-      estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-    }).subscribe({
-      next: (result: any) => {
-        if (result.sent) {
-          this.toastService.success('Email de prueba enviado exitosamente. Revisa tu bandeja de entrada.');
-        } else {
-          this.toastService.error('Error al enviar el email de prueba');
-        }
-      },
-      error: (error: any) => {
-        console.error('Error sending test email:', error);
-        this.toastService.error('Error al enviar el email de prueba');
-      }
-    });
-  }
-
-  testStatusUpdateEmail(): void {
-    const testEmail = prompt('Ingresa tu correo electrónico para recibir el email de prueba:');
-    if (!testEmail) return;
-
-    this.emailTemplatesService.sendTestStatusUpdateEmail({
-      email: testEmail,
-      customerName: 'Cliente de Prueba',
-      orderNumber: 'TEST-001',
-      status: 'preparing'
-    }).subscribe({
-      next: (result: any) => {
-        if (result.sent) {
-          this.toastService.success('Email de prueba enviado exitosamente. Revisa tu bandeja de entrada.');
-        } else {
-          this.toastService.error('Error al enviar el email de prueba');
-        }
-      },
-      error: (error: any) => {
-        console.error('Error sending test email:', error);
-        this.toastService.error('Error al enviar el email de prueba');
-      }
-    });
-  }
-
-  // Test email
-  testEmailAddress = signal('');
-  testTemplateType = signal<'order_confirmation' | 'order_status_update'>('order_confirmation');
-  isSendingTestEmail = signal(false);
-
-  sendTestEmail(): void {
-    if (!this.testEmailAddress().trim()) {
-      this.toastService.error('Por favor ingresa un correo electrónico');
-      return;
-    }
-
-    this.isSendingTestEmail.set(true);
-    this.emailTemplatesService.sendTestEmail({
-      email: this.testEmailAddress(),
-      templateType: this.testTemplateType()
-    }).subscribe({
-      next: (result) => {
-        this.isSendingTestEmail.set(false);
-        if (result.sent) {
-          this.toastService.success('Correo de prueba enviado correctamente. Revisa tu bandeja de entrada.');
-        } else {
-          this.toastService.error('Error al enviar el correo de prueba');
-        }
-      },
-      error: (error) => {
-        this.isSendingTestEmail.set(false);
-        console.error('Error sending test email:', error);
-        this.toastService.error('Error al enviar el correo de prueba. Verifica la configuración de email.');
-      }
-    });
-  }
 
   saveShippingRatesSettings(): void {
     const settingsToSave = [
@@ -505,23 +402,169 @@ export class SettingsComponent implements OnInit {
   parseInt = parseInt;
   parseFloat = parseFloat;
 
-  showResetWarning = signal(false);
-
-  goToFullSetup(): void {
-    // Mostrar advertencia antes de ir al setup
-    this.showResetWarning.set(true);
+  loadPaymentMethodsSettings(): void {
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        if (settings) {
+          this.phone.set(settings.phone || '');
+          this.whatsAppPhone.set(settings.whatsAppPhone || '');
+          this.email.set(settings.email || '');
+          // Cargar Yape (unificado con Plin)
+          this.yapePhone.set(settings.yapePhone || settings.plinPhone || '');
+          this.yapeQRUrl.set(settings.yapeQRUrl || settings.plinQRUrl || '');
+          this.yapeEnabled.set(settings.yapeEnabled ?? settings.plinEnabled ?? false);
+          // Plin se sincroniza automáticamente con Yape al guardar
+          this.bankName.set(settings.bankName || '');
+          this.bankAccountType.set(settings.bankAccountType || '');
+          this.bankAccountNumber.set(settings.bankAccountNumber || '');
+          this.bankCCI.set(settings.bankCCI || '');
+          this.bankAccountVisible.set(settings.bankAccountVisible ?? false);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading payment methods settings:', error);
+      }
+    });
   }
 
-  onResetWarningConfirmed(): void {
-    this.showResetWarning.set(false);
-    // Marcar setup como incompleto para forzar el guard
-    this.setupStatusService.markSetupIncomplete();
-    // Navegar con parámetro reset=true para limpiar datos guardados incompletos
-    this.router.navigate(['/auth/admin-setup'], { queryParams: { reset: 'true' } });
+  savePaymentMethodsSettings(): void {
+    // Obtener BrandSettings actual para mantener otros campos
+    this.brandSettingsService.get().subscribe({
+      next: (currentSettings) => {
+        const updateData: UpdateBrandSettings = {
+          // Mantener campos de marca visual (no se editan aquí)
+          logoUrl: currentSettings?.logoUrl || '',
+          logoEmoji: currentSettings?.logoEmoji,
+          storeName: currentSettings?.storeName || 'Minimarket Camucha',
+          faviconUrl: currentSettings?.faviconUrl,
+          primaryColor: currentSettings?.primaryColor || '#4CAF50',
+          secondaryColor: currentSettings?.secondaryColor || '#0d7ff2',
+          buttonColor: currentSettings?.buttonColor || '#4CAF50',
+          textColor: currentSettings?.textColor || '#333333',
+          hoverColor: currentSettings?.hoverColor || '#45a049',
+          description: currentSettings?.description,
+          slogan: currentSettings?.slogan,
+          // Campos de comunicación y métodos de pago (editables)
+          phone: this.phone().trim() || '',
+          whatsAppPhone: this.whatsAppPhone().trim() || '',
+          email: this.email().trim() || '',
+          yapePhone: this.yapePhone().trim() || '',
+          plinPhone: this.yapePhone().trim() || '', // Unificado: usar el mismo número de Yape
+          yapeQRUrl: this.yapeQRUrl().trim() || '',
+          plinQRUrl: this.yapeQRUrl().trim() || '', // Unificado: usar el mismo QR de Yape
+          yapeEnabled: this.yapeEnabled(),
+          plinEnabled: this.yapeEnabled(), // Unificado: mismo estado que Yape
+          bankName: this.bankName().trim() || '',
+          bankAccountType: this.bankAccountType().trim() || '',
+          bankAccountNumber: this.bankAccountNumber().trim() || '',
+          bankCCI: this.bankCCI().trim() || '',
+          bankAccountVisible: this.bankAccountVisible(),
+          // Mantener otros campos
+          ruc: currentSettings?.ruc || '',
+          address: currentSettings?.address || '',
+          deliveryType: currentSettings?.deliveryType || 'Ambos',
+          deliveryCost: currentSettings?.deliveryCost,
+          deliveryZones: currentSettings?.deliveryZones || '',
+          homeTitle: currentSettings?.homeTitle || '',
+          homeSubtitle: currentSettings?.homeSubtitle || '',
+          homeDescription: currentSettings?.homeDescription || '',
+          homeBannerImageUrl: currentSettings?.homeBannerImageUrl || ''
+        };
+
+        this.brandSettingsService.update(updateData).subscribe({
+          next: () => {
+            this.toastService.success('Configuración de métodos de pago guardada correctamente');
+            this.loadPaymentMethodsSettings();
+          },
+          error: (error) => {
+            console.error('Error saving payment methods settings:', error);
+            this.toastService.error('Error al guardar la configuración de métodos de pago');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error getting current brand settings:', error);
+        this.toastService.error('Error al cargar la configuración actual');
+      }
+    });
   }
 
-  onResetWarningCancelled(): void {
-    this.showResetWarning.set(false);
+  onYapeQRSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.toastService.error('Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, WEBP)');
+      return;
+    }
+    
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+      return;
+    }
+    
+    this.isUploadingYapeQR.set(true);
+    
+    this.filesService.uploadFile(file, 'payment-qr').subscribe({
+      next: (response) => {
+        this.yapeQRUrl.set(response.url);
+        this.isUploadingYapeQR.set(false);
+        this.toastService.success('QR de Yape subido exitosamente');
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading Yape QR:', error);
+        this.isUploadingYapeQR.set(false);
+        const errorMessage = error?.error?.error || error?.error?.message || 'Error al subir el QR de Yape';
+        this.toastService.error(errorMessage);
+        input.value = '';
+      }
+    });
+  }
+
+  onPlinQRSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.toastService.error('Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, WEBP)');
+      return;
+    }
+    
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+      return;
+    }
+    
+    this.isUploadingPlinQR.set(true);
+    
+    this.filesService.uploadFile(file, 'payment-qr').subscribe({
+      next: (response) => {
+        this.plinQRUrl.set(response.url);
+        this.isUploadingPlinQR.set(false);
+        this.toastService.success('QR de Plin subido exitosamente');
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading Plin QR:', error);
+        this.isUploadingPlinQR.set(false);
+        const errorMessage = error?.error?.error || error?.error?.message || 'Error al subir el QR de Plin';
+        this.toastService.error(errorMessage);
+        input.value = '';
+      }
+    });
   }
 }
 

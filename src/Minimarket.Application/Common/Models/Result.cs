@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Minimarket.Application.Common.Models;
 
 public class Result
@@ -22,6 +24,8 @@ public class Result<T> : Result
     public T? Data { get; set; }
 
     // Propiedad Value para acceso seguro (lanzará excepción si es failure)
+    // Ignorar en serialización JSON para evitar errores cuando el resultado es un fallo
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public T Value => IsSuccess && Data != null
         ? Data
         : throw new InvalidOperationException("Cannot access value of a failed result");

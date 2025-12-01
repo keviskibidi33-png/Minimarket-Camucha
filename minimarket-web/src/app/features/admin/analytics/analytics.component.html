@@ -66,27 +66,47 @@
       <div class="space-y-6">
         <!-- KPIs -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Vistas de Páginas</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ dashboard()!.totalPageViews }}</p>
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Vistas de Páginas</h3>
+              <span class="material-symbols-outlined text-blue-500 dark:text-blue-400 text-2xl">visibility</span>
+            </div>
+            <p class="text-4xl font-black text-blue-900 dark:text-blue-100">{{ dashboard()!.totalPageViews.toLocaleString('es-PE') }}</p>
+            <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">Total acumulado</p>
           </div>
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Vistas de Productos</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ dashboard()!.totalProductViews }}</p>
+          <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl shadow-lg border border-green-200 dark:border-green-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Vistas de Productos</h3>
+              <span class="material-symbols-outlined text-green-500 dark:text-green-400 text-2xl">shopping_bag</span>
+            </div>
+            <p class="text-4xl font-black text-green-900 dark:text-green-100">{{ dashboard()!.totalProductViews.toLocaleString('es-PE') }}</p>
+            <p class="text-xs text-green-600 dark:text-green-400 mt-2">Total acumulado</p>
           </div>
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Ventas</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ dashboard()!.totalSales }}</p>
+          <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-xl shadow-lg border border-red-200 dark:border-red-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide">Ventas</h3>
+              <span class="material-symbols-outlined text-red-500 dark:text-red-400 text-2xl">point_of_sale</span>
+            </div>
+            <p class="text-4xl font-black text-red-900 dark:text-red-100">{{ dashboard()!.totalSales.toLocaleString('es-PE') }}</p>
+            <p class="text-xs text-red-600 dark:text-red-400 mt-2">Transacciones completadas</p>
           </div>
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Ingresos</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">S/ {{ dashboard()!.totalRevenue.toFixed(2) }}</p>
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl shadow-lg border border-purple-200 dark:border-purple-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">Ingresos</h3>
+              <span class="material-symbols-outlined text-purple-500 dark:text-purple-400 text-2xl">payments</span>
+            </div>
+            <p class="text-4xl font-black text-purple-900 dark:text-purple-100">S/ {{ dashboard()!.totalRevenue.toFixed(2) }}</p>
+            <p class="text-xs text-purple-600 dark:text-purple-400 mt-2">Ingresos totales</p>
           </div>
         </div>
 
         <!-- Gráfica de Tendencias (Vistas y Ventas) -->
-        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <div class="h-80">
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Tendencias de Vistas y Ventas</h2>
+            <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl">trending_up</span>
+          </div>
+          <div class="h-96">
             <canvas baseChart
               [data]="lineChartData()"
               [options]="lineChartOptions"
@@ -96,8 +116,12 @@
         </div>
 
         <!-- Gráfica de Ingresos -->
-        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <div class="h-80">
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Ingresos Diarios</h2>
+            <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl">attach_money</span>
+          </div>
+          <div class="h-96">
             <canvas baseChart
               [data]="revenueChartData()"
               [options]="revenueChartOptions"
@@ -109,7 +133,11 @@
         <!-- Gráficas de Top Páginas y Productos lado a lado -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Top Pages Chart -->
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">Páginas Más Visitadas</h2>
+              <span class="material-symbols-outlined text-gray-400 dark:text-gray-500">web</span>
+            </div>
             <div class="h-80">
               @if (dashboard()!.topPages && dashboard()!.topPages.length > 0) {
                 <canvas baseChart
@@ -137,7 +165,11 @@
           </div>
 
           <!-- Top Products Chart -->
-          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+          <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">Productos Más Visitados</h2>
+              <span class="material-symbols-outlined text-gray-400 dark:text-gray-500">inventory_2</span>
+            </div>
             <div class="h-80">
               @if (dashboard()!.topProducts && dashboard()!.topProducts.length > 0) {
                 <canvas baseChart
@@ -166,7 +198,11 @@
         </div>
 
         <!-- Gráfica Comparativa de KPIs -->
-        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Resumen de Métricas</h2>
+            <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl">bar_chart</span>
+          </div>
           <div class="h-80">
             <canvas baseChart
               [data]="kpisChartData()"
@@ -177,8 +213,11 @@
         </div>
 
         <!-- Tabla de Estadísticas Diarias (Opcional - para referencia detallada) -->
-        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Estadísticas Diarias Detalladas</h2>
+        <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 hover:shadow-xl transition-shadow">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Estadísticas Diarias Detalladas</h2>
+            <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl">table_chart</span>
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-800">
@@ -193,14 +232,28 @@
               <tbody class="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
                 @if (dashboard()!.dailyStats && dashboard()!.dailyStats.length > 0) {
                   @for (stat of dashboard()!.dailyStats; track stat.date) {
-                    <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {{ formatDate(stat.date) }}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.pageViews }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.productViews }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ stat.sales }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">S/ {{ stat.revenue.toFixed(2) }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                          {{ stat.pageViews.toLocaleString('es-PE') }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                          {{ stat.productViews.toLocaleString('es-PE') }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                          {{ stat.sales.toLocaleString('es-PE') }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                        S/ {{ stat.revenue.toFixed(2) }}
+                      </td>
                     </tr>
                   }
                 } @else {

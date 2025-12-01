@@ -78,9 +78,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
         
         // Si el perfil no está completo
         if (response.profileCompleted === false) {
-          // Si es admin, redirigir a admin-setup, sino a complete-profile
+          // Si es admin, redirigir al admin (puede configurar desde ahí), sino a complete-profile
           if (isAdmin) {
-            this.router.navigate(['/auth/admin-setup']);
+            this.router.navigate(['/admin']);
           } else {
             this.router.navigate(['/auth/complete-profile']);
           }

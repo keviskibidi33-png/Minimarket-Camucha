@@ -73,6 +73,7 @@ export class SedesService {
   }
 
   update(id: string, sede: UpdateSede): Observable<Sede> {
+    // El backend espera UpdateSedeCommand que tiene la estructura { sede: UpdateSedeDto }
     return this.http.put<Sede>(`${this.apiUrl}/${id}`, { sede });
   }
 

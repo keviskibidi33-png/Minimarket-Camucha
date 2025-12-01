@@ -30,9 +30,7 @@ export class SettingsNavbarComponent {
   private updateActiveTab(): void {
     const url = this.router.url;
     
-    if (url.includes('/configuraciones/marca')) {
-      this.currentTab = 'marca';
-    } else if (url.includes('/configuraciones/permisos')) {
+    if (url.includes('/configuraciones/permisos')) {
       this.currentTab = 'permisos';
     } else if (url.includes('/configuraciones')) {
       // Leer query param desde la URL

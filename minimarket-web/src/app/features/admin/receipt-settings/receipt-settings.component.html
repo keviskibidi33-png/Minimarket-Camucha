@@ -1,0 +1,122 @@
+<div class="flex-1 p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Page Heading -->
+    <div class="mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-2">
+        Configuración de Comprobantes
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mb-2">
+        Configura los datos de tu empresa que aparecerán en <strong>todas</strong> las boletas y facturas del sistema
+      </p>
+      @if (!isLoading() && (storeName().trim() || ruc().trim() || address().trim() || phone().trim())) {
+        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-green-800 dark:text-green-300">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+            <span class="text-sm font-medium">Configuración guardada. Los datos se aplicarán automáticamente en todas las boletas y facturas.</span>
+          </div>
+        </div>
+      } @else if (!isLoading()) {
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-yellow-800 dark:text-yellow-300">
+            <span class="material-symbols-outlined text-lg">info</span>
+            <span class="text-sm font-medium">No hay datos guardados. Completa el formulario y guarda para que se apliquen en todas las boletas.</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      <form (ngSubmit)="saveSettings()">
+        <!-- Nombre Comercial -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Nombre Comercial <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            [value]="storeName()"
+            (input)="onStoreNameChange($event)"
+            name="storeName"
+            required
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Ej: Minimarket Camucha">
+        </div>
+
+        <!-- RUC -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            RUC
+          </label>
+          <input
+            type="text"
+            [value]="ruc()"
+            (input)="onRucChange($event)"
+            name="ruc"
+            maxlength="11"
+            pattern="[0-9]{11}"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="10095190559">
+          <p class="mt-1 text-xs text-gray-500">11 dígitos numéricos</p>
+        </div>
+
+        <!-- Dirección -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Dirección
+          </label>
+          <input
+            type="text"
+            [value]="address()"
+            (input)="onAddressChange($event)"
+            name="address"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Ej: Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú">
+        </div>
+
+        <!-- Teléfono -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Teléfono
+          </label>
+          <input
+            type="tel"
+            [value]="phone()"
+            (input)="onPhoneChange($event)"
+            name="phone"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
+            placeholder="Ej: +51 999 999 999">
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="generatePreviewPdf()"
+            [disabled]="isGeneratingPreview() || isSaving() || !storeName().trim()"
+            class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            @if (isGeneratingPreview()) {
+              <span class="material-symbols-outlined animate-spin text-sm">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-sm">description</span>
+            }
+            <span>Descargar PDF de Prueba</span>
+          </button>
+
+          <button
+            type="submit"
+            [disabled]="isSaving() || isGeneratingPreview() || !storeName().trim()"
+            class="px-6 py-2 rounded-lg bg-primary-admin text-white hover:bg-primary-admin/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            @if (isSaving()) {
+              <span class="material-symbols-outlined animate-spin text-sm">sync</span>
+            } @else {
+              <span class="material-symbols-outlined text-sm">save</span>
+            }
+            <span>Guardar Configuración</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

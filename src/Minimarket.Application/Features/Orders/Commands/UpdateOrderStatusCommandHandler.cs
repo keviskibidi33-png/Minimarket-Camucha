@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Minimarket.Application.Common.Models;
 using Minimarket.Domain.Interfaces;
 
@@ -7,10 +8,17 @@ namespace Minimarket.Application.Features.Orders.Commands;
 public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatusCommand, Result<bool>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<UpdateOrderStatusCommandHandler> _logger;
 
-    public UpdateOrderStatusCommandHandler(IUnitOfWork unitOfWork)
+    public UpdateOrderStatusCommandHandler(
+        IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        ILogger<UpdateOrderStatusCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<Result<bool>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
@@ -43,6 +51,32 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Enviar correo de actualización de estado en segundo plano (solo para ciertos estados)
+        if (request.Status == "ready_for_pickup" || request.Status == "shipped" || request.Status == "preparing")
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendOrderStatusUpdateAsync(
+                        order.CustomerEmail,
+                        order.CustomerName,
+                        order.OrderNumber,
+                        request.Status,
+                        request.TrackingUrl
+                    );
+
+                    _logger.LogInformation("Order status update email sent. OrderNumber: {OrderNumber}, Status: {Status}", 
+                        order.OrderNumber, request.Status);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send order status update email. OrderNumber: {OrderNumber}", 
+                        order.OrderNumber);
+                }
+            }, cancellationToken);
+        }
 
         return Result<bool>.Success(true);
     }

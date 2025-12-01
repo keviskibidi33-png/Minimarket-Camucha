@@ -60,6 +60,8 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  zoom: 90%;
+  transform-origin: top left;
 }
 
 /* Asegurar que el select nativo no se sobreponga a otros elementos */

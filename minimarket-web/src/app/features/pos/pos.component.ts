@@ -5,6 +5,7 @@ import { ProductsService, Product } from '../../core/services/products.service';
 import { CustomersService, Customer, CreateCustomerDto } from '../../core/services/customers.service';
 import { SalesService, CartItem, CreateSaleDto, Sale } from '../../core/services/sales.service';
 import { CategoriesService, CategoryDto } from '../../core/services/categories.service';
+import { CashClosureService, CashClosureSummary } from '../../core/services/cash-closure.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
@@ -42,7 +43,7 @@ export class PosComponent implements OnInit {
 
   // Sale Configuration
   documentType = signal<'Boleta' | 'Factura'>('Boleta');
-  paymentMethod = signal<'Efectivo' | 'Tarjeta' | 'YapePlin' | 'Transferencia'>('Efectivo');
+  paymentMethod = signal<'Efectivo' | 'YapePlin' | 'Transferencia'>('Efectivo');
   amountPaid = signal(0);
   discount = signal(0);
 
@@ -50,6 +51,8 @@ export class PosComponent implements OnInit {
   isLoading = signal(false);
   showCustomerSearch = signal(false);
   showSendReceiptDialog = signal(false);
+  showConfirmSendEmailDialog = signal(false);
+  emailToConfirm = signal<string | null>(null);
   showQRPaymentModal = signal(false);
   showCreateCustomerModal = signal(false);
   showDocumentTypeDialog = signal(false);
@@ -58,12 +61,24 @@ export class PosComponent implements OnInit {
   receiptEmailSent = signal(false); // Indica si el email se envió automáticamente
   lastCustomerEmail = signal<string | null>(null); // Guarda el email del cliente antes de limpiar
   documentViewSettings = signal<DocumentViewSettings | null>(null); // Configuración de visualización de documentos
+  showSaleSummary = signal(false); // Muestra el resumen de venta exitosa
   
   // Brand Settings
   brandSettings = signal<BrandSettings | null>(null);
+  yapeEnabled = signal<boolean>(true); // Estado de habilitación de Yape/Plin
+  bankAccountEnabled = signal<boolean>(true); // Estado de habilitación de Transferencia Bancaria
   
   // QR Payment Data
   qrPaymentData = signal<QRPaymentData | null>(null);
+  
+  // Cierre de Caja
+  cashClosureData = signal<{
+    totalPaid: number;
+    totalCount: number;
+    byPaymentMethod: Array<{ method: string; total: number; count: number }>;
+  } | null>(null);
+  isLoadingCashClosure = signal(false);
+  showCashClosureModal = signal(false);
 
   // Consultas State
   activeQueryTab = signal<'productos' | 'ventas' | 'clientes' | 'stock'>('productos');
@@ -81,7 +96,27 @@ export class PosComponent implements OnInit {
   querySaleStartDate = signal<string>('');
   querySaleEndDate = signal<string>('');
   querySalePage = signal(1);
+  querySalePageSize = signal(20);
   querySaleTotal = signal(0);
+  querySaleTotalPages = computed(() => {
+    const total = this.querySaleTotal();
+    const pageSize = this.querySalePageSize();
+    return Math.ceil(total / pageSize);
+  });
+  
+  // Exponer Math para usar en el template
+  Math = Math;
+  
+  getQuerySaleRangeStart(): number {
+    return ((this.querySalePage() - 1) * this.querySalePageSize()) + 1;
+  }
+  
+  getQuerySaleRangeEnd(): number {
+    return Math.min(this.querySalePage() * this.querySalePageSize(), this.querySaleTotal());
+  }
+  
+  // Estados para reenvío de documentos
+  resendingEmailForSale = signal<string | null>(null);
   
   // Consultas de Clientes
   queryCustomers = signal<Customer[]>([]);
@@ -94,7 +129,13 @@ export class PosComponent implements OnInit {
   queryStockFilter = signal<'low' | 'expired' | 'expiring'>('low');
 
   // Reportes State
-  activeReportTab = signal<'ventas' | 'productos' | 'ingresos' | 'pagos'>('ventas');
+  activeReportTab = signal<'ventas' | 'productos' | 'ingresos' | 'pagos' | 'cierre'>('ventas');
+  
+  // Cierre de Caja State
+  cashClosureStartDate = signal<string>('');
+  cashClosureEndDate = signal<string>('');
+  showCashClosureTotal = signal(false);
+  isGeneratingCashClosurePdf = signal(false);
   
   // Reportes de Ventas
   reportSalesPeriod = signal<'today' | 'week' | 'month' | 'custom'>('today');
@@ -185,6 +226,7 @@ export class PosComponent implements OnInit {
     public concentrationModeService: ConcentrationModeService,
     private brandSettingsService: BrandSettingsService,
     private documentSettingsService: DocumentSettingsService,
+    private cashClosureService: CashClosureService,
     private fb: FormBuilder
   ) {
     this.createCustomerForm = this.fb.group({
@@ -223,6 +265,9 @@ export class PosComponent implements OnInit {
     this.loadCategories();
     this.loadBrandSettings();
     this.loadDocumentViewSettings();
+    
+    // Inicializar fechas de cierre de caja con el día actual
+    this.setTodayDateRange();
 
     // Cargar datos si el servicio activo es consultas o reportes
     if (this.activeService() === 'consultas') {
@@ -325,7 +370,7 @@ export class PosComponent implements OnInit {
     this.querySalesLoading.set(true);
     const params: any = {
       page: this.querySalePage(),
-      pageSize: 20
+      pageSize: this.querySalePageSize()
     };
 
     if (this.querySaleSearch().trim()) {
@@ -350,6 +395,51 @@ export class PosComponent implements OnInit {
         console.error('Error loading query sales:', error);
         this.toastService.error('Error al cargar ventas');
         this.querySalesLoading.set(false);
+      }
+    });
+  }
+
+  goToQuerySalePage(page: number): void {
+    const totalPages = this.querySaleTotalPages();
+    if (page >= 1 && page <= totalPages) {
+      this.querySalePage.set(page);
+      this.loadQuerySales();
+    }
+  }
+
+  resendReceiptFromTable(sale: Sale): void {
+    if (!sale) return;
+
+    // Obtener el email del cliente
+    const customerEmail = sale.customerEmail;
+    
+    if (!customerEmail || customerEmail.trim() === '') {
+      // Si no hay email, mostrar modal para ingresar
+      this.showSendReceiptDialog.set(true);
+      // Guardar la venta temporalmente para usar después
+      this.lastSale.set(sale);
+      return;
+    }
+
+    // Si hay email, enviar directamente con confirmación rápida
+    if (!confirm(`¿Reenviar el comprobante ${sale.documentNumber} a ${customerEmail}?`)) {
+      return;
+    }
+
+    // Si hay email, enviar directamente
+    this.resendingEmailForSale.set(sale.id);
+    this.salesService.sendReceipt(sale.id, customerEmail, sale.documentType).subscribe({
+      next: () => {
+        this.resendingEmailForSale.set(null);
+        this.toastService.success(`✅ Comprobante reenviado exitosamente a ${customerEmail}`);
+      },
+      error: (error) => {
+        console.error('Error resending receipt:', error);
+        this.resendingEmailForSale.set(null);
+        // Si falla, mostrar modal para ingresar otro correo
+        this.showSendReceiptDialog.set(true);
+        this.lastSale.set(sale);
+        this.toastService.error(error.error?.errors?.[0] || 'Error al reenviar el comprobante. Puedes intentar con otro correo.');
       }
     });
   }
@@ -470,7 +560,7 @@ export class PosComponent implements OnInit {
     return expDate >= today && expDate <= nextWeek;
   }
 
-  setActiveReportTab(tab: 'ventas' | 'productos' | 'ingresos' | 'pagos'): void {
+  setActiveReportTab(tab: 'ventas' | 'productos' | 'ingresos' | 'pagos' | 'cierre'): void {
     this.activeReportTab.set(tab);
     this.loadReportData();
   }
@@ -489,6 +579,9 @@ export class PosComponent implements OnInit {
         break;
       case 'pagos':
         this.loadPaymentReport();
+        break;
+      case 'cierre':
+        this.loadCashClosure();
         break;
     }
   }
@@ -711,12 +804,12 @@ export class PosComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categoriesService.getAll().subscribe({
+    this.categoriesService.getAllWithoutPagination().subscribe({
       next: (categories) => {
         // Filtrar solo categorías activas y ordenar por nombre
         const activeCategories = categories
-          .filter(cat => cat.isActive)
-          .sort((a, b) => a.name.localeCompare(b.name));
+          .filter((cat: CategoryDto) => cat.isActive)
+          .sort((a: CategoryDto, b: CategoryDto) => a.name.localeCompare(b.name));
         this.categories.set(activeCategories);
       },
       error: (error) => {
@@ -769,9 +862,41 @@ export class PosComponent implements OnInit {
     this.brandSettingsService.get().subscribe({
       next: (settings: BrandSettings | null) => {
         this.brandSettings.set(settings);
+        if (settings) {
+          // Cargar estado de habilitación de Yape/Plin (unificado)
+          const isYapeEnabled = settings.yapeEnabled ?? settings.plinEnabled ?? false;
+          this.yapeEnabled.set(isYapeEnabled);
+          
+          // Si está deshabilitado y estaba seleccionado, cambiar a Efectivo
+          if (!isYapeEnabled && this.paymentMethod() === 'YapePlin') {
+            this.paymentMethod.set('Efectivo');
+          }
+          
+          // Cargar estado de habilitación de Transferencia Bancaria
+          const isBankEnabled = settings.bankAccountVisible ?? false;
+          this.bankAccountEnabled.set(isBankEnabled);
+          
+          // Si está deshabilitado y estaba seleccionado, cambiar a Efectivo
+          if (!isBankEnabled && this.paymentMethod() === 'Transferencia') {
+            this.paymentMethod.set('Efectivo');
+          }
+        } else {
+          // Si no hay settings, deshabilitar por defecto
+          this.yapeEnabled.set(false);
+          this.bankAccountEnabled.set(false);
+          if (this.paymentMethod() === 'YapePlin' || this.paymentMethod() === 'Transferencia') {
+            this.paymentMethod.set('Efectivo');
+          }
+        }
       },
       error: (error: any) => {
         console.error('Error loading brand settings:', error);
+        // En caso de error, deshabilitar por defecto
+        this.yapeEnabled.set(false);
+        this.bankAccountEnabled.set(false);
+        if (this.paymentMethod() === 'YapePlin' || this.paymentMethod() === 'Transferencia') {
+          this.paymentMethod.set('Efectivo');
+        }
       }
     });
   }
@@ -896,24 +1021,28 @@ export class PosComponent implements OnInit {
   }
 
   clearCart(): void {
-    if (this.cartItems().length === 0) return;
-    
-    if (confirm('¿Está seguro de limpiar el carrito?')) {
-      this.cartItems.set([]);
-      this.amountPaid.set(0);
-      this.discount.set(0);
-      this.selectedCustomer.set(null);
-      this.searchTerm.set('');
-      this.filteredProducts.set(this.products());
-    }
+    this.cartItems.set([]);
+    this.amountPaid.set(0);
+    this.discount.set(0);
+    this.selectedCustomer.set(null);
+    this.searchTerm.set('');
+    this.filteredProducts.set(this.products());
   }
 
   onDocumentTypeChange(): void {
-    if (this.documentType() === 'Boleta') {
-      this.selectedCustomer.set(null);
-    } else {
-      this.showCustomerSearch.set(true);
+    // Si cambia a Factura y el cliente actual no tiene RUC, limpiar selección
+    if (this.documentType() === 'Factura') {
+      const customer = this.selectedCustomer();
+      if (customer && (customer.documentType !== 'RUC' || customer.documentNumber.length !== 11)) {
+        this.selectedCustomer.set(null);
+        this.toastService.info('Las facturas requieren un cliente con RUC válido. Por favor, seleccione un cliente con RUC.');
+      }
+      // Mostrar búsqueda de cliente si no hay uno seleccionado
+      if (!this.selectedCustomer()) {
+        this.showCustomerSearch.set(true);
+      }
     }
+    // Para Boleta, no es necesario limpiar el cliente (puede tener DNI o ser público general)
   }
 
   selectCustomer(customer: Customer): void {
@@ -923,8 +1052,11 @@ export class PosComponent implements OnInit {
   }
 
   openCreateCustomerModal(): void {
+    // Determinar el tipo de documento por defecto según el tipo de comprobante
+    const defaultDocumentType = this.documentType() === 'Factura' ? 'RUC' : 'DNI';
+    
     this.createCustomerForm.reset({
-      documentType: 'DNI',
+      documentType: defaultDocumentType,
       documentNumber: '',
       name: '',
       email: '',
@@ -1071,10 +1203,10 @@ export class PosComponent implements OnInit {
       const customer = this.selectedCustomer();
       if (!customer) {
         this.toastService.warning('Las facturas requieren un cliente con RUC válido');
-      this.showCustomerSearch.set(true);
+        this.showCustomerSearch.set(true);
         this.documentType.set('Boleta'); // Revertir a Boleta
-      return;
-    }
+        return;
+      }
 
       // Validar que el cliente tenga RUC (11 dígitos)
       if (customer.documentType !== 'RUC' || customer.documentNumber.length !== 11) {
@@ -1084,6 +1216,7 @@ export class PosComponent implements OnInit {
         return;
       }
     }
+    // Para Boleta, no se requiere validación especial (puede tener cliente con DNI o ser público general)
 
     // Continuar con el proceso de venta
     this.continueSaleProcess();
@@ -1140,32 +1273,34 @@ export class PosComponent implements OnInit {
     this.salesService.create(saleDto).subscribe({
       next: (sale) => {
         this.lastSale.set(sale);
-        this.toastService.success(`Venta ${sale.documentNumber} creada exitosamente`);
+        
         // Cerrar modal QR si estaba abierto
         this.showQRPaymentModal.set(false);
         
         // IMPORTANTE: Guardar el email del cliente ANTES de limpiar el carrito
         const customerEmail = this.selectedCustomer()?.email;
-        const hasCustomerEmail = customerEmail && customerEmail.trim() !== '';
+        const hasCustomerEmail = !!(customerEmail && customerEmail.trim() !== '');
         
-        // Guardar el email para mostrarlo en el modal de confirmación
-        this.lastCustomerEmail.set(hasCustomerEmail ? customerEmail : null);
+        // Guardar el email para mostrarlo en el resumen
+        this.lastCustomerEmail.set(hasCustomerEmail ? customerEmail! : null);
         
         // Recargar productos para actualizar stock
         this.loadProducts();
         this.clearCart();
         this.isLoading.set(false);
         
-        // Verificar si el cliente tiene email para determinar qué mostrar
-        if (hasCustomerEmail) {
-          // Cliente tiene email: se enviará automáticamente
-          this.receiptEmailSent.set(true);
-          this.toastService.success(`El comprobante se enviará automáticamente a ${customerEmail}`);
-        } else {
-          // Cliente no tiene email: mostrar modal para ingresar correo alternativo
-          this.receiptEmailSent.set(false);
-          this.showSendReceiptDialog.set(true);
-        }
+        // Actualizar cierre de caja después de una venta exitosa
+        this.loadCashClosure();
+        
+        // Mostrar resumen de venta (sin interrumpir el flujo)
+        // NO establecer receiptEmailSent como true automáticamente
+        // El envío se hace en segundo plano en el backend, pero no sabemos si fue exitoso
+        // Solo mostraremos "Enviado a..." cuando el usuario haga clic en "Enviar por Email" y se confirme
+        this.receiptEmailSent.set(false);
+        this.showSaleSummary.set(true);
+        
+        // Si el cliente tiene email, el backend intentará enviarlo automáticamente en segundo plano
+        // Pero no mostramos confirmación hasta que el usuario lo solicite explícitamente
       },
       error: (error) => {
         console.error('Error creating sale:', error);
@@ -1210,14 +1345,75 @@ export class PosComponent implements OnInit {
 
     this.salesService.sendReceipt(sale.id, event.email, sale.documentType).subscribe({
       next: () => {
+        // Actualizar los signals para mostrar "Enviado a..." en el resumen
+        this.lastCustomerEmail.set(event.email);
+        this.receiptEmailSent.set(true);
         this.toastService.success(`Comprobante enviado exitosamente a ${event.email}`);
         this.showSendReceiptDialog.set(false);
+        // Recargar ventas si estamos en la vista de consultas
+        if (this.activeService() === 'consultas' && this.activeQueryTab() === 'ventas') {
+          this.loadQuerySales();
+        }
       },
       error: (error) => {
         console.error('Error sending receipt:', error);
-        this.toastService.error(error.error?.errors?.[0] || 'Error al enviar el comprobante');
+        // No actualizar los signals si hay error
+        this.toastService.error(error.error?.errors?.[0] || error.error?.message || 'Error al enviar el comprobante');
       }
     });
+  }
+
+  handleSendReceiptClick(): void {
+    const sale = this.lastSale();
+    if (!sale) return;
+
+    // Obtener el email del cliente de la venta o del cliente seleccionado
+    const customerEmail = sale.customerEmail || this.lastCustomerEmail() || this.selectedCustomer()?.email;
+    
+    // Si el cliente tiene email registrado, mostrar modal de confirmación simple
+    if (customerEmail && customerEmail.trim() !== '') {
+      this.emailToConfirm.set(customerEmail);
+      this.showConfirmSendEmailDialog.set(true);
+    } else {
+      // Si no hay email, mostrar el modal para ingresar el correo
+      this.showSendReceiptDialog.set(true);
+    }
+  }
+
+  confirmSendEmail(): void {
+    const sale = this.lastSale();
+    const email = this.emailToConfirm();
+    
+    if (!sale || !email) return;
+
+    this.salesService.sendReceipt(sale.id, email, sale.documentType).subscribe({
+      next: () => {
+        this.lastCustomerEmail.set(email);
+        this.receiptEmailSent.set(true);
+        this.showConfirmSendEmailDialog.set(false);
+        this.emailToConfirm.set(null);
+        this.toastService.success(`Comprobante enviado exitosamente a ${email}`);
+      },
+      error: (error) => {
+        console.error('Error sending receipt:', error);
+        // Si falla, mostrar el modal para que el usuario pueda ingresar otro correo
+        this.showConfirmSendEmailDialog.set(false);
+        this.showSendReceiptDialog.set(true);
+        this.toastService.error(error.error?.errors?.[0] || error.error?.message || 'Error al enviar el comprobante');
+      }
+    });
+  }
+
+  cancelConfirmSendEmail(): void {
+    this.showConfirmSendEmailDialog.set(false);
+    this.emailToConfirm.set(null);
+  }
+
+  closeSaleSummary(): void {
+    this.showSaleSummary.set(false);
+    this.lastSale.set(null);
+    this.lastCustomerEmail.set(null);
+    this.receiptEmailSent.set(false);
   }
 
   downloadReceipt(): void {
@@ -1292,6 +1488,18 @@ export class PosComponent implements OnInit {
       .slice(0, 10);
   }
 
+  getFilteredCustomersWithRuc(): Customer[] {
+    return this.getFilteredCustomers().filter(c => 
+      c.documentType === 'RUC' && c.documentNumber.length === 11
+    );
+  }
+
+  getFilteredCustomersWithDni(): Customer[] {
+    return this.getFilteredCustomers().filter(c => 
+      c.documentType === 'DNI' || !c.documentType || c.documentType !== 'RUC'
+    );
+  }
+
   // Shortcuts de teclado
   onKeyDown(event: KeyboardEvent): void {
     // ESC para cerrar búsqueda de cliente
@@ -1312,6 +1520,120 @@ export class PosComponent implements OnInit {
         }
       }
     }
+  }
+  
+  setTodayDateRange(): void {
+    const today = new Date();
+    this.cashClosureStartDate.set(today.toISOString().split('T')[0]);
+    this.cashClosureEndDate.set(today.toISOString().split('T')[0]);
+    this.loadCashClosure();
+  }
+  
+  loadCashClosure(): void {
+    this.isLoadingCashClosure.set(true);
+    
+    // Obtener ventas pagadas del rango seleccionado
+    const startDate = this.cashClosureStartDate() 
+      ? new Date(this.cashClosureStartDate())
+      : new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = this.cashClosureEndDate()
+      ? new Date(this.cashClosureEndDate())
+      : new Date();
+    endDate.setHours(23, 59, 59, 999);
+    
+    this.cashClosureService.getSummary(startDate, endDate).subscribe({
+      next: (summary: CashClosureSummary) => {
+        this.cashClosureData.set({
+          totalPaid: summary.totalPaid,
+          totalCount: summary.totalCount,
+          byPaymentMethod: summary.byPaymentMethod.map((p: { method: string; total: number; count: number }) => ({
+            method: p.method,
+            total: p.total,
+            count: p.count
+          }))
+        });
+        
+        this.isLoadingCashClosure.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading cash closure:', error);
+        this.cashClosureData.set(null);
+        this.isLoadingCashClosure.set(false);
+        this.toastService.error('Error al cargar el resumen de cierre de caja');
+      }
+    });
+  }
+  
+  openCashClosureModal(): void {
+    this.showCashClosureModal.set(true);
+    // Recargar datos al abrir el modal
+    this.loadCashClosure();
+  }
+  
+  closeCashClosureModal(): void {
+    this.showCashClosureModal.set(false);
+  }
+  
+  getPaymentMethodText(method: string): string {
+    const methods: { [key: string]: string } = {
+      'Efectivo': 'Efectivo',
+      'YapePlin': 'Yape/Plin',
+      'Transferencia': 'Transferencia'
+    };
+    return methods[method] || method;
+  }
+  
+  getCurrentDateFormatted(): string {
+    return new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  
+  generateCashClosurePdf(): void {
+    if (!this.cashClosureData() || this.cashClosureData()!.totalCount === 0) {
+      this.toastService.warning('No hay ventas para generar el cierre de caja');
+      return;
+    }
+
+    this.isGeneratingCashClosurePdf.set(true);
+
+    const startDate = this.cashClosureStartDate() 
+      ? new Date(this.cashClosureStartDate())
+      : new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = this.cashClosureEndDate()
+      ? new Date(this.cashClosureEndDate())
+      : new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    this.cashClosureService.generatePdf({
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    }).subscribe({
+      next: (blob) => {
+        // Crear URL del blob y descargar
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Cierre_Caja_${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        this.toastService.success('PDF de cierre de caja generado y descargado exitosamente. Las ventas han sido marcadas como cerradas.');
+        this.isGeneratingCashClosurePdf.set(false);
+        
+        // Recargar datos para actualizar (las ventas ahora estarán marcadas como cerradas)
+        this.loadCashClosure();
+      },
+      error: (error) => {
+        console.error('Error generando PDF de cierre de caja:', error);
+        this.toastService.error('Error al generar el PDF de cierre de caja');
+        this.isGeneratingCashClosurePdf.set(false);
+      }
+    });
   }
 }
 

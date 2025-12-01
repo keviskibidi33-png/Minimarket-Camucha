@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -20,6 +20,16 @@ export class CategoriesComponent implements OnInit {
   searchTerm = signal('');
   showConfirmDialog = signal(false);
   categoryToDelete = signal<string | null>(null);
+  
+  // Paginación
+  currentPage = signal(1);
+  pageSize = 20;
+  totalCategories = signal(0);
+  totalPages = computed(() => {
+    return Math.ceil(this.totalCategories() / this.pageSize);
+  });
+  
+  Math = Math;
 
   constructor(
     private categoriesService: CategoriesService,
@@ -33,32 +43,52 @@ export class CategoriesComponent implements OnInit {
 
   loadCategories(): void {
     this.isLoading.set(true);
-    this.categoriesService.getAll().subscribe({
-      next: (categories) => {
-        this.categories.set(categories);
-        this.filteredCategories.set(categories);
+    
+    const params: any = {
+      page: this.currentPage(),
+      pageSize: this.pageSize
+    };
+    
+    if (this.searchTerm().trim()) {
+      params.searchTerm = this.searchTerm().trim();
+    }
+    
+    this.categoriesService.getAll(params).subscribe({
+      next: (pagedResult) => {
+        this.categories.set(pagedResult.items || []);
+        this.filteredCategories.set(pagedResult.items || []);
+        this.totalCategories.set(pagedResult.totalCount || 0);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading categories:', error);
         this.toastService.error('Error al cargar las categorías');
+        this.categories.set([]);
+        this.filteredCategories.set([]);
+        this.totalCategories.set(0);
         this.isLoading.set(false);
       }
     });
   }
 
   onSearch(): void {
-    const term = this.searchTerm().toLowerCase().trim();
-    if (!term) {
-      this.filteredCategories.set(this.categories());
-      return;
+    this.currentPage.set(1);
+    this.loadCategories();
+  }
+  
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadCategories();
     }
-
-    const filtered = this.categories().filter(c =>
-      c.name.toLowerCase().includes(term) ||
-      (c.description && c.description.toLowerCase().includes(term))
-    );
-    this.filteredCategories.set(filtered);
+  }
+  
+  getRangeStart(): number {
+    return ((this.currentPage() - 1) * this.pageSize) + 1;
+  }
+  
+  getRangeEnd(): number {
+    return Math.min(this.currentPage() * this.pageSize, this.totalCategories());
   }
 
   confirmDelete(categoryId: string): void {

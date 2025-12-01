@@ -1,0 +1,120 @@
+<div class="flex flex-col h-full">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-text-light dark:text-text-dark">Categorías Populares</h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Gestiona las categorías que aparecen en la página de inicio</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Categorías Populares -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-xl font-semibold mb-4 text-text-light dark:text-text-dark">
+          Categorías Populares ({{ popularCategories().length }})
+        </h2>
+        
+        @if (popularCategories().length === 0) {
+          <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-6xl mb-4 block">category</span>
+            <p>No hay categorías populares</p>
+            <p class="text-sm mt-2">Agrega categorías desde la lista de la derecha</p>
+          </div>
+        } @else {
+          <div class="space-y-3 max-h-[600px] overflow-y-auto">
+            @for (category of popularCategories(); track category.id) {
+              <div class="flex items-center gap-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <div class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  @if (category.imageUrl) {
+                    <img [src]="category.imageUrl" [alt]="category.name" class="w-full h-full object-cover">
+                  } @else {
+                    <span class="material-symbols-outlined text-gray-400 text-3xl">category</span>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-text-light dark:text-text-dark truncate">{{ category.name }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Orden: {{ category.orden || 'N/A' }}</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    (click)="moveUp(category)"
+                    [disabled]="$first"
+                    class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Mover arriba">
+                    <span class="material-symbols-outlined text-lg">arrow_upward</span>
+                  </button>
+                  <button
+                    (click)="moveDown(category)"
+                    [disabled]="$last"
+                    class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Mover abajo">
+                    <span class="material-symbols-outlined text-lg">arrow_downward</span>
+                  </button>
+                  <button
+                    (click)="removeFromPopular(category)"
+                    class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                    title="Remover">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Categorías Disponibles -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-xl font-semibold mb-4 text-text-light dark:text-text-dark">
+          Categorías Disponibles
+        </h2>
+        
+        <!-- Buscador -->
+        <div class="mb-4">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Buscar categorías..."
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-text-light dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+
+        @if (getAvailableCategories().length === 0) {
+          <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-6xl mb-4 block">search_off</span>
+            <p>No hay categorías disponibles</p>
+          </div>
+        } @else {
+          <div class="space-y-3 max-h-[600px] overflow-y-auto">
+            @for (category of getAvailableCategories(); track category.id) {
+              <div class="flex items-center gap-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
+                <div class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  @if (category.imageUrl) {
+                    <img [src]="category.imageUrl" [alt]="category.name" class="w-full h-full object-cover">
+                  } @else {
+                    <span class="material-symbols-outlined text-gray-400 text-3xl">category</span>
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-text-light dark:text-text-dark truncate">{{ category.name }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ category.description || 'Sin descripción' }}</p>
+                </div>
+                <button
+                  (click)="addToPopular(category)"
+                  class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex-shrink-0">
+                  <span class="material-symbols-outlined text-lg mr-1">add</span>
+                  Agregar
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

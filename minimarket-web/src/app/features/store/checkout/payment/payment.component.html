@@ -21,20 +21,6 @@
             <section>
               <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Selecciona Método de Pago</h2>
               <div class="space-y-4">
-                <label [class]="paymentMethod() === 'card' 
-                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
-                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
-                  <input 
-                    type="radio"
-                    name="payment"
-                    [value]="'card'"
-                    [checked]="paymentMethod() === 'card'"
-                    (change)="onPaymentMethodChange('card')"
-                    class="form-radio text-primary focus:ring-primary"/>
-                  <div class="ml-4 flex-1">
-                    <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Tarjeta de Crédito/Débito</span>
-                  </div>
-                </label>
                 <label [class]="paymentMethod() === 'cash' 
                   ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
                   : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
@@ -49,99 +35,40 @@
                     <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Efectivo al Recibir</span>
                   </div>
                 </label>
-                <label [class]="paymentMethod() === 'bank' 
-                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
-                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
-                  <input 
-                    type="radio"
-                    name="payment"
-                    [value]="'bank'"
-                    [checked]="paymentMethod() === 'bank'"
-                    (change)="onPaymentMethodChange('bank')"
-                    class="form-radio text-primary focus:ring-primary"/>
-                  <div class="ml-4 flex-1">
-                    <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Transferencia Bancaria</span>
-                  </div>
-                </label>
-                <label [class]="paymentMethod() === 'wallet' 
-                  ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
-                  : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
-                  <input 
-                    type="radio"
-                    name="payment"
-                    [value]="'wallet'"
-                    [checked]="paymentMethod() === 'wallet'"
-                    (change)="onPaymentMethodChange('wallet')"
-                    class="form-radio text-primary focus:ring-primary"/>
-                  <div class="ml-4 flex-1">
-                    <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Billeteras Digitales</span>
-                  </div>
-                </label>
+                @if (bankAccountEnabled()) {
+                  <label [class]="paymentMethod() === 'bank' 
+                    ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
+                    : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
+                    <input 
+                      type="radio"
+                      name="payment"
+                      [value]="'bank'"
+                      [checked]="paymentMethod() === 'bank'"
+                      (change)="onPaymentMethodChange('bank')"
+                      class="form-radio text-primary focus:ring-primary"/>
+                    <div class="ml-4 flex-1">
+                      <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Transferencia Bancaria</span>
+                    </div>
+                  </label>
+                }
+                @if (yapeEnabled()) {
+                  <label [class]="paymentMethod() === 'wallet' 
+                    ? 'flex items-center p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 dark:bg-primary/10' 
+                    : 'flex items-center p-4 border border-border-light dark:border-border-dark rounded-lg cursor-pointer bg-white dark:bg-gray-800 hover:border-primary/50 dark:hover:border-primary/50'">
+                    <input 
+                      type="radio"
+                      name="payment"
+                      [value]="'wallet'"
+                      [checked]="paymentMethod() === 'wallet'"
+                      (change)="onPaymentMethodChange('wallet')"
+                      class="form-radio text-primary focus:ring-primary"/>
+                    <div class="ml-4 flex-1">
+                      <span class="font-medium text-text-primary-light dark:text-text-primary-dark">Billeteras Digitales</span>
+                    </div>
+                  </label>
+                }
               </div>
             </section>
-
-            <!-- Card Details (si se selecciona tarjeta) -->
-            @if (paymentMethod() === 'card') {
-              <section>
-                <h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] pb-4">Información de la Tarjeta</h2>
-                <div class="space-y-4">
-                  @if (stripeLoading()) {
-                    <div class="p-4 text-center text-gray-500">
-                      <span class="material-symbols-outlined animate-spin">sync</span>
-                      <p class="mt-2 text-sm">Cargando sistema de pago...</p>
-                    </div>
-                  } @else {
-                    <!-- Campos de tarjeta -->
-                    <label class="flex flex-col">
-                      <p class="text-base font-medium leading-normal pb-2">Nombre en la Tarjeta</p>
-                      <input 
-                        type="text"
-                        [ngModel]="cardName()"
-                        (ngModelChange)="cardName.set($event); savePaymentData()"
-                        name="cardName"
-                        placeholder="Juan Pérez"
-                        required
-                        class="form-input flex w-full rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal"/>
-                    </label>
-                    <label class="flex flex-col">
-                      <p class="text-base font-medium leading-normal pb-2">Número de Tarjeta</p>
-                      <input 
-                        type="text"
-                        [ngModel]="cardNumber()"
-                        (ngModelChange)="cardNumber.set($event); savePaymentData()"
-                        name="cardNumber"
-                        maxlength="19"
-                        placeholder="1234 5678 9012 3456"
-                        class="form-input flex w-full rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal"/>
-                    </label>
-                    <div class="grid grid-cols-2 gap-4">
-                      <label class="flex flex-col">
-                        <p class="text-base font-medium leading-normal pb-2">Fecha de Vencimiento</p>
-                        <input 
-                          type="text"
-                          [ngModel]="expiryDate()"
-                          (ngModelChange)="expiryDate.set($event); savePaymentData()"
-                          name="expiryDate"
-                          placeholder="MM/AA"
-                          maxlength="5"
-                          class="form-input flex w-full rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal"/>
-                      </label>
-                      <label class="flex flex-col">
-                        <p class="text-base font-medium leading-normal pb-2">CVV</p>
-                        <input 
-                          type="text"
-                          [ngModel]="cvv()"
-                          (ngModelChange)="cvv.set($event); savePaymentData()"
-                          name="cvv"
-                          placeholder="123"
-                          maxlength="4"
-                          class="form-input flex w-full rounded-lg text-text-primary-light dark:text-text-primary-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-white dark:bg-gray-800 h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-base font-normal leading-normal"/>
-                      </label>
-                    </div>
-                  }
-                </div>
-              </section>
-            }
 
             <!-- Bank Transfer Details (si se selecciona transferencia bancaria) -->
             @if (paymentMethod() === 'bank') {
@@ -150,18 +77,36 @@
                 <div class="space-y-4">
                   <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="space-y-2">
-                      <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Banco:</span>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">BCP</span>
-                      </div>
-                      <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Número de Cuenta:</span>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankAccountNumber }}</span>
-                      </div>
-                      <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Titular:</span>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankAccountName }}</span>
-                      </div>
+                      @if (bankName()) {
+                        <div class="flex justify-between items-center">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Banco:</span>
+                          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankName() }}</span>
+                        </div>
+                      }
+                      @if (bankAccountType()) {
+                        <div class="flex justify-between items-center">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo de Cuenta:</span>
+                          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankAccountType() }}</span>
+                        </div>
+                      }
+                      @if (bankAccountNumber()) {
+                        <div class="flex justify-between items-center">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Número de Cuenta:</span>
+                          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankAccountNumber() }}</span>
+                        </div>
+                      }
+                      @if (bankCCI()) {
+                        <div class="flex justify-between items-center">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">CCI:</span>
+                          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankCCI() }}</span>
+                        </div>
+                      }
+                      @if (bankAccountName()) {
+                        <div class="flex justify-between items-center">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Titular:</span>
+                          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ bankAccountName() }}</span>
+                        </div>
+                      }
                       <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Monto a Transferir:</span>
                         <span class="text-lg font-black text-primary">{{ getPriceFormatted(total()) }}</span>
@@ -174,13 +119,15 @@
                       <strong>Instrucciones:</strong> Realiza la transferencia bancaria y luego sube el comprobante de pago.
                     </p>
                     <div class="flex gap-2 mt-3">
-                      <button 
-                        type="button"
-                        (click)="copyToClipboard(bankAccountNumber)"
-                        class="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                        <span class="material-symbols-outlined text-base">content_copy</span>
-                        Copiar Número de Cuenta
-                      </button>
+                      @if (bankAccountNumber()) {
+                        <button 
+                          type="button"
+                          (click)="copyToClipboard(bankAccountNumber())"
+                          class="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                          <span class="material-symbols-outlined text-base">content_copy</span>
+                          Copiar Número de Cuenta
+                        </button>
+                      }
                     </div>
                   </div>
                   
@@ -200,12 +147,12 @@
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div class="text-center mb-4">
                     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Escanea el código QR con Yape para realizar el pago
+                      Escanea el código QR con Yape o Plin para realizar el pago
                     </p>
                     <div class="flex justify-center">
                       @if (yapeQR()) {
                         <div class="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg p-2 flex items-center justify-center">
-                          <img [src]="yapeQR()" alt="QR Code Yape" class="w-full h-full object-contain">
+                          <img [src]="yapeQR()" alt="QR Code Yape/Plin" class="w-full h-full object-contain">
                         </div>
                       } @else {
                         <div class="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
@@ -215,9 +162,9 @@
                     </div>
                     <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                        Número de Yape:
+                        Número de Yape/Plin:
                       </p>
-                      <p class="text-lg font-bold text-primary font-mono">{{ yapeNumber }}</p>
+                      <p class="text-lg font-bold text-primary font-mono">{{ yapeNumber() }}</p>
                     </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Monto: <strong>{{ getPriceFormatted(total()) }}</strong>
@@ -229,9 +176,9 @@
                       <strong>Instrucciones:</strong>
                     </p>
                     <ol class="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
-                      <li>Escanea el código QR con Yape</li>
+                      <li>Escanea el código QR con Yape o Plin</li>
                       <li>Confirma el monto: <strong>{{ getPriceFormatted(total()) }}</strong></li>
-                      <li>Finaliza la transacción en Yape</li>
+                      <li>Finaliza la transacción en Yape o Plin</li>
                       <li>Guarda el comprobante de pago</li>
                       <li>En la siguiente página podrás adjuntar el comprobante</li>
                     </ol>

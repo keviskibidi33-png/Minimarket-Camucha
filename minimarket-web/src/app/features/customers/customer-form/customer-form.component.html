@@ -52,7 +52,7 @@
               formControlName="documentNumber"
               class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin"
               [class.border-red-500]="customerForm.get('documentNumber')?.invalid && customerForm.get('documentNumber')?.touched"
-              [placeholder]="customerForm.get('documentType')?.value === 'DNI' ? '12345678' : '20123456789'"
+              [placeholder]="customerForm.get('documentType')?.value === 'DNI' ? '12345678' : '10095190559'"
               maxlength="11">
             @if (getFieldError('documentNumber')) {
               <p class="mt-1 text-sm text-red-500">{{ getFieldError('documentNumber') }}</p>

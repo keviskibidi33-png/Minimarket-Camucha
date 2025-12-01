@@ -13,7 +13,6 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IRepository<InventoryMovement> InventoryMovements { get; }
     IRepository<SystemSettings> SystemSettings { get; }
     IRepository<ShippingRate> ShippingRates { get; }
-    IRepository<Banner> Banners { get; }
     IRepository<BrandSettings> BrandSettings { get; }
     IRepository<Module> Modules { get; }
     IRepository<RolePermission> RolePermissions { get; }

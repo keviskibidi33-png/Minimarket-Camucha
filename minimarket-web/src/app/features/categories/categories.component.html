@@ -85,6 +85,60 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Paginación -->
+      @if (totalPages() > 1) {
+        <nav aria-label="Table navigation" class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+          <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+            Mostrando 
+            <span class="font-semibold text-gray-900 dark:text-white">{{ getRangeStart() }}</span>
+            @if (categories().length > 0) {
+              -
+              <span class="font-semibold text-gray-900 dark:text-white">{{ getRangeEnd() }}</span>
+            }
+            de 
+            <span class="font-semibold text-gray-900 dark:text-white">{{ totalCategories() }}</span>
+            categorías
+          </span>
+          <ul class="inline-flex items-center -space-x-px">
+            <li>
+              <button 
+                (click)="goToPage(currentPage() - 1)"
+                [disabled]="currentPage() === 1"
+                class="flex items-center justify-center h-8 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+            </li>
+            @for (page of [].constructor(totalPages()); track page; let i = $index) {
+              @if (i + 1 === currentPage() || i + 1 === 1 || i + 1 === totalPages() || (i + 1 >= currentPage() - 2 && i + 1 <= currentPage() + 2)) {
+                <li>
+                  <button
+                    (click)="goToPage(i + 1)"
+                    [class.bg-primary-admin]="currentPage() === i + 1"
+                    [class.text-white]="currentPage() === i + 1"
+                    [class.bg-white]="currentPage() !== i + 1"
+                    [class.dark:bg-gray-700]="currentPage() !== i + 1"
+                    class="flex items-center justify-center h-8 px-3 leading-tight border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-primary-admin/10 dark:hover:bg-primary-admin/20">
+                    {{ i + 1 }}
+                  </button>
+                </li>
+              } @else if (i + 1 === currentPage() - 3 || i + 1 === currentPage() + 3) {
+                <li>
+                  <span class="flex items-center justify-center h-8 px-3 leading-tight text-gray-500 dark:text-gray-400">...</span>
+                </li>
+              }
+            }
+            <li>
+              <button 
+                (click)="goToPage(currentPage() + 1)"
+                [disabled]="currentPage() === totalPages()"
+                class="flex items-center justify-center h-8 px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
     </div>
   </div>
 </div>

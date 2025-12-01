@@ -29,11 +29,11 @@ export class TermsComponent implements OnInit {
   }
 
   get companyRuc(): string {
-    return this.brandSettings()?.ruc || '20123456789';
+    return this.brandSettings()?.ruc || '10095190559';
   }
 
   get companyAddress(): string {
-    return this.brandSettings()?.address || 'Av. Principal 123, Lima, Perú';
+    return this.brandSettings()?.address || 'Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú';
   }
 }
 

@@ -345,6 +345,51 @@ public class OrdersController : ControllerBase
 
         return Ok(new { success = true, message = "Comprobante de pago actualizado correctamente" });
     }
+
+    [HttpPost("{id}/approve")]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> ApproveOrder(Guid id, [FromBody] ApproveOrderRequest request)
+    {
+        var command = new ApproveOrderCommand
+        {
+            OrderId = id,
+            SendPaymentVerifiedEmail = request?.SendPaymentVerifiedEmail ?? false
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Pedido aprobado correctamente" });
+    }
+
+    [HttpPost("{id}/reject")]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> RejectOrder(Guid id, [FromBody] RejectOrderRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Reason))
+        {
+            return BadRequest(new { error = "El motivo del rechazo es obligatorio" });
+        }
+
+        var command = new RejectOrderCommand
+        {
+            OrderId = id,
+            Reason = request.Reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Pedido rechazado correctamente" });
+    }
 }
 
 public class UpdateOrderStatusRequest
@@ -357,5 +402,15 @@ public class UpdateOrderStatusRequest
 public class UpdatePaymentProofRequest
 {
     public string PaymentProofUrl { get; set; } = string.Empty;
+}
+
+public class ApproveOrderRequest
+{
+    public bool SendPaymentVerifiedEmail { get; set; } = false;
+}
+
+public class RejectOrderRequest
+{
+    public string Reason { get; set; } = string.Empty;
 }
 

@@ -115,7 +115,15 @@ export class BrandSettingsService {
   }
 
   update(settings: UpdateBrandSettings): Observable<BrandSettings> {
-    return this.http.put<BrandSettings>(this.apiUrl, settings).pipe(
+    // El backend espera UpdateBrandSettingsCommand con una propiedad BrandSettings
+    // Envolver el objeto en la estructura correcta
+    const command = {
+      brandSettings: settings
+    };
+    
+    console.log('📤 Enviando al backend (wrapped):', JSON.stringify(command, null, 2));
+    
+    return this.http.put<BrandSettings>(this.apiUrl, command).pipe(
       tap(updatedSettings => {
         this.settingsSubject.next(updatedSettings);
         this.applyStyles(updatedSettings);

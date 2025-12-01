@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Minimarket.Application.Features.Categories.Commands;
 using Minimarket.Application.Features.Categories.Queries;
+using Minimarket.Application.Features.Categories.DTOs;
 
 namespace Minimarket.API.Controllers;
 
@@ -20,9 +21,35 @@ public class CategoriesController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous] // Permitir acceso público para la tienda
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? searchTerm = null)
     {
-        var query = new GetAllCategoriesQuery();
+        // Si no se especifica paginación, devolver todas las categorías como array
+        if (!page.HasValue && !pageSize.HasValue)
+        {
+            var allQuery = new GetAllCategoriesQuery
+            {
+                Page = 1,
+                PageSize = 10000, // Número grande para obtener todas
+                SearchTerm = searchTerm
+            };
+            var allResult = await _mediator.Send(allQuery);
+
+            if (!allResult.Succeeded)
+            {
+                return BadRequest(allResult);
+            }
+
+            // Devolver solo los items como array
+            return Ok(allResult.Data?.Items ?? new List<CategoryDto>());
+        }
+
+        // Si se especifica paginación, devolver resultado paginado
+        var query = new GetAllCategoriesQuery
+        {
+            Page = page ?? 1,
+            PageSize = pageSize ?? 20,
+            SearchTerm = searchTerm
+        };
         var result = await _mediator.Send(query);
 
         if (!result.Succeeded)

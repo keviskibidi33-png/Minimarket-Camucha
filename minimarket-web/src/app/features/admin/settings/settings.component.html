@@ -3,26 +3,7 @@
     <!-- Page Heading -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight">Configuraciones del Sistema</h1>
-      <button
-        (click)="goToFullSetup()"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-admin text-white font-bold hover:bg-primary-admin/90">
-        <span class="material-symbols-outlined">tune</span>
-        Personalizar por Completo Tienda
-      </button>
     </div>
-
-    <!-- Modal de Advertencia al Reiniciar Setup -->
-    @if (showResetWarning()) {
-      <app-confirm-dialog
-        [isOpen]="true"
-        title="⚠️ Advertencia: Se borrarán datos existentes"
-        message="Al personalizar la tienda desde cero, se eliminarán TODOS los productos y categorías creados hasta el momento. Esta acción no se puede deshacer. ¿Estás seguro de continuar?"
-        confirmText="Sí, Continuar"
-        cancelText="Cancelar"
-        (confirmed)="onResetWarningConfirmed()"
-        (cancelled)="onResetWarningCancelled()">
-      </app-confirm-dialog>
-    }
 
     <!-- Navbar de pestañas -->
     <app-settings-navbar></app-settings-navbar>
@@ -258,147 +239,189 @@
         </div>
       }
 
-      @if (activeTab() === 'email-templates') {
-        <!-- Email Templates Management -->
+      @if (activeTab() === 'payment-methods') {
+        <!-- Payment Methods Config -->
         <div class="space-y-6">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Configuración de Templates de Email</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Métodos de Pago y Comunicación</h2>
           
-          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-            <p class="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Nota:</strong> Las imágenes deben estar accesibles públicamente. Puedes subirlas a la carpeta <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">wwwroot/email-templates/</code> o usar URLs externas.
-            </p>
+          <!-- Información de Contacto -->
+          <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Información de Contacto</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Teléfono Principal
+                </label>
+                <input
+                  type="tel"
+                  [value]="phone()"
+                  (input)="phone.set($any($event.target).value)"
+                  placeholder="+51 999 999 999"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  WhatsApp para Notificaciones
+                </label>
+                <input
+                  type="tel"
+                  [value]="whatsAppPhone()"
+                  (input)="whatsAppPhone.set($any($event.target).value)"
+                  placeholder="+51 999 999 999"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Número donde se enviarán notificaciones de pedidos</p>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email de Contacto
+                </label>
+                <input
+                  type="email"
+                  [value]="email()"
+                  (input)="email.set($any($event.target).value)"
+                  placeholder="contacto@empresa.com"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+              </div>
+            </div>
           </div>
 
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                URL del Logo (arriba del email)
+          <!-- Yape/Plin (Unificado) -->
+          <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Yape/Plin</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Configuración unificada para ambos métodos de pago</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="yapeEnabled()"
+                  (change)="yapeEnabled.set($any($event.target).checked)"
+                  class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
               </label>
-              <input
-                type="text"
-                [value]="emailLogoUrl()"
-                (input)="emailLogoUrl.set($any($event.target).value)"
-                placeholder="https://tudominio.com/email-templates/logo.png o http://localhost:5000/email-templates/logo.png"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                URL completa de la imagen del logo. Se mostrará arriba del email.
-              </p>
-              @if (emailLogoUrl()) {
-                <div class="mt-2">
-                  <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Vista previa:</p>
-                  <img [src]="emailLogoUrl()" alt="Logo preview" class="max-w-[200px] h-auto border border-gray-300 dark:border-gray-700 rounded" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                  <p class="text-xs text-red-500 hidden">Error al cargar la imagen. Verifica la URL.</p>
-                </div>
-              }
             </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                URL de Imagen de Promoción (abajo del email)
-              </label>
-              <input
-                type="text"
-                [value]="emailPromotionImageUrl()"
-                (input)="emailPromotionImageUrl.set($any($event.target).value)"
-                placeholder="https://tudominio.com/email-templates/promotion.png o http://localhost:5000/email-templates/promotion.png"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                URL completa de la imagen de promoción. Se mostrará abajo del email, antes del footer.
-              </p>
-              @if (emailPromotionImageUrl()) {
-                <div class="mt-2">
-                  <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Vista previa:</p>
-                  <img [src]="emailPromotionImageUrl()" alt="Promotion preview" class="max-w-full h-auto border border-gray-300 dark:border-gray-700 rounded" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                  <p class="text-xs text-red-500 hidden">Error al cargar la imagen. Verifica la URL.</p>
-                </div>
-              }
-            </div>
-
-            <div class="pt-4 flex gap-4">
-              <button
-                (click)="saveEmailTemplateSettings()"
-                class="px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
-                Guardar Configuración
-              </button>
-              <button
-                (click)="testConfirmationEmail()"
-                class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
-                📧 Probar Email de Confirmación
-              </button>
-              <button
-                (click)="testStatusUpdateEmail()"
-                class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">
-                📧 Probar Email de Estado
-              </button>
-            </div>
-
-            <!-- Test Email Section -->
-            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Enviar Correo de Prueba</h3>
-              
-              <div class="space-y-4">
+            
+            @if (yapeEnabled()) {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Correo Electrónico de Prueba
+                    Número de Yape/Plin
                   </label>
                   <input
-                    type="email"
-                    [value]="testEmailAddress()"
-                    (input)="testEmailAddress.set($any($event.target).value)"
-                    placeholder="tu@email.com"
+                    type="tel"
+                    [value]="yapePhone()"
+                    (input)="yapePhone.set($any($event.target).value)"
+                    placeholder="999 888 777"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se usará el mismo número para Yape y Plin</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    QR Code de Yape/Plin
+                  </label>
+                  <div class="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      (change)="onYapeQRSelected($event)"
+                      class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+                    @if (isUploadingYapeQR()) {
+                      <span class="material-symbols-outlined animate-spin text-primary-admin">refresh</span>
+                    }
+                  </div>
+                  @if (yapeQRUrl()) {
+                    <div class="mt-2">
+                      <img [src]="yapeQRUrl()" alt="Yape/Plin QR" class="w-32 h-32 border border-gray-300 dark:border-gray-700 rounded-lg object-contain">
+                    </div>
+                  }
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se usará el mismo QR para Yape y Plin</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Cuenta Bancaria -->
+          <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Cuenta Bancaria (Opcional)</h3>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="bankAccountVisible()"
+                  (change)="bankAccountVisible.set($any($event.target).checked)"
+                  class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-admin/20 dark:peer-focus:ring-primary-admin/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-admin"></div>
+              </label>
+            </div>
+            
+            @if (bankAccountVisible()) {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Banco
+                  </label>
+                  <input
+                    type="text"
+                    [value]="bankName()"
+                    (input)="bankName.set($any($event.target).value)"
+                    placeholder="Ej: BCP, BBVA, Interbank"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tipo de Template
+                    Tipo de Cuenta
                   </label>
                   <select
-                    [value]="testTemplateType()"
-                    (change)="testTemplateType.set($any($event.target).value)"
+                    [value]="bankAccountType()"
+                    (change)="bankAccountType.set($any($event.target).value)"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
-                    <option value="order_confirmation">Confirmación de Pedido</option>
-                    <option value="order_status_update">Actualización de Estado</option>
+                    <option value="">Seleccione</option>
+                    <option value="Ahorros">Ahorros</option>
+                    <option value="Corriente">Corriente</option>
                   </select>
                 </div>
 
                 <div>
-                  <button
-                    (click)="sendTestEmail()"
-                    [disabled]="isSendingTestEmail() || !testEmailAddress().trim()"
-                    class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                    @if (isSendingTestEmail()) {
-                      Enviando...
-                    } @else {
-                      Enviar Correo de Prueba
-                    }
-                  </button>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Número de Cuenta
+                  </label>
+                  <input
+                    type="text"
+                    [value]="bankAccountNumber()"
+                    (input)="bankAccountNumber.set($any($event.target).value)"
+                    placeholder="1234567890123456"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
                 </div>
 
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                  <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                    <strong>Nota:</strong> Asegúrate de que la configuración de email (SMTP) esté correcta en <code class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">appsettings.json</code>. 
-                    El correo se enviará a la dirección especificada con datos de prueba.
-                  </p>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    CCI (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    [value]="bankCCI()"
+                    (input)="bankCCI.set($any($event.target).value)"
+                    placeholder="00000000000000000000"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-admin focus:border-primary-admin">
                 </div>
               </div>
-            </div>
-
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Cómo subir imágenes:</h3>
-              <ol class="list-decimal list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                <li>Coloca las imágenes en: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">src/Minimarket.API/wwwroot/email-templates/</code></li>
-                <li>Nombra el logo como: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">logo.png</code></li>
-                <li>Nombra la promoción como: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">promotion.png</code></li>
-                <li>Las URLs serán: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">http://localhost:5000/email-templates/logo.png</code></li>
-                <li>En producción, usa la URL completa de tu dominio</li>
-              </ol>
-            </div>
+            }
           </div>
+
+          <button
+            (click)="savePaymentMethodsSettings()"
+            class="w-full px-4 py-2 bg-primary-admin text-white font-bold rounded-lg hover:bg-primary-admin/90">
+            Guardar Configuración
+          </button>
         </div>
       }
+
 
 
     </div>

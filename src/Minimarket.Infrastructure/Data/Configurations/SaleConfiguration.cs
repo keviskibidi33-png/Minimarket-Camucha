@@ -59,6 +59,16 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.Property(s => s.CancellationReason)
             .HasMaxLength(500);
 
+        // Propiedades de cierre de caja (requieren migración)
+        // Si las columnas no existen, EF Core las ignorará automáticamente
+        builder.Property(s => s.IsClosed)
+            .HasDefaultValue(false);
+        
+        builder.Property(s => s.CashClosureDate);
+
+        // Índice para IsClosed
+        builder.HasIndex(s => s.IsClosed);
+
         // Relaciones
         builder.HasOne(s => s.Customer)
             .WithMany(c => c.Sales)

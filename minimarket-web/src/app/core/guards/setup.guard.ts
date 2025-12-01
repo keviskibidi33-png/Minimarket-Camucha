@@ -9,11 +9,6 @@ export const setupGuard: CanActivateFn = async (route, state) => {
   const authService = inject(AuthService);
   const setupStatusService = inject(SetupStatusService);
 
-  // Si está intentando acceder a admin-setup, permitir siempre
-  if (state.url.includes('/auth/admin-setup')) {
-    return true;
-  }
-
   // Verificar si el usuario está autenticado
   const currentUser = authService.currentUser();
   if (!currentUser) {
@@ -28,23 +23,29 @@ export const setupGuard: CanActivateFn = async (route, state) => {
     return true;
   }
 
-  // Verificar si el setup está completo
+  // Verificar primero el estado guardado en localStorage/signal
+  // Si está marcado como completo manualmente (por ejemplo, al omitir), permitir acceso
+  const savedStatus = setupStatusService.getSetupStatus();
+  if (savedStatus === true) {
+    // Si está marcado como completo en localStorage, permitir acceso sin verificar backend
+    return true;
+  }
+
+  // Si no está marcado como completo, verificar contra el backend
   try {
     const isComplete = await firstValueFrom(setupStatusService.checkSetupComplete());
     
     if (!isComplete) {
-      // Si no está completo, redirigir al setup
-      router.navigate(['/auth/admin-setup']);
-      return false;
+      // Si no está completo, permitir acceso de todas formas (el setup ya no existe)
+      // El admin puede configurar desde el panel de administración
+      return true;
     }
     
     return true;
   } catch (error) {
     console.error('Error checking setup status:', error);
-    // En caso de error, permitir acceso pero marcar como incompleto
-    setupStatusService.markSetupIncomplete();
-    router.navigate(['/auth/admin-setup']);
-    return false;
+    // En caso de error, permitir acceso de todas formas
+    return true;
   }
 };
 

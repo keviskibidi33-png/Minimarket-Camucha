@@ -164,11 +164,10 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                 // Nota: CommitTransactionAsync se maneja automáticamente por ExecuteInTransactionAsync
 
                 // Obtener datos del cliente si existe
-                string? customerName = null;
+                Domain.Entities.Customer? customer = null;
                 if (sale.CustomerId.HasValue)
                 {
-                    var customer = await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value, cancellationToken);
-                    customerName = customer?.Name;
+                    customer = await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value, cancellationToken);
                 }
 
                 // Construir respuesta
@@ -179,7 +178,11 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                     DocumentType = sale.DocumentType,
                     SaleDate = sale.SaleDate,
                     CustomerId = sale.CustomerId,
-                    CustomerName = customerName,
+                    CustomerName = customer?.Name,
+                    CustomerDocumentType = customer?.DocumentType,
+                    CustomerDocumentNumber = customer?.DocumentNumber,
+                    CustomerAddress = customer?.Address,
+                    CustomerEmail = customer?.Email,
                     Subtotal = sale.Subtotal,
                     Tax = sale.Tax,
                     Discount = sale.Discount,
@@ -205,6 +208,8 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
 
                 // Generar PDF y enviar email automáticamente en segundo plano (no bloquea la respuesta)
                 // Usar Task.Run con ConfigureAwait(false) para ejecutar en thread pool sin capturar contexto
+                // IMPORTANTE: No usar cancellationToken aquí porque puede estar cancelado después del commit
+                // y causar que se intente hacer rollback de una transacción ya commiteada
                 _ = Task.Run(async () =>
                 {
                     try
@@ -215,13 +220,17 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                             ? "document_factura_template_active" 
                             : "document_boleta_template_active";
                         
+                        // Usar CancellationToken.None para evitar problemas con el token de la transacción
                         var templateSetting = (await _unitOfWork.SystemSettings.FindAsync(
                             s => s.Key == templateKey, 
-                            cancellationToken))
+                            CancellationToken.None))
                             .FirstOrDefault();
                         
                         var isTemplateActive = templateSetting == null || 
                             templateSetting.Value?.ToLower() != "false";
+                        
+                        _logger.LogInformation("Checking template for {DocumentType} (SaleId: {SaleId}). TemplateKey: {TemplateKey}, IsActive: {IsActive}", 
+                            documentTypeText, sale.Id, templateKey, isTemplateActive);
                         
                         if (!isTemplateActive)
                         {
@@ -232,9 +241,14 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                             return;
                         }
 
-                        if (sale.CustomerId.HasValue && !string.IsNullOrWhiteSpace(customerName))
+                        if (sale.CustomerId.HasValue)
                         {
-                            var customer = await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value, cancellationToken);
+                            // Usar CancellationToken.None para evitar problemas con el token de la transacción
+                            var customer = await _unitOfWork.Customers.GetByIdAsync(sale.CustomerId.Value, CancellationToken.None);
+                            
+                            _logger.LogInformation("Customer found for sale {SaleId}. CustomerId: {CustomerId}, HasEmail: {HasEmail}, Email: {Email}", 
+                                sale.Id, sale.CustomerId.Value, !string.IsNullOrWhiteSpace(customer?.Email), customer?.Email ?? "NULL");
+                            
                             if (customer != null && !string.IsNullOrWhiteSpace(customer.Email))
                             {
                                 // Generar PDF con timeout y manejo de errores robusto
@@ -251,7 +265,9 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                                         customer.Name,
                                         sale.DocumentNumber,
                                         pdfPath,
-                                        documentTypeText
+                                        documentTypeText,
+                                        sale.Total,
+                                        sale.SaleDate
                                     );
 
                                     if (emailSent)
@@ -289,7 +305,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
                         // No fallar la venta si el email/PDF falla, solo loguear
                         _logger.LogError(ex, "Error in background PDF/email processing for sale {SaleId}", sale.Id);
                     }
-                }, cancellationToken);
+                }, CancellationToken.None);
 
             return saleDto;
         }, cancellationToken);

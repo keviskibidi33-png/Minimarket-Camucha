@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PagesService, Page } from '../../../core/services/pages.service';
+import { BrandSettingsService, BrandSettings } from '../../../core/services/brand-settings.service';
 import { StoreHeaderComponent } from '../../../shared/components/store-header/store-header.component';
 import { StoreFooterComponent } from '../../../shared/components/store-footer/store-footer.component';
 
@@ -17,15 +18,27 @@ export class PageComponent implements OnInit {
   page = signal<Page | null>(null);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  brandSettings = signal<BrandSettings | null>(null);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private pagesService: PagesService,
+    private brandSettingsService: BrandSettingsService,
     private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
+    // Cargar BrandSettings primero
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        this.brandSettings.set(settings);
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {
@@ -103,6 +116,43 @@ export class PageComponent implements OnInit {
         html = this.renderDefault(section, pageTitle);
     }
     
+    // Reemplazar datos dinámicos de BrandSettings
+    html = this.replaceDynamicData(html);
+    
+    return html;
+  }
+
+  private replaceDynamicData(html: string): string {
+    const settings = this.brandSettings();
+    if (!settings) return html;
+
+    // Reemplazar teléfono si existe en BrandSettings
+    if (settings.phone) {
+      // Buscar patrones comunes de teléfono en el HTML y reemplazarlos
+      html = html.replace(/<li><strong>Teléfono:<\/strong>.*?<\/li>/gi, 
+        `<li><strong>Teléfono:</strong> ${settings.phone}</li>`);
+      html = html.replace(/Teléfono:.*?(\+51\s?\d{3}\s?\d{3}\s?\d{3})/gi, 
+        `Teléfono: ${settings.phone}`);
+    }
+
+    // Reemplazar email si existe en BrandSettings
+    if (settings.email) {
+      const emailRegex = /<a\s+href=['"]mailto:([^'"]+)['"]>([^<]+)<\/a>/gi;
+      html = html.replace(emailRegex, (match, hrefEmail, displayEmail) => {
+        // Solo reemplazar si el email es el placeholder o el email por defecto
+        if (displayEmail.includes('minimarket.camucha@gmail.com') || displayEmail.includes('contacto@')) {
+          return `<a href="mailto:${settings.email}">${settings.email}</a>`;
+        }
+        return match;
+      });
+    }
+
+    // Reemplazar dirección si existe en BrandSettings
+    if (settings.address) {
+      html = html.replace(/<li><strong>Dirección:<\/strong>.*?<\/li>/gi, 
+        `<li><strong>Dirección:</strong> ${settings.address}</li>`);
+    }
+
     return html;
   }
 
@@ -113,14 +163,22 @@ export class PageComponent implements OnInit {
   private renderBanner(section: any, pageTitle?: string): string {
     const titulo = section.datos['titulo'] || '';
     const contenido = section.datos['contenido'] || '';
-    const imagenUrl = section.datos['imagenUrl'] || '';
+    let imagenUrl = section.datos['imagenUrl'] || '';
+    
+    // Si no hay imagen URL, usar una imagen por defecto relacionada con delivery
+    if (!imagenUrl) {
+      imagenUrl = 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1920&q=80&auto=format&fit=crop';
+    }
+    
+    // Escapar la URL para evitar problemas con comillas
+    const safeImageUrl = imagenUrl.replace(/'/g, "\\'");
     
     // Si el título de la sección es igual al título de la página, no mostrar el título de la sección (evitar duplicación)
     const mostrarTitulo = titulo && titulo !== pageTitle;
     
     return `
       <div class="relative w-full h-96 rounded-xl overflow-hidden shadow-lg mb-8">
-        ${imagenUrl ? `<div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${imagenUrl}')"></div>` : ''}
+        <div class="absolute inset-0 bg-cover bg-center bg-gray-300" style="background-image: url('${safeImageUrl}'); background-size: cover; background-position: center;"></div>
         <div class="absolute inset-0 bg-black/40"></div>
         <div class="relative h-full flex flex-col items-center justify-center text-center text-white p-6">
           ${mostrarTitulo ? `<h1 class="text-4xl font-bold mb-4">${titulo}</h1>` : ''}

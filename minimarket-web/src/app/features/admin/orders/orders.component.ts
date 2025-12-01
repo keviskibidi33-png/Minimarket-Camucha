@@ -20,6 +20,12 @@ export class OrdersComponent implements OnInit {
   searchTerm = signal('');
   startDate = signal('');
   endDate = signal('');
+
+  // Estadísticas rápidas
+  pendingCount = computed(() => this.orders().filter(o => o.status === 'pending').length);
+  pendingWithProof = computed(() => this.orders().filter(o => o.status === 'pending' && o.requiresPaymentProof && o.paymentProofUrl).length);
+  pendingWithoutProof = computed(() => this.orders().filter(o => o.status === 'pending' && o.requiresPaymentProof && !o.paymentProofUrl).length);
+  confirmedCount = computed(() => this.orders().filter(o => o.status === 'confirmed').length);
   
   // Paginación
   currentPage = signal(1);
@@ -36,6 +42,12 @@ export class OrdersComponent implements OnInit {
   newStatus = signal('');
   trackingUrl = signal('');
   estimatedDelivery = signal('');
+
+  // Modal de aprobación/rechazo
+  showApproveModal = signal(false);
+  showRejectModal = signal(false);
+  rejectionReason = signal('');
+  isProcessing = signal(false);
 
   // Estados disponibles
   statuses = [
@@ -261,6 +273,194 @@ export class OrdersComponent implements OnInit {
 
   getStatusesForModal(): Array<{ value: string; label: string }> {
     return this.statuses.filter(s => s.value !== '');
+  }
+
+  // Métodos de aprobación rápida
+  canApproveQuickly(order: WebOrder): boolean {
+    // Se puede aprobar rápidamente si:
+    // 1. Está pendiente
+    // 2. Es efectivo (no requiere comprobante) O tiene comprobante subido
+    if (order.status !== 'pending') {
+      return false;
+    }
+    
+    // Si es efectivo y no requiere comprobante, siempre se puede aprobar
+    if (order.paymentMethod === 'cash' && !order.requiresPaymentProof) {
+      return true;
+    }
+    
+    // Si requiere comprobante (bank/wallet), solo se puede aprobar si ya tiene comprobante
+    if (order.requiresPaymentProof) {
+      return !!order.paymentProofUrl;
+    }
+    
+    // Por defecto, si no requiere comprobante y no es efectivo, también se puede aprobar
+    return true;
+  }
+
+  canRejectQuickly(order: WebOrder): boolean {
+    // Se puede rechazar si está pendiente
+    return order.status === 'pending';
+  }
+
+  needsPaymentProof(order: WebOrder): boolean {
+    // Necesita comprobante si requiere comprobante y no lo tiene
+    return order.requiresPaymentProof && !order.paymentProofUrl;
+  }
+
+  isImageFile(url: string): boolean {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.jpg') || 
+           lowerUrl.endsWith('.jpeg') || 
+           lowerUrl.endsWith('.png') || 
+           lowerUrl.endsWith('.gif') || 
+           lowerUrl.endsWith('.webp') ||
+           lowerUrl.includes('/payment-proofs/') && !lowerUrl.endsWith('.pdf');
+  }
+
+  isPdfFile(url: string): boolean {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf');
+  }
+
+  onProofImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    console.warn('Error al cargar la imagen del comprobante');
+  }
+
+  openApproveModal(order: WebOrder): void {
+    if (!this.canApproveQuickly(order)) {
+      if (order.requiresPaymentProof && !order.paymentProofUrl) {
+        this.toastService.error('Este pedido requiere comprobante de pago antes de ser aprobado');
+      } else {
+        this.toastService.error('Este pedido no puede ser aprobado en este momento');
+      }
+      return;
+    }
+    this.selectedOrder.set(order);
+    this.showApproveModal.set(true);
+  }
+
+  closeApproveModal(): void {
+    this.showApproveModal.set(false);
+    this.selectedOrder.set(null);
+  }
+
+  openRejectModal(order: WebOrder): void {
+    if (!this.canRejectQuickly(order)) {
+      this.toastService.error('Solo se pueden rechazar pedidos en estado "Pendiente"');
+      return;
+    }
+    this.selectedOrder.set(order);
+    this.rejectionReason.set('');
+    this.showRejectModal.set(true);
+  }
+
+  closeRejectModal(): void {
+    this.showRejectModal.set(false);
+    this.rejectionReason.set('');
+    this.selectedOrder.set(null);
+  }
+
+  approveOrder(): void {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    this.isProcessing.set(true);
+    const sendPaymentVerifiedEmail = order.requiresPaymentProof && !!order.paymentProofUrl;
+
+    this.ordersService.approveOrder(order.id, sendPaymentVerifiedEmail).subscribe({
+      next: () => {
+        this.toastService.success(`Pedido ${order.orderNumber} aprobado correctamente. Se ha enviado un correo al cliente.`);
+        this.closeApproveModal();
+        this.loadOrders();
+        this.isProcessing.set(false);
+      },
+      error: (error) => {
+        console.error('Error approving order:', error);
+        this.toastService.error('Error al aprobar el pedido');
+        this.isProcessing.set(false);
+      }
+    });
+  }
+
+  rejectOrder(): void {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    if (!this.rejectionReason().trim()) {
+      this.toastService.error('Por favor ingresa el motivo del rechazo');
+      return;
+    }
+
+    this.isProcessing.set(true);
+
+    this.ordersService.rejectOrder(order.id, this.rejectionReason().trim()).subscribe({
+      next: () => {
+        this.toastService.success(`Pedido ${order.orderNumber} rechazado. Se ha enviado un correo al cliente con el motivo.`);
+        this.closeRejectModal();
+        this.loadOrders();
+        this.isProcessing.set(false);
+      },
+      error: (error) => {
+        console.error('Error rejecting order:', error);
+        this.toastService.error('Error al rechazar el pedido');
+        this.isProcessing.set(false);
+      }
+    });
+  }
+
+  markAsReadyForPickup(order: WebOrder): void {
+    this.ordersService.updateOrderStatus(order.id, 'ready_for_pickup').subscribe({
+      next: () => {
+        this.toastService.success(`Pedido ${order.orderNumber} marcado como listo para recoger. Se ha enviado un correo al cliente.`);
+        this.loadOrders();
+        if (this.showOrderDetails()) {
+          this.closeOrderDetails();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating order status:', error);
+        this.toastService.error('Error al actualizar el estado del pedido');
+      }
+    });
+  }
+
+  markAsShipped(order: WebOrder): void {
+    this.ordersService.updateOrderStatus(order.id, 'shipped').subscribe({
+      next: () => {
+        this.toastService.success(`Pedido ${order.orderNumber} marcado como enviado. Se ha enviado un correo al cliente.`);
+        this.loadOrders();
+        if (this.showOrderDetails()) {
+          this.closeOrderDetails();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating order status:', error);
+        this.toastService.error('Error al actualizar el estado del pedido');
+      }
+    });
+  }
+
+  getPaymentMethodLabel(paymentMethod: string): string {
+    const methods: { [key: string]: string } = {
+      'cash': 'Efectivo',
+      'bank': 'Transferencia Bancaria',
+      'wallet': 'Yape/Plin'
+    };
+    return methods[paymentMethod] || paymentMethod;
+  }
+
+  getPaymentMethodIcon(paymentMethod: string): string {
+    const icons: { [key: string]: string } = {
+      'cash': 'money',
+      'bank': 'account_balance',
+      'wallet': 'account_balance_wallet'
+    };
+    return icons[paymentMethod] || 'payment';
   }
 }
 

@@ -8,18 +8,29 @@
       <div>
         <h3 class="text-sm font-semibold tracking-wider uppercase">Enlaces Rápidos</h3>
         <ul class="mt-4 space-y-2">
-          <li><a class="text-sm text-gray-400 hover:text-white" href="#">Acerca de Nosotros</a></li>
-          <li><a class="text-sm text-gray-400 hover:text-white" href="#">Información de Envío</a></li>
-          <li><a class="text-sm text-gray-400 hover:text-white" href="#">Términos y Condiciones</a></li>
-          <li><a class="text-sm text-gray-400 hover:text-white" href="#">Política de Privacidad</a></li>
+          <li><a [routerLink]="'/pagina/acerca-de-nosotros'" class="text-sm text-gray-400 hover:text-white">Acerca de Nosotros</a></li>
+          <li><a [routerLink]="'/pagina/informacion-de-envio'" class="text-sm text-gray-400 hover:text-white">Información de Envío</a></li>
+          <li><a [routerLink]="'/legal/terms'" class="text-sm text-gray-400 hover:text-white">Términos y Condiciones</a></li>
+          <li><a [routerLink]="'/legal/privacy'" class="text-sm text-gray-400 hover:text-white">Política de Privacidad</a></li>
         </ul>
       </div>
       <div>
         <h3 class="text-sm font-semibold tracking-wider uppercase">Contacto</h3>
         <ul class="mt-4 space-y-2 text-sm text-gray-400">
-          <li>123 Market St, City, Country</li>
-          <li>contact&#64;camucha.com</li>
-          <li>+123 456 7890</li>
+          @if (address()) {
+            <li>{{ address() }}</li>
+          }
+          @if (email()) {
+            <li><a [href]="'mailto:' + email()" class="hover:text-white">{{ email() }}</a></li>
+          }
+          @if (phone()) {
+            <li><a [href]="'tel:' + phone()" class="hover:text-white">{{ phone() }}</a></li>
+          }
+          @if (!address() && !email() && !phone()) {
+            <li>Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú</li>
+            <li><a href="mailto:minimarket.camucha&#64;gmail.com" class="hover:text-white">minimarket.camucha&#64;gmail.com</a></li>
+            <li>+51 999 999 999</li>
+          }
         </ul>
       </div>
       <div>

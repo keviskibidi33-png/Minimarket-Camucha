@@ -24,8 +24,6 @@ export class SedesComponent implements OnInit {
   direccion = signal('');
   ciudad = signal('');
   pais = signal('Perú');
-  latitud = signal(0);
-  longitud = signal(0);
   telefono = signal('');
   estado = signal(true);
   logoUrl = signal('');
@@ -74,8 +72,6 @@ export class SedesComponent implements OnInit {
       this.direccion.set(sede.direccion);
       this.ciudad.set(sede.ciudad);
       this.pais.set(sede.pais);
-      this.latitud.set(sede.latitud);
-      this.longitud.set(sede.longitud);
       this.telefono.set(sede.telefono || '');
       this.estado.set(sede.estado);
       this.logoUrl.set(sede.logoUrl || '');
@@ -98,8 +94,6 @@ export class SedesComponent implements OnInit {
     this.direccion.set('');
     this.ciudad.set('');
     this.pais.set('Perú');
-    this.latitud.set(0);
-    this.longitud.set(0);
     this.telefono.set('');
     this.estado.set(true);
     this.logoUrl.set('');
@@ -147,8 +141,8 @@ export class SedesComponent implements OnInit {
       direccion: this.direccion(),
       ciudad: this.ciudad(),
       pais: this.pais(),
-      latitud: this.latitud(),
-      longitud: this.longitud(),
+      latitud: 0, // Valor por defecto
+      longitud: 0, // Valor por defecto
       telefono: this.telefono() || undefined,
       horarios: this.horarios(),
       logoUrl: this.logoUrl() || undefined,

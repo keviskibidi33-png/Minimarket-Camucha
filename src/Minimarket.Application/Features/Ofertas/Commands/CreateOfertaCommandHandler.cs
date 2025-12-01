@@ -70,23 +70,73 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
 
     public static OfertaDto MapToDto(Oferta oferta)
     {
-        return new OfertaDto
+        if (oferta == null)
         {
-            Id = oferta.Id,
-            Nombre = oferta.Nombre,
-            Descripcion = oferta.Descripcion,
-            DescuentoTipo = (int)oferta.DescuentoTipo,
-            DescuentoValor = oferta.DescuentoValor,
-            CategoriasIds = oferta.GetCategoriasIds(),
-            ProductosIds = oferta.GetProductosIds(),
-            FechaInicio = oferta.FechaInicio,
-            FechaFin = oferta.FechaFin,
-            Activa = oferta.Activa,
-            Orden = oferta.Orden,
-            ImagenUrl = oferta.ImagenUrl,
-            CreatedAt = oferta.CreatedAt,
-            UpdatedAt = oferta.UpdatedAt
-        };
+            throw new ArgumentNullException(nameof(oferta));
+        }
+
+        List<Guid> categoriasIds = new List<Guid>();
+        List<Guid> productosIds = new List<Guid>();
+
+        try
+        {
+            categoriasIds = oferta.GetCategoriasIds() ?? new List<Guid>();
+        }
+        catch (Exception)
+        {
+            categoriasIds = new List<Guid>();
+        }
+
+        try
+        {
+            productosIds = oferta.GetProductosIds() ?? new List<Guid>();
+        }
+        catch (Exception)
+        {
+            productosIds = new List<Guid>();
+        }
+
+        try
+        {
+            return new OfertaDto
+            {
+                Id = oferta.Id,
+                Nombre = oferta.Nombre ?? string.Empty,
+                Descripcion = oferta.Descripcion,
+                DescuentoTipo = (int)oferta.DescuentoTipo,
+                DescuentoValor = oferta.DescuentoValor,
+                CategoriasIds = categoriasIds,
+                ProductosIds = productosIds,
+                FechaInicio = oferta.FechaInicio,
+                FechaFin = oferta.FechaFin,
+                Activa = oferta.Activa,
+                Orden = oferta.Orden,
+                ImagenUrl = oferta.ImagenUrl,
+                CreatedAt = oferta.CreatedAt,
+                UpdatedAt = oferta.UpdatedAt
+            };
+        }
+        catch (Exception)
+        {
+            // Si hay algún error al mapear, retornar un DTO básico
+            return new OfertaDto
+            {
+                Id = oferta.Id,
+                Nombre = oferta.Nombre ?? string.Empty,
+                Descripcion = oferta.Descripcion,
+                DescuentoTipo = (int)oferta.DescuentoTipo,
+                DescuentoValor = oferta.DescuentoValor,
+                CategoriasIds = new List<Guid>(),
+                ProductosIds = new List<Guid>(),
+                FechaInicio = oferta.FechaInicio,
+                FechaFin = oferta.FechaFin,
+                Activa = oferta.Activa,
+                Orden = oferta.Orden,
+                ImagenUrl = oferta.ImagenUrl,
+                CreatedAt = oferta.CreatedAt,
+                UpdatedAt = oferta.UpdatedAt
+            };
+        }
     }
 }
 

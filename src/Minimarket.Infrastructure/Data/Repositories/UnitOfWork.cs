@@ -20,7 +20,6 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<InventoryMovement>? _inventoryMovements;
     private IRepository<SystemSettings>? _systemSettings;
     private IRepository<ShippingRate>? _shippingRates;
-    private IRepository<Banner>? _banners;
     private IRepository<BrandSettings>? _brandSettings;
     private IRepository<Module>? _modules;
     private IRepository<RolePermission>? _rolePermissions;
@@ -75,8 +74,6 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ShippingRate> ShippingRates =>
         _shippingRates ??= new Repository<ShippingRate>(_context);
 
-    public IRepository<Banner> Banners =>
-        _banners ??= new Repository<Banner>(_context);
 
     public IRepository<BrandSettings> BrandSettings =>
         _brandSettings ??= new Repository<BrandSettings>(_context);
@@ -176,9 +173,30 @@ public class UnitOfWork : IUnitOfWork
     {
         if (_transaction != null)
         {
-            await _transaction.RollbackAsync(cancellationToken);
-            await _transaction.DisposeAsync();
-            _transaction = null;
+            try
+            {
+                // Verificar si la transacción aún está activa antes de hacer rollback
+                // Si ya fue commiteada o disposed, no intentar hacer rollback
+                await _transaction.RollbackAsync(cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                // La transacción ya fue completada (commit o rollback previo)
+                // Esto puede ocurrir si hubo un error después del commit
+                // Simplemente ignorar y continuar con el dispose
+            }
+            finally
+            {
+                try
+                {
+                    await _transaction.DisposeAsync();
+                }
+                catch
+                {
+                    // Ignorar errores al hacer dispose
+                }
+                _transaction = null;
+            }
         }
     }
 
@@ -189,15 +207,21 @@ public class UnitOfWork : IUnitOfWork
         return await strategy.ExecuteAsync(async () =>
         {
             await BeginTransactionAsync(cancellationToken);
+            bool transactionCommitted = false;
             try
             {
                 var result = await operation();
                 await CommitTransactionAsync(cancellationToken);
+                transactionCommitted = true;
                 return result;
             }
             catch
             {
-                await RollbackTransactionAsync(cancellationToken);
+                // Solo hacer rollback si la transacción no fue commiteada
+                if (!transactionCommitted)
+                {
+                    await RollbackTransactionAsync(cancellationToken);
+                }
                 throw;
             }
         });

@@ -128,7 +128,8 @@ export class AuthService {
               const isAdmin = loginResponse.roles?.includes('Administrador');
               if (loginResponse.profileCompleted === false) {
                 if (isAdmin) {
-                  window.location.href = '/auth/admin-setup';
+                  // Admin sin perfil completo va directamente al admin (puede configurar desde ahí)
+                  window.location.href = '/admin';
                 } else {
                   window.location.href = '/auth/complete-profile';
                 }
@@ -212,6 +213,28 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  decodeToken(): any | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+    
+    try {
+      // Decodificar manualmente el token JWT (formato: header.payload.signature)
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        return null;
+      }
+      
+      // Decodificar el payload (segunda parte)
+      const payload = JSON.parse(atob(tokenParts[1]));
+      return payload;
+    } catch (error) {
+      console.error('Error decodificando token JWT:', error);
+      return null;
+    }
+  }
+
   private hasToken(): boolean {
     return !!this.getToken();
   }
@@ -265,6 +288,11 @@ export class AuthService {
   }
 
   private loadUserProfilePrivate(): void {
+    // Solo intentar cargar el perfil si el usuario está autenticado
+    if (!this.isAuthenticated()) {
+      return;
+    }
+
     this.getProfile().subscribe({
       next: (profile) => {
         const current = this.currentUser();
@@ -282,7 +310,10 @@ export class AuthService {
         }
       },
       error: (error) => {
-        console.error('Error al cargar perfil del usuario:', error);
+        // Solo loguear errores que no sean 401 (no autenticado)
+        if (error?.status !== 401) {
+          console.error('Error al cargar perfil del usuario:', error);
+        }
         // No hacer nada si falla, el usuario ya está autenticado
       }
     });

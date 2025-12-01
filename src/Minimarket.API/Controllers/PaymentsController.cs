@@ -43,5 +43,19 @@ public class PaymentsController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpPost("send-proof")]
+    [AllowAnonymous] // Permitir acceso público para que los clientes suban comprobantes
+    public async Task<IActionResult> SendPaymentProof([FromBody] SendPaymentProofCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(new { success = true, message = "Comprobante de pago recibido correctamente" });
+    }
 }
 

@@ -178,9 +178,9 @@ export class StoreProductsComponent implements OnInit {
   }
 
   loadCategories() {
-    this.categoriesService.getAll().subscribe({
+    this.categoriesService.getAllWithoutPagination().subscribe({
       next: (categories) => {
-        this.categories.set(categories.filter(c => c.isActive));
+        this.categories.set(categories.filter((c: any) => c.isActive));
       },
       error: (error) => {
         console.error('Error loading categories:', error);

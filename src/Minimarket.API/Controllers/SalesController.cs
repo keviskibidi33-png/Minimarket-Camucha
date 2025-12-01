@@ -109,7 +109,13 @@ public class SalesController : ControllerBase
 
         if (!result.Succeeded)
         {
-            return BadRequest(result);
+            // Retornar un objeto anónimo en lugar del Result directamente para evitar problemas de serialización
+            return BadRequest(new 
+            { 
+                succeeded = false,
+                errors = result.Errors,
+                message = result.Errors.Length > 0 ? result.Errors[0] : "Error al enviar el comprobante"
+            });
         }
 
         return Ok(new { success = true, message = "Comprobante enviado exitosamente" });

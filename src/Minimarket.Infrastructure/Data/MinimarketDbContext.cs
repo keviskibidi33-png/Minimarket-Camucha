@@ -20,7 +20,6 @@ public class MinimarketDbContext : IdentityDbContext<IdentityUser<Guid>, Identit
     public DbSet<InventoryMovement> InventoryMovements { get; set; }
     public DbSet<SystemSettings> SystemSettings { get; set; }
     public DbSet<ShippingRate> ShippingRates { get; set; }
-    public DbSet<Banner> Banners { get; set; }
     public DbSet<BrandSettings> BrandSettings { get; set; }
     public DbSet<Domain.Entities.Module> Modules { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }

@@ -41,25 +41,43 @@ export class AnalyticsComponent implements OnInit {
           label: 'Vistas de Páginas',
           data: data.dailyStats.map(stat => stat.pageViews),
           borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          borderWidth: 3,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
         },
         {
           label: 'Vistas de Productos',
           data: data.dailyStats.map(stat => stat.productViews),
           borderColor: 'rgb(16, 185, 129)',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          fill: true
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          borderWidth: 3,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(16, 185, 129)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
         },
         {
           label: 'Ventas',
           data: data.dailyStats.map(stat => stat.sales),
           borderColor: 'rgb(245, 101, 101)',
-          backgroundColor: 'rgba(245, 101, 101, 0.1)',
-          tension: 0.4,
+          backgroundColor: 'rgba(245, 101, 101, 0.15)',
+          borderWidth: 3,
+          tension: 0.5,
           fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(245, 101, 101)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
           yAxisID: 'y1'
         }
       ]
@@ -69,14 +87,53 @@ export class AnalyticsComponent implements OnInit {
   lineChartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: true,
-        position: 'top'
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 12,
+            weight: 'normal'
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Tendencias de Vistas y Ventas'
+        text: 'Tendencias de Vistas y Ventas',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: (context) => {
+            return `${context.dataset.label}: ${context.parsed.y !== null && context.parsed.y !== undefined ? context.parsed.y.toLocaleString('es-PE') : '0'}`;
+          }
+        }
       }
     },
     scales: {
@@ -120,9 +177,16 @@ export class AnalyticsComponent implements OnInit {
         {
           label: 'Vistas',
           data: data.topPages.map(page => page.viewCount),
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.9)',
+            'rgba(37, 99, 235, 0.9)',
+            'rgba(29, 78, 216, 0.9)',
+            'rgba(30, 64, 175, 0.9)',
+            'rgba(30, 58, 138, 0.9)'
+          ],
           borderColor: 'rgb(59, 130, 246)',
-          borderWidth: 1
+          borderWidth: 2,
+          borderRadius: 6
         }
       ]
     };
@@ -131,18 +195,54 @@ export class AnalyticsComponent implements OnInit {
   topPagesChartOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: false
       },
       title: {
         display: true,
-        text: 'Páginas Más Visitadas'
+        text: 'Páginas Más Visitadas',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            return `${value !== null && value !== undefined ? value.toLocaleString('es-PE') : '0'} vistas`;
+          }
+        }
       }
     },
     scales: {
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => {
+            return Number(value).toLocaleString('es-PE');
+          }
+        }
       }
     }
   };
@@ -167,9 +267,16 @@ export class AnalyticsComponent implements OnInit {
         {
           label: 'Vistas',
           data: data.topProducts.map(product => product.viewCount),
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.9)',
+            'rgba(5, 150, 105, 0.9)',
+            'rgba(4, 120, 87, 0.9)',
+            'rgba(6, 95, 70, 0.9)',
+            'rgba(6, 78, 59, 0.9)'
+          ],
           borderColor: 'rgb(16, 185, 129)',
-          borderWidth: 1
+          borderWidth: 2,
+          borderRadius: 6
         }
       ]
     };
@@ -178,18 +285,54 @@ export class AnalyticsComponent implements OnInit {
   topProductsChartOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: false
       },
       title: {
         display: true,
-        text: 'Productos Más Visitados'
+        text: 'Productos Más Visitados',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            return `${value !== null && value !== undefined ? value.toLocaleString('es-PE') : '0'} vistas`;
+          }
+        }
       }
     },
     scales: {
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => {
+            return Number(value).toLocaleString('es-PE');
+          }
+        }
       }
     }
   };
@@ -235,18 +378,54 @@ export class AnalyticsComponent implements OnInit {
   kpisChartOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: false
       },
       title: {
         display: true,
-        text: 'Resumen de Métricas'
+        text: 'Resumen de Métricas',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            return `${context.dataset.label || 'Métrica'}: ${value !== null && value !== undefined ? value.toLocaleString('es-PE') : '0'}`;
+          }
+        }
       }
     },
     scales: {
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => {
+            return Number(value).toLocaleString('es-PE');
+          }
+        }
       }
     }
   };
@@ -272,9 +451,15 @@ export class AnalyticsComponent implements OnInit {
           label: 'Ingresos (S/)',
           data: data.dailyStats.map(stat => stat.revenue),
           borderColor: 'rgb(168, 85, 247)',
-          backgroundColor: 'rgba(168, 85, 247, 0.1)',
-          tension: 0.4,
-          fill: true
+          backgroundColor: 'rgba(168, 85, 247, 0.2)',
+          borderWidth: 3,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(168, 85, 247)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
         }
       ]
     };
@@ -283,14 +468,53 @@ export class AnalyticsComponent implements OnInit {
   revenueChartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
     plugins: {
       legend: {
         display: true,
-        position: 'top'
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 12,
+            weight: 'normal'
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Ingresos Diarios'
+        text: 'Ingresos Diarios',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            return `Ingresos: S/ ${value !== null && value !== undefined ? value.toFixed(2) : '0.00'}`;
+          }
+        }
       }
     },
     scales: {
@@ -298,7 +522,16 @@ export class AnalyticsComponent implements OnInit {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Ingresos (S/)'
+          text: 'Ingresos (S/)',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        },
+        ticks: {
+          callback: (value) => {
+            return `S/ ${Number(value).toFixed(0)}`;
+          }
         }
       }
     }

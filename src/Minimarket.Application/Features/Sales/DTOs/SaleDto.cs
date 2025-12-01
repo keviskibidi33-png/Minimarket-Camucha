@@ -10,6 +10,10 @@ public class SaleDto
     public DateTime SaleDate { get; set; }
     public Guid? CustomerId { get; set; }
     public string? CustomerName { get; set; }
+    public string? CustomerDocumentType { get; set; }
+    public string? CustomerDocumentNumber { get; set; }
+    public string? CustomerAddress { get; set; }
+    public string? CustomerEmail { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Tax { get; set; }
     public decimal Discount { get; set; }

@@ -7,6 +7,7 @@ import { PaymentsService } from '../../../../core/services/payments.service';
 import { CheckoutStepperComponent } from '../../../../shared/components/checkout-stepper/checkout-stepper.component';
 import { StoreHeaderComponent } from '../../../../shared/components/store-header/store-header.component';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { BrandSettingsService } from '../../../../core/services/brand-settings.service';
 import { loadStripe } from '@stripe/stripe-js';
 import { firstValueFrom } from 'rxjs';
 
@@ -24,7 +25,7 @@ import { firstValueFrom } from 'rxjs';
   styleUrl: './payment.component.css'
 })
 export class PaymentComponent implements OnInit, OnDestroy {
-  paymentMethod = signal<'card' | 'cash' | 'bank' | 'wallet'>('card');
+  paymentMethod = signal<'cash' | 'bank' | 'wallet'>('cash');
   // Ya no necesitamos walletMethod porque solo usamos Yape
   
   // Card details
@@ -44,13 +45,20 @@ export class PaymentComponent implements OnInit, OnDestroy {
   cardElement: any = null;
   stripeLoading = signal(false);
   
-  // Bank account info (BCP)
-  bankAccountNumber = '193-12345678-0-00'; // TODO: Mover a configuración
-  bankAccountName = 'Minimarket Camucha S.A.C.'; // TODO: Mover a configuración
+  // Bank account info - se carga desde BrandSettings
+  bankAccountNumber = signal<string>('');
+  bankAccountName = signal<string>('');
+  bankName = signal<string>('');
+  bankAccountType = signal<string>('');
+  bankCCI = signal<string>('');
   
-  // Digital wallet info (solo Yape)
-  yapeNumber = '999 888 777'; // TODO: Mover a configuración
+  // Digital wallet info (solo Yape) - se carga desde BrandSettings
+  yapeNumber = signal<string>('999 888 777'); // Fallback si no hay configuración
   yapeQR = signal<string>('');
+  yapeEnabled = signal<boolean>(true); // Estado de habilitación desde BrandSettings
+  
+  // Bank account info - se carga desde BrandSettings
+  bankAccountEnabled = signal<boolean>(true); // Estado de habilitación desde BrandSettings
   
   cartItems!: ReturnType<typeof CartService.prototype.getCartItems>;
   shippingData: any = null;
@@ -62,13 +70,17 @@ export class PaymentComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private paymentsService: PaymentsService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private brandSettingsService: BrandSettingsService
   ) {
     // Inicializar cartItems después del constructor
     this.cartItems = this.cartService.getCartItems();
   }
 
   async ngOnInit() {
+    // Cargar BrandSettings para obtener QR y número de Yape
+    this.loadBrandSettings();
+    
     // Cargar datos de envío desde localStorage (persistencia después de recargar)
     this.loadShippingDataFromStorage();
     
@@ -81,10 +93,73 @@ export class PaymentComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Inicializar Stripe solo si se selecciona tarjeta
-    if (this.paymentMethod() === 'card') {
-      await this.initializeStripe();
-    }
+    // Ya no se usa Stripe/tarjeta
+  }
+  
+  loadBrandSettings(): void {
+    this.brandSettingsService.get().subscribe({
+      next: (settings) => {
+        if (settings) {
+          // Cargar estado de habilitación de Yape/Plin (unificado)
+          const isYapeEnabled = settings.yapeEnabled ?? settings.plinEnabled ?? false;
+          this.yapeEnabled.set(isYapeEnabled);
+          
+          // Si está deshabilitado y estaba seleccionado, cambiar a efectivo
+          if (!isYapeEnabled && this.paymentMethod() === 'wallet') {
+            this.paymentMethod.set('cash');
+            this.savePaymentData();
+          }
+          
+          // Cargar estado de habilitación de Transferencia Bancaria
+          const isBankEnabled = settings.bankAccountVisible ?? false;
+          this.bankAccountEnabled.set(isBankEnabled);
+          
+          // Si está deshabilitado y estaba seleccionado, cambiar a efectivo
+          if (!isBankEnabled && this.paymentMethod() === 'bank') {
+            this.paymentMethod.set('cash');
+            this.savePaymentData();
+          }
+          
+          // Cargar número de Yape/Plin desde BrandSettings (unificado)
+          // Priorizar yapePhone, pero usar plinPhone como fallback
+          const phoneNumber = settings.yapePhone || settings.plinPhone;
+          if (phoneNumber) {
+            this.yapeNumber.set(phoneNumber);
+          }
+          
+          // Cargar QR de Yape/Plin desde BrandSettings (unificado)
+          // Priorizar yapeQRUrl, pero usar plinQRUrl como fallback
+          const qrUrl = settings.yapeQRUrl || settings.plinQRUrl;
+          if (qrUrl) {
+            this.yapeQR.set(qrUrl);
+          } else if (isYapeEnabled) {
+            // Si no hay QR en BrandSettings pero está habilitado, generar uno dinámico como fallback
+            this.generateYapeQR();
+          }
+          
+          // Cargar datos de cuenta bancaria desde BrandSettings
+          this.bankName.set(settings.bankName || '');
+          this.bankAccountType.set(settings.bankAccountType || '');
+          this.bankAccountNumber.set(settings.bankAccountNumber || '');
+          this.bankCCI.set(settings.bankCCI || '');
+          // Nombre del titular: usar storeName como fallback
+          this.bankAccountName.set(settings.storeName || 'Minimarket Camucha S.A.C.');
+        } else {
+          // Si no hay settings, deshabilitar por defecto
+          this.yapeEnabled.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+        // En caso de error, deshabilitar por defecto
+        this.yapeEnabled.set(false);
+        this.bankAccountEnabled.set(false);
+        if (this.paymentMethod() === 'wallet' || this.paymentMethod() === 'bank') {
+          this.paymentMethod.set('cash');
+          this.savePaymentData();
+        }
+      }
+    });
   }
 
   // Cargar datos de envío desde localStorage
@@ -115,24 +190,10 @@ export class PaymentComponent implements OnInit, OnDestroy {
       if (savedPayment) {
         const paymentData = JSON.parse(savedPayment);
         if (paymentData && typeof paymentData === 'object') {
-          this.paymentMethod.set(paymentData.paymentMethod || 'card');
+          this.paymentMethod.set(paymentData.paymentMethod || 'cash');
           
-          // Si hay datos de tarjeta guardados, cargarlos
-          if (paymentData.cardNumber) {
-            this.cardNumber.set(paymentData.cardNumber || '');
-          }
-          if (paymentData.cardName) {
-            this.cardName.set(paymentData.cardName || '');
-          }
-          if (paymentData.expiryDate) {
-            this.expiryDate.set(paymentData.expiryDate || '');
-          }
-          if (paymentData.cvv) {
-            this.cvv.set(paymentData.cvv || '');
-          }
-          
-          // Si es billetera digital, generar QR
-          if (this.paymentMethod() === 'wallet') {
+          // Si es billetera digital y no hay QR cargado, generar uno dinámico
+          if (this.paymentMethod() === 'wallet' && !this.yapeQR()) {
             this.generateYapeQR();
           }
         }
@@ -168,12 +229,13 @@ export class PaymentComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPaymentMethodChange(method: 'card' | 'cash' | 'bank' | 'wallet') {
+  onPaymentMethodChange(method: 'cash' | 'bank' | 'wallet') {
     this.paymentMethod.set(method);
-    if (method === 'card' && !this.stripe) {
-      this.initializeStripe();
-    } else if (method === 'wallet') {
-      this.generateYapeQR(); // Generar QR de Yape automáticamente
+    if (method === 'wallet') {
+      // Si no hay QR cargado desde BrandSettings, generar uno dinámico
+      if (!this.yapeQR()) {
+        this.generateYapeQR();
+      }
       this.removePaymentProof(); // Clear proof if switching methods
     } else if (method === 'bank') {
       this.removePaymentProof(); // Clear proof if switching methods
@@ -189,19 +251,16 @@ export class PaymentComponent implements OnInit, OnDestroy {
         paymentMethod: this.paymentMethod()
       };
       
-      // Guardar datos de tarjeta si están llenos
-      if (this.paymentMethod() === 'card') {
-        if (this.cardNumber()) paymentData.cardNumber = this.cardNumber();
-        if (this.cardName()) paymentData.cardName = this.cardName();
-        if (this.expiryDate()) paymentData.expiryDate = this.expiryDate();
-        if (this.cvv()) paymentData.cvv = this.cvv();
-      } else if (this.paymentMethod() === 'wallet') {
+      if (this.paymentMethod() === 'wallet') {
         paymentData.walletMethod = 'yape';
         paymentData.walletNumber = this.yapeNumber;
         paymentData.requiresProof = true;
       } else if (this.paymentMethod() === 'bank') {
-        paymentData.bankAccountNumber = this.bankAccountNumber;
-        paymentData.bankAccountName = this.bankAccountName;
+        paymentData.bankName = this.bankName();
+        paymentData.bankAccountType = this.bankAccountType();
+        paymentData.bankAccountNumber = this.bankAccountNumber();
+        paymentData.bankCCI = this.bankCCI();
+        paymentData.bankAccountName = this.bankAccountName();
         paymentData.requiresProof = true;
       } else {
         paymentData.requiresProof = false;
@@ -215,11 +274,16 @@ export class PaymentComponent implements OnInit, OnDestroy {
   }
 
   generateYapeQR() {
-    // Generar QR dinámico de Yape con el monto
+    // Generar QR dinámico de Yape con el monto (solo si no hay QR en BrandSettings)
+    // Este método se usa como fallback cuando no hay QR subido en el admin
     const amount = this.total();
-    const qrData = `yape://payment?phone=${this.yapeNumber.replace(/\s/g, '')}&amount=${amount.toFixed(2)}`;
+    const phoneNumber = this.yapeNumber().replace(/\s/g, '');
+    const qrData = `yape://payment?phone=${phoneNumber}&amount=${amount.toFixed(2)}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
-    this.yapeQR.set(qrUrl);
+    // Solo establecer si no hay QR ya cargado desde BrandSettings
+    if (!this.yapeQR()) {
+      this.yapeQR.set(qrUrl);
+    }
   }
 
   onPaymentProofSelected(event: Event) {
@@ -264,86 +328,15 @@ export class PaymentComponent implements OnInit, OnDestroy {
 
   async continueToConfirmation() {
     // Validar según el método de pago
-    if (this.paymentMethod() === 'card') {
-      // Validar campos de tarjeta
-      if (!this.cardNumber() || !this.cardName() || !this.expiryDate() || !this.cvv()) {
-        this.toastService.error('Por favor completa todos los campos de la tarjeta');
-        return;
-      }
-
-      // Si Stripe está disponible, procesar con Stripe
-      if (this.stripe && this.cardElement) {
-        try {
-          this.stripeLoading.set(true);
-          const paymentIntent = await firstValueFrom(
-            this.paymentsService.createPaymentIntent({
-              amount: this.total(),
-              currency: 'pen',
-              description: `Pedido Minimarket Camucha`
-            })
-          );
-
-          if (paymentIntent) {
-            const { error, paymentIntent: confirmedIntent } = await this.stripe.confirmCardPayment(
-              paymentIntent.clientSecret,
-              {
-                payment_method: {
-                  card: this.cardElement,
-                  billing_details: {
-                    name: this.cardName()
-                  }
-                }
-              }
-            );
-
-            if (error) {
-              this.toastService.error(error.message || 'Error al procesar el pago');
-              this.stripeLoading.set(false);
-              return;
-            }
-
-            if (confirmedIntent && confirmedIntent.status === 'succeeded') {
-              const paymentData = {
-                paymentMethod: this.paymentMethod(),
-                paymentIntentId: confirmedIntent.id,
-                status: confirmedIntent.status,
-                requiresProof: false // Stripe no requiere comprobante
-              };
-              localStorage.setItem('checkout-payment', JSON.stringify(paymentData));
-              localStorage.setItem('checkout-total', this.total().toString());
-              
-              // NO limpiar carrito aquí - se limpiará cuando se confirme el pedido
-              // Solo navegar a confirmación
-              this.router.navigate(['/checkout/confirmacion']);
-              return;
-            }
-          }
-        } catch (error: any) {
-          console.error('Error processing payment:', error);
-          this.toastService.error('Error al procesar el pago. Por favor intenta de nuevo.');
-        } finally {
-          this.stripeLoading.set(false);
-        }
-      }
-
-      // Fallback: guardar datos manuales (para procesar después)
-      const paymentData = {
-        paymentMethod: this.paymentMethod(),
-        cardNumber: this.cardNumber().replace(/\s/g, ''), // Remover espacios
-        cardName: this.cardName(),
-        expiryDate: this.expiryDate(),
-        cvv: this.cvv(),
-        requiresProof: false // Tarjeta manual no requiere comprobante (se procesará después)
-      };
-      localStorage.setItem('checkout-payment', JSON.stringify(paymentData));
-      localStorage.setItem('checkout-total', this.total().toString());
-      this.router.navigate(['/checkout/confirmacion']);
-    } else if (this.paymentMethod() === 'bank') {
+    if (this.paymentMethod() === 'bank') {
       // NO requerir comprobante aquí - se subirá después de crear el pedido
       const paymentData = {
         paymentMethod: this.paymentMethod(),
-        bankAccountNumber: this.bankAccountNumber,
-        bankAccountName: this.bankAccountName,
+        bankName: this.bankName(),
+        bankAccountType: this.bankAccountType(),
+        bankAccountNumber: this.bankAccountNumber(),
+        bankCCI: this.bankCCI(),
+        bankAccountName: this.bankAccountName(),
         requiresProof: true // Indica que necesita comprobante
       };
       localStorage.setItem('checkout-payment', JSON.stringify(paymentData));
@@ -354,7 +347,7 @@ export class PaymentComponent implements OnInit, OnDestroy {
       const paymentData = {
         paymentMethod: this.paymentMethod(),
         walletMethod: 'yape', // Siempre Yape
-        walletNumber: this.yapeNumber,
+        walletNumber: this.yapeNumber(),
         requiresProof: true // Indica que necesita comprobante
       };
       localStorage.setItem('checkout-payment', JSON.stringify(paymentData));

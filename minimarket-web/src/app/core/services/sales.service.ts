@@ -10,6 +10,10 @@ export interface Sale {
   saleDate: string;
   customerId?: string;
   customerName?: string;
+  customerDocumentType?: string;
+  customerDocumentNumber?: string;
+  customerAddress?: string;
+  customerEmail?: string;
   subtotal: number;
   tax: number;
   discount: number;

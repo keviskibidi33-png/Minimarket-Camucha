@@ -15,15 +15,9 @@
     <div>
       <!-- Logo -->
       <div class="flex items-center gap-3 p-2 mb-6">
-        @if (brandSettings()?.logoUrl) {
-          <img [src]="brandSettings()!.logoUrl" 
-               [alt]="brandSettings()?.storeName || 'Logo'" 
-               class="rounded-lg size-10 object-contain bg-white dark:bg-gray-800 p-1">
-        } @else {
-          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10 bg-primary-admin flex items-center justify-center">
-            <span class="material-symbols-outlined text-white text-xl">storefront</span>
-          </div>
-        }
+        <img src="/assets/logo.png" 
+             alt="Minimarket Camucha" 
+             class="rounded-lg size-10 object-contain bg-white dark:bg-gray-800 p-1">
         <div class="flex flex-col" [class.hidden]="!sidebarOpen">
           <h1 class="text-gray-900 dark:text-white text-base font-bold leading-normal">{{ brandSettings()?.storeName || 'Minimarket Camucha' }}</h1>
           <p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">Admin</p>
@@ -51,6 +45,13 @@
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">receipt_long</span>
             <p class="text-sm font-medium leading-normal">Ventas</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/pedidos" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <p class="text-sm font-medium leading-normal">Pedidos</p>
           </a>
         }
         @if (permissions.canManageProducts()) {
@@ -89,6 +90,20 @@
           </a>
         }
         @if (permissions.isAdmin()) {
+          <a routerLink="/admin/productos-destacados" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">star</span>
+            <p class="text-sm font-medium leading-normal">Productos Destacados</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/categorias-populares" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">trending_up</span>
+            <p class="text-sm font-medium leading-normal">Categorías Populares</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
           <a routerLink="/admin/page-builder" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">article</span>
@@ -96,24 +111,17 @@
           </a>
         }
         @if (permissions.isAdmin()) {
-          <a routerLink="/admin/banners" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
-             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
-            <span class="material-symbols-outlined">image</span>
-            <p class="text-sm font-medium leading-normal">Banners</p>
-          </a>
-        }
-        @if (permissions.isAdmin()) {
-          <a routerLink="/admin/modelo-documento" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
-             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
-            <span class="material-symbols-outlined">description</span>
-            <p class="text-sm font-medium leading-normal">Modelo Boleta/Factura</p>
-          </a>
-        }
-        @if (permissions.isAdmin()) {
           <a routerLink="/admin/analytics" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
              class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
             <span class="material-symbols-outlined">analytics</span>
             <p class="text-sm font-medium leading-normal">Analytics</p>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <a routerLink="/admin/configuracion-comprobantes" routerLinkActive="bg-primary-admin/10 text-primary-admin" 
+             class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-admin/10 hover:text-primary-admin dark:hover:text-primary-admin">
+            <span class="material-symbols-outlined">description</span>
+            <p class="text-sm font-medium leading-normal">Configuración Comprobantes</p>
           </a>
         }
         @if (permissions.isAdmin()) {
@@ -162,8 +170,9 @@
           <span class="text-sm text-gray-600 dark:text-gray-300" data-cy="user-menu">
             {{ (authService.currentUser()?.firstName && authService.currentUser()?.lastName) ? (authService.currentUser()!.firstName + ' ' + authService.currentUser()!.lastName) : (authService.currentUser()?.firstName || authService.currentUser()?.lastName || 'Usuario') }}
           </span>
-          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" 
-               style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzj00K22jvV9gfRXmUkPBZ9DXXy5vpjyoCDRFuOm3c8FDewvZ8pcTrCalOneosWGlCMlL9e2p6ZHzGU8KsqNpSggFmZLeHKjGP--Ffa0mur3KSnkq0PfkisB3ijiFRrJdgn62PjMRxv4okkzBAJlmaBGPYVV22DiFAYd6zuY4oUGqUSgI7-jBvhVp5ltSbE-NF-ia3es20-HLLgMqkw37y_lauHy6msLzObilopS4fviDrJWDrmFzOj_MhqRvaKBZ8kA3gLt53WsYf');"></div>
+          <img src="/assets/logo.png" 
+               alt="Usuario" 
+               class="rounded-full size-10 object-cover">
           <button (click)="logout()" 
                   data-cy="logout-button"
                   class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-bold leading-normal tracking-wide hover:bg-gray-200 dark:hover:bg-gray-600">

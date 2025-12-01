@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -16,6 +16,7 @@ export interface CategoryDto {
   description: string;
   imageUrl?: string;
   isActive: boolean;
+  orden?: number; // Orden para categorías populares
   productCount?: number; // Conteo de productos en esta categoría
 }
 
@@ -29,6 +30,7 @@ export interface UpdateCategoryDto {
   description?: string;
   imageUrl?: string;
   isActive: boolean;
+  orden?: number; // Orden para categorías populares
 }
 
 @Injectable({
@@ -39,7 +41,24 @@ export class CategoriesService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<CategoryDto[]> {
+  getAll(params?: { page?: number; pageSize?: number; searchTerm?: string }): Observable<import('./products.service').PagedResult<CategoryDto>> {
+    let httpParams = new HttpParams();
+    if (params) {
+      if (params.page) {
+        httpParams = httpParams.set('page', params.page.toString());
+      }
+      if (params.pageSize) {
+        httpParams = httpParams.set('pageSize', params.pageSize.toString());
+      }
+      if (params.searchTerm) {
+        httpParams = httpParams.set('searchTerm', params.searchTerm);
+      }
+    }
+    return this.http.get<import('./products.service').PagedResult<CategoryDto>>(this.apiUrl, { params: httpParams });
+  }
+
+  // Método para obtener todas las categorías sin paginación (para compatibilidad)
+  getAllWithoutPagination(): Observable<CategoryDto[]> {
     return this.http.get<CategoryDto[]>(this.apiUrl);
   }
 

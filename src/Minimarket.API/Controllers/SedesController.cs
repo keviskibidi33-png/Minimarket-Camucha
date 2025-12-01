@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Minimarket.Application.Features.Sedes.Commands;
 using Minimarket.Application.Features.Sedes.Queries;
+using System;
 
 namespace Minimarket.API.Controllers;
 
@@ -65,15 +66,33 @@ public class SedesController : ControllerBase
     [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSedeCommand command)
     {
-        command.Id = id;
-        var result = await _mediator.Send(command);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            if (command == null)
+            {
+                return BadRequest(new { message = "El comando no puede ser nulo" });
+            }
 
-        return Ok(result.Data);
+            command.Id = id;
+            
+            if (command.Sede == null)
+            {
+                return BadRequest(new { message = "Los datos de la sede son requeridos" });
+            }
+
+            var result = await _mediator.Send(command);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error al actualizar la sede: {ex.Message}", details = ex.ToString() });
+        }
     }
 
     [HttpDelete("{id}")]

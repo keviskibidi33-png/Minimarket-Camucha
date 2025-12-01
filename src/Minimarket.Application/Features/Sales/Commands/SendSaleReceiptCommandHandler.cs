@@ -60,7 +60,9 @@ public class SendSaleReceiptCommandHandler : IRequestHandler<SendSaleReceiptComm
                 customerName,
                 sale.DocumentNumber,
                 pdfPath,
-                request.DocumentType
+                request.DocumentType,
+                sale.Total,
+                sale.SaleDate
             );
 
             // Limpiar archivo temporal después de un tiempo (opcional)
@@ -73,8 +75,8 @@ public class SendSaleReceiptCommandHandler : IRequestHandler<SendSaleReceiptComm
                 return Result<bool>.Success(true);
             }
 
-            _logger.LogError("Failed to send email for sale {SaleId} to {Email}", request.SaleId, request.Email);
-            throw new BusinessRuleViolationException("Error al enviar el correo electrónico");
+            _logger.LogError("Failed to send email for sale {SaleId} to {Email}. Check SMTP configuration or API key.", request.SaleId, request.Email);
+            return Result<bool>.Failure(new[] { "No se pudo enviar el correo electrónico. Por favor, verifica la configuración del servidor de correo o contacta al administrador del sistema." });
         }
         catch (NotFoundException ex)
         {

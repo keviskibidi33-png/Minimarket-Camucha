@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Minimarket.Domain.Entities;
 using Minimarket.Domain.Enums;
+using System.Collections.Generic;
 
 namespace Minimarket.Infrastructure.Data.Seeders;
 
@@ -19,6 +20,7 @@ public static class DatabaseSeeder
         await SeedModulesAsync(context);
         await SeedBrandSettingsAsync(context);
         await SeedPaymentMethodSettingsAsync(context);
+        await SeedPagesAsync(context);
     }
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager)
@@ -453,21 +455,12 @@ public static class DatabaseSeeder
             },
             new PaymentMethodSettings
             {
-                PaymentMethodId = (int)PaymentMethod.Tarjeta,
-                Name = "Tarjeta",
-                IsEnabled = true,
-                RequiresCardDetails = true,
-                Description = "Pago con tarjeta de crédito o débito",
-                DisplayOrder = 2
-            },
-            new PaymentMethodSettings
-            {
                 PaymentMethodId = (int)PaymentMethod.YapePlin,
                 Name = "Yape/Plin",
                 IsEnabled = true,
                 RequiresCardDetails = false,
                 Description = "Pago mediante Yape o Plin",
-                DisplayOrder = 3
+                DisplayOrder = 2
             },
             new PaymentMethodSettings
             {
@@ -476,11 +469,204 @@ public static class DatabaseSeeder
                 IsEnabled = true,
                 RequiresCardDetails = false,
                 Description = "Transferencia bancaria",
-                DisplayOrder = 4
+                DisplayOrder = 3
             }
         };
 
         await context.PaymentMethodSettings.AddRangeAsync(paymentMethods);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedPagesAsync(MinimarketDbContext context)
+    {
+        // Verificar si las páginas ya existen
+        var existingPages = await context.Pages.Where(p => p.Slug == "acerca-de-nosotros" || p.Slug == "informacion-de-envio").ToListAsync();
+        if (existingPages.Any())
+            return;
+
+        // Obtener BrandSettings para usar datos de contacto
+        var brandSettings = await context.BrandSettings.FirstOrDefaultAsync();
+        var companyPhone = brandSettings?.Phone ?? "+51 999 999 999";
+        var companyEmail = brandSettings?.Email ?? "minimarket.camucha@gmail.com";
+        var companyAddress = brandSettings?.Address ?? "Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú";
+
+        // Página: Acerca de Nosotros
+        var acercaPage = new Page
+        {
+            Titulo = "Acerca de Nosotros",
+            Slug = "acerca-de-nosotros",
+            TipoPlantilla = TipoPlantilla.Generica,
+            MetaDescription = "Conoce más sobre Minimarket Camucha, tu tienda de confianza en San Martín de Porres, Lima.",
+            Keywords = "minimarket, camucha, tienda, abarrotes, san martín de porres, lima",
+            Orden = 1,
+            Activa = true,
+            MostrarEnNavbar = false
+        };
+
+        await context.Pages.AddAsync(acercaPage);
+        await context.SaveChangesAsync();
+
+        // Sección 1: Banner
+        var acercaBanner = new PageSection
+        {
+            PageId = acercaPage.Id,
+            SeccionTipo = SeccionTipo.Banner,
+            Orden = 0
+        };
+        acercaBanner.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Acerca de Nosotros" },
+            { "contenido", "<p>Tu minimarket de confianza en San Martín de Porres</p>" },
+            { "imagenUrl", "" }
+        });
+
+        // Sección 2: Texto e Imagen
+        var acercaTexto = new PageSection
+        {
+            PageId = acercaPage.Id,
+            SeccionTipo = SeccionTipo.TextoImagen,
+            Orden = 1
+        };
+        acercaTexto.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Nuestra Historia" },
+            { "contenido", @"<p>Minimarket Camucha es una tienda familiar que nació con el propósito de brindar productos de calidad y un servicio excepcional a nuestros clientes en San Martín de Porres, Lima.</p>
+<p>Desde nuestros inicios, nos hemos comprometido a ofrecer una amplia variedad de productos de primera necesidad, desde abarrotes y bebidas hasta productos de limpieza y cuidado personal.</p>
+<p>Nuestro compromiso es mantener siempre los mejores precios, productos frescos y un trato amable y profesional con cada uno de nuestros clientes.</p>
+<h3>Nuestra Misión</h3>
+<p>Proporcionar productos de calidad a precios justos, con un servicio al cliente excepcional que satisfaga las necesidades de nuestras familias y comunidad.</p>
+<h3>Nuestros Valores</h3>
+<ul>
+<li><strong>Calidad:</strong> Seleccionamos cuidadosamente cada producto que ofrecemos.</li>
+<li><strong>Confianza:</strong> Construimos relaciones duraderas con nuestros clientes.</li>
+<li><strong>Servicio:</strong> Nos esforzamos por brindar la mejor experiencia de compra.</li>
+<li><strong>Compromiso:</strong> Con nuestra comunidad y el bienestar de nuestros clientes.</li>
+</ul>" },
+            { "imagenUrl", "" },
+            { "posicion", "left" }
+        });
+
+        await context.PageSections.AddRangeAsync(acercaBanner, acercaTexto);
+
+        // Página: Información de Envío
+        var envioPage = new Page
+        {
+            Titulo = "Información de Envío",
+            Slug = "informacion-de-envio",
+            TipoPlantilla = TipoPlantilla.Generica,
+            MetaDescription = "Información sobre nuestros servicios de envío y entrega a domicilio en Lima, Perú.",
+            Keywords = "envío, entrega, domicilio, delivery, lima, perú, minimarket camucha",
+            Orden = 2,
+            Activa = true,
+            MostrarEnNavbar = false
+        };
+
+        await context.Pages.AddAsync(envioPage);
+        await context.SaveChangesAsync();
+
+        // Sección 1: Banner
+        var envioBanner = new PageSection
+        {
+            PageId = envioPage.Id,
+            SeccionTipo = SeccionTipo.Banner,
+            Orden = 0
+        };
+        envioBanner.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Información de Envío" },
+            { "contenido", "<p>Llevamos tus compras hasta la puerta de tu hogar</p>" },
+            { "imagenUrl", "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1920&q=80" }
+        });
+
+        // Sección 2: Texto e Imagen - Información General
+        var envioInfo = new PageSection
+        {
+            PageId = envioPage.Id,
+            SeccionTipo = SeccionTipo.TextoImagen,
+            Orden = 1
+        };
+        envioInfo.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Servicio de Entrega a Domicilio" },
+            { "contenido", @"<p>En Minimarket Camucha ofrecemos servicio de entrega a domicilio para tu comodidad. Realizamos entregas en diferentes zonas de Lima, con tarifas accesibles y tiempos de entrega rápidos.</p>
+<h3>Zonas de Cobertura</h3>
+<ul>
+<li><strong>Lima Centro:</strong> Hasta 10 km - Tarifa desde S/ 3.50</li>
+<li><strong>Lima Norte:</strong> Hasta 20 km - Tarifa desde S/ 4.00</li>
+<li><strong>Lima Sur:</strong> Hasta 20 km - Tarifa desde S/ 4.00</li>
+<li><strong>Callao:</strong> Hasta 15 km - Tarifa desde S/ 4.50</li>
+<li><strong>Lima Este:</strong> Hasta 25 km - Tarifa desde S/ 5.00</li>
+<li><strong>Lima Oeste:</strong> Hasta 18 km - Tarifa desde S/ 4.50</li>
+<li><strong>Zona General:</strong> Sin límite de distancia - Tarifa desde S/ 5.50</li>
+</ul>
+<p>El costo final del envío se calcula según la distancia y el peso de tu pedido. Puedes calcular el costo exacto durante el proceso de checkout.</p>" },
+            { "imagenUrl", "" },
+            { "posicion", "left" }
+        });
+
+        // Sección 3: Texto e Imagen - Envío Gratis
+        var envioGratis = new PageSection
+        {
+            PageId = envioPage.Id,
+            SeccionTipo = SeccionTipo.TextoImagen,
+            Orden = 2
+        };
+        envioGratis.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Envío Gratis" },
+            { "contenido", @"<p>¡Aprovecha nuestro servicio de envío gratis!</p>
+<ul>
+<li><strong>Lima Centro, Norte, Sur, Callao, Este y Oeste:</strong> Envío gratis en compras mayores a S/ 100.00</li>
+<li><strong>Zona General:</strong> Envío gratis en compras mayores a S/ 150.00</li>
+</ul>
+<p>El envío gratis se aplica automáticamente cuando tu pedido alcanza el monto mínimo requerido para tu zona.</p>" },
+            { "imagenUrl", "" },
+            { "posicion", "right" }
+        });
+
+        // Sección 4: Texto e Imagen - Tiempos de Entrega
+        var envioTiempos = new PageSection
+        {
+            PageId = envioPage.Id,
+            SeccionTipo = SeccionTipo.TextoImagen,
+            Orden = 3
+        };
+        envioTiempos.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "Tiempos de Entrega" },
+            { "contenido", @"<p>Nos esforzamos por entregar tus pedidos lo más rápido posible:</p>
+<ul>
+<li><strong>Pedidos realizados antes de las 2:00 PM:</strong> Entrega el mismo día (sujeto a disponibilidad)</li>
+<li><strong>Pedidos realizados después de las 2:00 PM:</strong> Entrega al día siguiente</li>
+<li><strong>Fines de semana:</strong> Entregas disponibles según disponibilidad</li>
+</ul>
+<p>Los tiempos de entrega pueden variar según la zona y el tráfico. Te notificaremos cuando tu pedido esté en camino.</p>" },
+            { "imagenUrl", "" },
+            { "posicion", "left" }
+        });
+
+        // Sección 5: Texto e Imagen - Información de Contacto
+        var envioContacto = new PageSection
+        {
+            PageId = envioPage.Id,
+            SeccionTipo = SeccionTipo.TextoImagen,
+            Orden = 4
+        };
+        envioContacto.SetDatos(new Dictionary<string, object>
+        {
+            { "titulo", "¿Necesitas más información?" },
+            { "contenido", $@"<p>Si tienes alguna pregunta sobre nuestros servicios de envío, no dudes en contactarnos:</p>
+<ul>
+<li><strong>Dirección:</strong> {companyAddress}</li>
+<li><strong>Email:</strong> <a href='mailto:{companyEmail}'>{companyEmail}</a></li>
+<li><strong>Teléfono:</strong> {companyPhone}</li>
+</ul>
+<p>Estamos aquí para ayudarte y resolver todas tus dudas sobre nuestros servicios de entrega.</p>" },
+            { "imagenUrl", "" },
+            { "posicion", "right" }
+        });
+
+        await context.PageSections.AddRangeAsync(envioBanner, envioInfo, envioGratis, envioTiempos, envioContacto);
         await context.SaveChangesAsync();
     }
 }

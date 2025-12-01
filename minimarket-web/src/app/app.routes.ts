@@ -79,11 +79,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/auth/complete-profile/complete-profile.component').then(m => m.CompleteProfileComponent)
   },
-  {
-    path: 'auth/admin-setup',
-    canActivate: [authGuard, roleGuard(['Administrador'])],
-    loadComponent: () => import('./features/auth/admin-setup/admin-setup.component').then(m => m.AdminSetupComponent)
-  },
   // Rutas LEGALES (públicas)
   {
     path: 'legal/terms',
@@ -205,11 +200,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/settings/settings.component').then(m => m.SettingsComponent)
       },
       {
-        path: 'configuraciones/marca',
-        canActivate: [roleGuard(['Administrador'])],
-        loadComponent: () => import('./features/admin/brand-settings/brand-settings.component').then(m => m.BrandSettingsComponent)
-      },
-      {
         path: 'configuraciones/permisos',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/permissions/permissions.component').then(m => m.PermissionsComponent)
@@ -230,11 +220,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/page-builder/page-builder.component').then(m => m.PageBuilderComponent)
       },
       {
-        path: 'banners',
-        canActivate: [roleGuard(['Administrador'])],
-        loadComponent: () => import('./features/admin/banners/banners.component').then(m => m.BannersComponent)
-      },
-      {
         path: 'analytics',
         canActivate: [roleGuard(['Administrador'])],
         loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent)
@@ -245,9 +230,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/orders/orders.component').then(m => m.OrdersComponent)
       },
       {
-        path: 'modelo-documento',
+        path: 'productos-destacados',
         canActivate: [roleGuard(['Administrador'])],
-        loadComponent: () => import('./features/admin/document-template/document-template.component').then(m => m.DocumentTemplateComponent)
+        loadComponent: () => import('./features/admin/featured-products/featured-products.component').then(m => m.FeaturedProductsComponent)
+      },
+      {
+        path: 'categorias-populares',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/popular-categories/popular-categories.component').then(m => m.PopularCategoriesComponent)
+      },
+      {
+        path: 'configuracion-comprobantes',
+        canActivate: [roleGuard(['Administrador'])],
+        loadComponent: () => import('./features/admin/receipt-settings/receipt-settings.component').then(m => m.ReceiptSettingsComponent)
       }
     ]
   },

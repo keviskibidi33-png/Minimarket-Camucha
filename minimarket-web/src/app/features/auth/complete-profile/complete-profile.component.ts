@@ -274,5 +274,20 @@ export class CompleteProfileComponent implements OnInit {
     }
   }
 
+  skipProfile(): void {
+    // Permitir al usuario omitir el completado del perfil y redirigir
+    this.toastService.info('Puedes completar tu perfil más tarde desde tu cuenta');
+    
+    // Verificar si es administrador para redirigir correctamente
+    const currentUser = this.authService.currentUser();
+    if (currentUser?.roles?.includes('Administrador')) {
+      // Si es admin, redirigir al dashboard (aunque puede que lo redirija al setup si no está completo)
+      this.router.navigate(['/admin']);
+    } else {
+      // Si no es admin, redirigir a la página principal
+      this.router.navigate(['/']);
+    }
+  }
+
 }
 

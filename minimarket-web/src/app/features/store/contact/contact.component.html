@@ -121,8 +121,12 @@
                 <div>
                   <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Dirección</h3>
                   <p class="text-gray-600 dark:text-gray-400">
-                    123 Market St, City, Country<br>
-                    Lima, Perú
+                    @if (contactAddress()) {
+                      {{ contactAddress() }}
+                    } @else {
+                      123 Market St, City, Country<br>
+                      Lima, Perú
+                    }
                   </p>
                 </div>
               </div>
@@ -134,8 +138,11 @@
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Email</h3>
-                  <p class="text-gray-600 dark:text-gray-400">
-                    <a href="mailto:contact&#64;camucha.com" class="hover:text-primary">contact&#64;camucha.com</a>
+                  <p class="text-gray-900 dark:text-white">
+                    <a [href]="'mailto:' + contactEmail()" 
+                       class="hover:text-primary font-semibold text-lg underline decoration-2 underline-offset-2">
+                      {{ contactEmail() }}
+                    </a>
                   </p>
                 </div>
               </div>
@@ -148,7 +155,11 @@
                 <div>
                   <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Teléfono</h3>
                   <p class="text-gray-600 dark:text-gray-400">
-                    <a href="tel:+1234567890" class="hover:text-primary">+123 456 7890</a>
+                    @if (contactPhone()) {
+                      <a [href]="'tel:' + contactPhone()" class="hover:text-primary">{{ contactPhone() }}</a>
+                    } @else {
+                      <a href="tel:+1234567890" class="hover:text-primary">+123 456 7890</a>
+                    }
                   </p>
                 </div>
               </div>

@@ -18,6 +18,8 @@ public class Sale : BaseEntity
     public SaleStatus Status { get; set; } = SaleStatus.Pendiente;
     public Guid UserId { get; set; } // Cajero
     public string? CancellationReason { get; set; }
+    public bool IsClosed { get; set; } = false; // Indica si la venta fue incluida en un cierre de caja
+    public DateTime? CashClosureDate { get; set; } // Fecha en que se realizó el cierre de caja
 
     // Navigation properties
     public virtual Customer? Customer { get; set; }

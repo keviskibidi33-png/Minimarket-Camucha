@@ -59,10 +59,10 @@ export class ProductFormComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categoriesService.getAll().subscribe({
+    this.categoriesService.getAllWithoutPagination().subscribe({
       next: (categories) => {
         // Mapear categorías asegurando que productCount esté presente
-        const categoriesWithCount = categories.map(c => ({
+        const categoriesWithCount = categories.map((c: any) => ({
           id: c.id,
           name: c.name,
           productCount: c.productCount !== undefined ? c.productCount : 0

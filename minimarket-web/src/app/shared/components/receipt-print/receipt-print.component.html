@@ -1,0 +1,162 @@
+<div class="receipt-container" style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; color: #333333; background-color: #ffffff;">
+  
+  <!-- HEADER SECTION -->
+  <div style="margin-bottom: 15px; padding-bottom: 15px;">
+    <!-- Primera fila: Logo arriba a la izquierda con RUC/dirección/teléfono debajo, Tipo de documento a la derecha -->
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;">
+      <!-- Logo y datos de contacto a la izquierda (vertical) -->
+      <div style="flex: 1;">
+        <!-- Logo (60px) arriba -->
+        <div style="width: 60px; height: 60px; margin-bottom: 5px;">
+          <img [src]="logoUrl" 
+               alt="Logo" 
+               style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+        
+        <!-- RUC, dirección, teléfono debajo del logo (sin nombre del negocio) -->
+        <div style="margin-top: 5px;">
+          @if (companyRuc) {
+            <p style="font-size: 11px; margin: 0 0 1px 0; color: #333333;">RUC: {{ companyRuc }}</p>
+          }
+          @if (companyAddress) {
+            <p style="font-size: 11px; margin: 0 0 1px 0; color: #333333;">{{ companyAddress }}</p>
+          }
+          @if (companyPhone) {
+            <p style="font-size: 11px; margin: 0; color: #333333;">Tel: {{ companyPhone }}</p>
+          }
+        </div>
+      </div>
+      
+      <!-- Tipo de documento (derecha) -->
+      <div style="text-align: right; width: 100px; flex-shrink: 0;">
+        <h3 style="font-size: 18px; font-weight: bold; color: {{ primaryColor }}; margin: 0 0 2px 0;">{{ documentType === 'Factura' ? 'FACTURA' : 'BOLETA' }}</h3>
+        <p style="font-size: 12px; margin: 0; color: #666666;">N° {{ documentNumber }}</p>
+      </div>
+    </div>
+    
+    <!-- Línea separadora con color primario (2px) -->
+    <div style="border-top: 2px solid {{ primaryColor }}; margin-top: 20px;"></div>
+  </div>
+
+  <!-- CONTENT SECTION -->
+  <div style="padding-top: 15px; padding-bottom: 15px;">
+    <!-- Título "BOLETA DE VENTA" centrado -->
+    <div style="text-align: center; margin-bottom: 15px;">
+      <h1 style="font-size: 20px; font-weight: bold; color: {{ primaryColor }}; margin: 0;">{{ documentType === 'Factura' ? 'FACTURA' : 'BOLETA DE VENTA' }}</h1>
+    </div>
+
+    <!-- Línea separadora (1px) -->
+    <div style="border-top: 1px solid {{ primaryColor }}; margin-bottom: 15px;"></div>
+
+    <!-- Sección de Número/Fecha a la izquierda y Cliente a la derecha -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+      <!-- Número y Fecha a la izquierda -->
+      <div>
+        <p style="font-size: 12px; margin: 0 0 2px 0; color: #333333;">Número: {{ documentNumber }}</p>
+        <p style="font-size: 12px; margin: 0; color: #333333;">Fecha: {{ formatDate(saleDate) }}</p>
+      </div>
+      
+      <!-- Cliente a la derecha -->
+      <div style="text-align: right;">
+        @if (customerName) {
+          <p style="font-size: 12px; margin: 0 0 2px 0; color: #333333; font-weight: bold;">Cliente: {{ customerName }}</p>
+          @if (customerDocumentType && customerDocumentNumber) {
+            <p style="font-size: 12px; margin: 0 0 2px 0; color: #333333;">{{ customerDocumentType }}: {{ customerDocumentNumber }}</p>
+          }
+          @if (customerEmail) {
+            <p style="font-size: 11px; margin: 0; color: #666666;">Email: {{ customerEmail }}</p>
+          }
+        } @else if (documentType === 'Factura') {
+          <p style="font-size: 12px; margin: 0; color: #d32f2f;">Cliente: No especificado</p>
+        } @else {
+          <p style="font-size: 12px; margin: 0; color: #666666;">Cliente: Público General</p>
+        }
+      </div>
+    </div>
+
+    <!-- Línea separadora antes de la tabla (1px) -->
+    <div style="border-top: 1px solid {{ primaryColor }}; margin-bottom: 15px;"></div>
+
+    <!-- Detalle de productos - Orden: Producto, Cantidad, P. Unit, Subtotal -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+      <thead>
+        <tr>
+          <th style="background-color: {{ primaryColor }}; color: #ffffff; padding: 10px 8px; text-align: left; font-size: 11px; font-weight: bold; border: 1px solid {{ primaryColor }};">Producto</th>
+          <th style="background-color: {{ primaryColor }}; color: #ffffff; padding: 10px 8px; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid {{ primaryColor }};">Cantidad</th>
+          <th style="background-color: {{ primaryColor }}; color: #ffffff; padding: 10px 8px; text-align: right; font-size: 11px; font-weight: bold; border: 1px solid {{ primaryColor }};">P. Unit</th>
+          <th style="background-color: {{ primaryColor }}; color: #ffffff; padding: 10px 8px; text-align: right; font-size: 11px; font-weight: bold; border: 1px solid {{ primaryColor }};">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (detail of saleDetails; track detail.id) {
+          <tr>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; text-align: left;">
+              <div>
+                <div style="font-weight: 600; color: #333333;">{{ detail.productName }}</div>
+                @if (detail.productCode) {
+                  <div style="font-size: 10px; color: #666666; margin-top: 2px;">({{ detail.productCode }})</div>
+                }
+              </div>
+            </td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; text-align: center; color: #333333;">{{ detail.quantity }}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; text-align: right; color: #333333;">S/ {{ detail.unitPrice.toFixed(2) }}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; text-align: right; color: #333333;">S/ {{ detail.subtotal.toFixed(2) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Totales (alineados a la derecha) -->
+    <div style="margin-bottom: 15px; text-align: right;">
+      <div style="display: inline-block; width: 220px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+          <span style="font-size: 11px; color: #333333;">Subtotal:</span>
+          <span style="font-size: 11px; color: #333333;">S/ {{ subtotal.toFixed(2) }}</span>
+        </div>
+        @if (discount > 0) {
+          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+            <span style="font-size: 11px; color: #333333;">Descuento:</span>
+            <span style="font-size: 11px; color: #333333;">S/ {{ discount.toFixed(2) }}</span>
+          </div>
+        }
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+          <span style="font-size: 11px; font-weight: bold; color: #333333;">IGV (18%):</span>
+          <span style="font-size: 11px; font-weight: bold; color: #333333;">S/ {{ tax.toFixed(2) }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+          <span style="font-size: 14px; font-weight: bold; color: {{ primaryColor }};">TOTAL:</span>
+          <span style="font-size: 14px; font-weight: bold; color: {{ primaryColor }};">S/ {{ total.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Línea separadora (1px) -->
+    <div style="border-top: 1px solid {{ primaryColor }}; margin-bottom: 15px;"></div>
+
+    <!-- Información de pago (con borde superior de 2px) -->
+    <div style="border-top: 2px solid {{ primaryColor }}; padding-top: 15px;">
+      <h3 style="font-size: 12px; font-weight: bold; color: #555555; margin: 0 0 10px 0;">INFORMACIÓN DE PAGO</h3>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div>
+          <p style="font-size: 11px; margin: 0 0 2px 0; color: #666666;">Método de pago:</p>
+          <p style="font-size: 11px; margin: 0; color: #333333; font-weight: 600;">{{ getPaymentMethodText(paymentMethod) }}</p>
+        </div>
+        <div>
+          <p style="font-size: 11px; margin: 0 0 2px 0; color: #666666;">Monto pagado:</p>
+          <p style="font-size: 11px; margin: 0; color: #333333; font-weight: 600;">S/ {{ amountPaid.toFixed(2) }}</p>
+        </div>
+        @if (change > 0) {
+          <div>
+            <p style="font-size: 11px; margin: 0 0 2px 0; color: #666666;">Vuelto:</p>
+            <p style="font-size: 11px; margin: 0; color: #4CAF50; font-weight: 600;">S/ {{ change.toFixed(2) }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER SECTION -->
+  <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+    <p style="font-size: 10px; color: #999999; margin: 0;">Gracias por su compra</p>
+  </div>
+</div>

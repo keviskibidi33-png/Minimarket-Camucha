@@ -12,6 +12,7 @@ public class UpdateProductDto
     public int MinimumStock { get; set; }
     public Guid CategoryId { get; set; }
     public string? ImageUrl { get; set; }
+    public Dictionary<string, object>? Paginas { get; set; } // Para productos destacados
     public bool IsActive { get; set; }
     public DateTime? ExpirationDate { get; set; } // Fecha de vencimiento
 }

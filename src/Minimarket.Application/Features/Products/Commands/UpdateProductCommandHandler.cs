@@ -5,6 +5,7 @@ using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Products.Commands;
 using Minimarket.Application.Features.Products.DTOs;
 using Minimarket.Domain.Interfaces;
+using System.Text.Json;
 
 namespace Minimarket.Application.Features.Products.Commands;
 
@@ -61,6 +62,13 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.ImageUrl = request.Product.ImageUrl;
         product.IsActive = request.Product.IsActive;
         product.ExpirationDate = request.Product.ExpirationDate;
+        
+        // Actualizar PaginasJson si se proporciona
+        if (request.Product.Paginas != null)
+        {
+            product.PaginasJson = JsonSerializer.Serialize(request.Product.Paginas);
+        }
+        
         product.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.Products.UpdateAsync(product, cancellationToken);
@@ -82,12 +90,63 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
             CategoryId = product.CategoryId,
             CategoryName = category.Name,
             ImageUrl = product.ImageUrl,
+            Imagenes = ParseJsonArray(product.ImagenesJson),
+            Paginas = ParseJsonObject(product.PaginasJson),
+            SedesDisponibles = ParseJsonGuidArray(product.SedesDisponiblesJson),
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt,
             ExpirationDate = product.ExpirationDate
         };
 
         return Result<ProductDto>.Success(result);
+    }
+
+    private static List<string> ParseJsonArray(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<string>();
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
+    private static Dictionary<string, object> ParseJsonObject(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new Dictionary<string, object>();
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+        }
+        catch
+        {
+            return new Dictionary<string, object>();
+        }
+    }
+
+    private static List<Guid> ParseJsonGuidArray(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<Guid>();
+        try
+        {
+            var stringList = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+            var guidList = new List<Guid>();
+            foreach (var str in stringList)
+            {
+                if (Guid.TryParse(str, out var guid))
+                {
+                    guidList.Add(guid);
+                }
+            }
+            return guidList;
+        }
+        catch
+        {
+            return new List<Guid>();
+        }
     }
 }
 

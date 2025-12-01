@@ -252,12 +252,12 @@ public class PdfService : IPdfService
                 ? brandSettings.Ruc 
                 : (!string.IsNullOrWhiteSpace(_configuration["Company:Ruc"]) 
                     ? _configuration["Company:Ruc"] 
-                    : "20123456789");
+                    : "10095190559");
             var companyAddress = !string.IsNullOrWhiteSpace(brandSettings?.Address) 
                 ? brandSettings.Address 
                 : (!string.IsNullOrWhiteSpace(_configuration["Company:Address"]) 
                     ? _configuration["Company:Address"] 
-                    : "Av. Principal 123, Lima, Perú");
+                    : "Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú");
             var companyPhone = !string.IsNullOrWhiteSpace(brandSettings?.Phone) 
                 ? brandSettings.Phone 
                 : (!string.IsNullOrWhiteSpace(_configuration["Company:Phone"]) 
@@ -268,9 +268,8 @@ public class PdfService : IPdfService
                 : (!string.IsNullOrWhiteSpace(_configuration["Company:Email"]) 
                     ? _configuration["Company:Email"] 
                     : "");
-            var logoUrl = !string.IsNullOrWhiteSpace(brandSettings?.LogoUrl) 
-                ? brandSettings.LogoUrl 
-                : "";
+            // Siempre usar el logo de assets por defecto
+            var logoUrl = "/assets/logo.png";
             // Usar el color primario de BrandSettings, o un azul por defecto si no existe
             var primaryColor = !string.IsNullOrWhiteSpace(brandSettings?.PrimaryColor) 
                 ? brandSettings.PrimaryColor 
@@ -436,17 +435,42 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    // Construir la URL completa si es necesario
-                    var fullLogoUrl = logoUrl;
-                    if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                    // Si es /assets/logo.png, buscar primero en wwwroot local
+                    if (logoUrl.StartsWith("/assets/"))
                     {
-                        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
-                        var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        
+                        if (System.IO.File.Exists(localPath))
+                        {
+                            _logger.LogInformation("✅ Logo encontrado localmente en: {LocalPath}", localPath);
+                            localLogoPath = localPath;
+                        }
+                        else
+                        {
+                            // Si no existe localmente, intentar descargar desde el frontend
+                            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
+                            localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                        }
                     }
-                    
-                    _logger.LogInformation("Descargando logo desde: {LogoUrl}", fullLogoUrl);
-                    localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    else
+                    {
+                        // Construir la URL completa si es necesario
+                        var fullLogoUrl = logoUrl;
+                        if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                        {
+                            var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        }
+                        
+                        _logger.LogInformation("Descargando logo desde: {LogoUrl}", fullLogoUrl);
+                        localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    }
                     
                     if (localLogoPath != null && System.IO.File.Exists(localLogoPath))
                     {
@@ -454,7 +478,7 @@ public class PdfService : IPdfService
                     }
                     else
                     {
-                        _logger.LogWarning("⚠️ No se pudo descargar el logo desde: {LogoUrl}", fullLogoUrl);
+                        _logger.LogWarning("⚠️ No se pudo descargar el logo desde: {LogoUrl}", logoUrl);
                     }
                 }
                 catch (Exception ex)
@@ -846,9 +870,39 @@ public class PdfService : IPdfService
                         .BorderColor(Colors.Grey.Lighten2)
                         .PaddingTop(20)
                         .AlignCenter()
-                        .Text(x =>
+                        .Column(footerCol =>
                         {
-                            x.Span("Gracias por su compra").FontSize(10).FontColor(Colors.Grey.Medium);
+                            // Nombre de la empresa
+                            var footerCompanyName = !string.IsNullOrWhiteSpace(companyName) 
+                                ? companyName 
+                                : "Minimarket Camucha";
+                            footerCol.Item().Text(footerCompanyName).FontSize(10).Bold().FontColor(Colors.Black);
+                            
+                            // Información de contacto
+                            var footerInfo = new List<string>();
+                            if (!string.IsNullOrWhiteSpace(companyAddress))
+                            {
+                                footerInfo.Add(companyAddress);
+                            }
+                            if (!string.IsNullOrWhiteSpace(companyPhone))
+                            {
+                                footerInfo.Add($"Tel: {companyPhone}");
+                            }
+                            if (!string.IsNullOrWhiteSpace(companyEmail))
+                            {
+                                footerInfo.Add(companyEmail);
+                            }
+                            
+                            if (footerInfo.Any())
+                            {
+                                footerCol.Item().PaddingTop(3).Text(string.Join(" | ", footerInfo))
+                                    .FontSize(8)
+                                    .FontColor(Colors.Grey.Medium);
+                            }
+                            
+                            footerCol.Item().PaddingTop(5).Text("Gracias por su compra")
+                                .FontSize(9)
+                                .FontColor(Colors.Grey.Medium);
                         });
                 });
             });
@@ -862,6 +916,381 @@ public class PdfService : IPdfService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating PDF for sale {SaleId}", saleId);
+            throw;
+        }
+    }
+
+    public async Task<string> GenerateWebOrderReceiptAsync(Guid orderId, string documentType = "Boleta")
+    {
+        try
+        {
+            _logger.LogInformation("Generando PDF de pedido web. OrderId: {OrderId}, DocumentType: {DocumentType}", orderId, documentType);
+
+            var order = await _unitOfWork.WebOrders.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new Exception($"Pedido con ID {orderId} no encontrado");
+            }
+
+            // Cargar items del pedido
+            var orderItems = (await _unitOfWork.WebOrderItems.FindAsync(oi => oi.WebOrderId == orderId)).ToList();
+            if (orderItems == null || !orderItems.Any())
+            {
+                throw new InvalidOperationException("El pedido no tiene items. No se puede generar el documento.");
+            }
+
+            // Obtener BrandSettings
+            var brandSettingsList = await _unitOfWork.BrandSettings.GetAllAsync();
+            var brandSettings = brandSettingsList.FirstOrDefault();
+
+            var companyName = !string.IsNullOrWhiteSpace(brandSettings?.StoreName)
+                ? brandSettings.StoreName
+                : (!string.IsNullOrWhiteSpace(_configuration["Company:Name"])
+                    ? _configuration["Company:Name"]
+                    : "Minimarket Camucha");
+            var companyRuc = !string.IsNullOrWhiteSpace(brandSettings?.Ruc)
+                ? brandSettings.Ruc
+                : (!string.IsNullOrWhiteSpace(_configuration["Company:Ruc"])
+                    ? _configuration["Company:Ruc"]
+                    : "10095190559");
+            var companyAddress = !string.IsNullOrWhiteSpace(brandSettings?.Address)
+                ? brandSettings.Address
+                : (!string.IsNullOrWhiteSpace(_configuration["Company:Address"])
+                    ? _configuration["Company:Address"]
+                    : "Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú");
+            var companyPhone = !string.IsNullOrWhiteSpace(brandSettings?.Phone)
+                ? brandSettings.Phone
+                : (!string.IsNullOrWhiteSpace(_configuration["Company:Phone"])
+                    ? _configuration["Company:Phone"]
+                    : "+51 999 999 999");
+            var companyEmail = !string.IsNullOrWhiteSpace(brandSettings?.Email)
+                ? brandSettings.Email
+                : (!string.IsNullOrWhiteSpace(_configuration["Company:Email"])
+                    ? _configuration["Company:Email"]
+                    : "");
+
+            var logoUrl = "/assets/logo.png";
+            var primaryColor = !string.IsNullOrWhiteSpace(brandSettings?.PrimaryColor)
+                ? brandSettings.PrimaryColor
+                : "#4A90E2";
+
+            // Parsear colores (reutilizar lógica similar a GenerateSaleReceiptAsync)
+            QuestPDF.Infrastructure.Color ParseColor(string hexColor)
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(hexColor))
+                        return Colors.Blue.Medium;
+
+                    hexColor = hexColor.Trim().ToUpper();
+                    if (!hexColor.StartsWith("#"))
+                        hexColor = "#" + hexColor;
+
+                    var colorMap = new Dictionary<string, QuestPDF.Infrastructure.Color>
+                    {
+                        { "#4CAF50", Colors.Green.Medium },
+                        { "#4A90E2", Colors.Blue.Medium },
+                        { "#2196F3", Colors.Blue.Medium },
+                        { "#FF9800", Colors.Orange.Medium },
+                        { "#F44336", Colors.Red.Medium },
+                        { "#9C27B0", Colors.Purple.Medium },
+                        { "#333333", Colors.Grey.Darken3 },
+                        { "#111827", Colors.Black },
+                        { "#000000", Colors.Black },
+                        { "#FFFFFF", Colors.White },
+                    };
+
+                    if (colorMap.TryGetValue(hexColor, out var mappedColor))
+                        return mappedColor;
+
+                    hexColor = hexColor.TrimStart('#');
+                    if (hexColor.Length == 6)
+                    {
+                        var r = Convert.ToByte(hexColor.Substring(0, 2), 16);
+                        var g = Convert.ToByte(hexColor.Substring(2, 2), 16);
+                        var b = Convert.ToByte(hexColor.Substring(4, 2), 16);
+                        return QuestPDF.Infrastructure.Color.FromRgb(r, g, b);
+                    }
+                }
+                catch { }
+                return Colors.Blue.Medium;
+            }
+
+            var primaryColorParsed = ParseColor(primaryColor);
+
+            // Descargar logo
+            string? localLogoPath = null;
+            if (!string.IsNullOrWhiteSpace(logoUrl))
+            {
+                try
+                {
+                    if (logoUrl.StartsWith("/assets/"))
+                    {
+                        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+
+                        if (System.IO.File.Exists(localPath))
+                        {
+                            localLogoPath = localPath;
+                        }
+                        else
+                        {
+                            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al descargar el logo");
+                }
+            }
+
+            var pdfPath = Path.Combine(
+                Path.GetTempPath(),
+                $"{(documentType == "Factura" ? "F" : "B")}_{order.OrderNumber.Replace("-", "_")}.pdf"
+            );
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(1.5f, Unit.Centimetre);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontColor(Colors.Black));
+
+                    page.Header()
+                        .PaddingBottom(15)
+                        .Column(headerCol =>
+                        {
+                            headerCol.Item().BorderTop(3).BorderColor(primaryColorParsed).PaddingTop(15);
+
+                            headerCol.Item().Row(row =>
+                            {
+                                // Logo y datos empresa (izquierda)
+                                row.RelativeItem().Column(leftCol =>
+                                {
+                                    if (localLogoPath != null && System.IO.File.Exists(localLogoPath))
+                                    {
+                                        try
+                                        {
+                                            leftCol.Item().Height(60).Image(localLogoPath).FitArea();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger.LogError(ex, "Error al cargar el logo en PDF");
+                                        }
+                                    }
+
+                                    var displayName = !string.IsNullOrWhiteSpace(companyName) ? companyName : "Minimarket Camucha";
+                                    if (localLogoPath != null && System.IO.File.Exists(localLogoPath))
+                                    {
+                                        leftCol.Item().PaddingTop(8).Text(displayName)
+                                            .FontSize(14).Bold().FontColor(Colors.Black);
+                                    }
+                                    else
+                                    {
+                                        leftCol.Item().Text(displayName)
+                                            .FontSize(14).Bold().FontColor(Colors.Black);
+                                    }
+
+                                    leftCol.Item().PaddingTop(3).Column(contactCol =>
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(companyAddress))
+                                        {
+                                            contactCol.Item().Text(companyAddress)
+                                                .FontSize(9).FontColor(Colors.Grey.Medium);
+                                        }
+                                        if (!string.IsNullOrWhiteSpace(companyPhone))
+                                        {
+                                            contactCol.Item().PaddingTop(1).Text($"Tel: {companyPhone}")
+                                                .FontSize(9).FontColor(Colors.Grey.Medium);
+                                        }
+                                        if (!string.IsNullOrWhiteSpace(companyEmail))
+                                        {
+                                            contactCol.Item().PaddingTop(1).Text(companyEmail)
+                                                .FontSize(9).FontColor(Colors.Grey.Medium);
+                                        }
+                                    });
+                                });
+
+                                // RUC y Número (derecha)
+                                row.RelativeItem().Column(rightCol =>
+                                {
+                                    rightCol.Item().AlignRight();
+
+                                    if (!string.IsNullOrWhiteSpace(companyRuc))
+                                    {
+                                        rightCol.Item().Text($"RUC: {companyRuc}")
+                                            .FontSize(9).FontColor(Colors.Grey.Medium).AlignRight();
+                                    }
+
+                                    rightCol.Item().PaddingTop(5).Text(documentType.ToUpper())
+                                        .FontSize(16).Bold().FontColor(Colors.Black).AlignRight();
+
+                                    rightCol.Item().Text($"N° {order.OrderNumber}")
+                                        .FontSize(12).Bold().FontColor(Colors.Black).AlignRight();
+                                });
+                            });
+                        });
+
+                    page.Content()
+                        .PaddingVertical(20)
+                        .Column(column =>
+                        {
+                            // Datos del cliente
+                            column.Item().Column(clientCol =>
+                            {
+                                clientCol.Item().PaddingBottom(10).Text("DATOS DEL CLIENTE")
+                                    .FontSize(9).Bold().FontColor(Colors.Grey.Medium);
+
+                                clientCol.Item().Row(row =>
+                                {
+                                    row.RelativeItem().Column(infoCol =>
+                                    {
+                                        infoCol.Item().Text($"Nombre: {order.CustomerName}")
+                                            .FontSize(9).FontColor(Colors.Black);
+                                        if (!string.IsNullOrWhiteSpace(order.CustomerEmail))
+                                        {
+                                            infoCol.Item().PaddingTop(2).Text($"Email: {order.CustomerEmail}")
+                                                .FontSize(9).FontColor(Colors.Black);
+                                        }
+                                        if (!string.IsNullOrWhiteSpace(order.CustomerPhone))
+                                        {
+                                            infoCol.Item().PaddingTop(2).Text($"Teléfono: {order.CustomerPhone}")
+                                                .FontSize(9).FontColor(Colors.Black);
+                                        }
+                                    });
+
+                                    row.RelativeItem().Column(infoCol =>
+                                    {
+                                        infoCol.Item().Text($"Fecha: {order.CreatedAt:dd/MM/yyyy HH:mm}")
+                                            .FontSize(9).FontColor(Colors.Black);
+                                        infoCol.Item().PaddingTop(2).Text($"Método de envío: {(order.ShippingMethod == "delivery" ? "Delivery" : "Recojo en Tienda")}")
+                                            .FontSize(9).FontColor(Colors.Black);
+                                        if (!string.IsNullOrWhiteSpace(order.ShippingAddress))
+                                        {
+                                            infoCol.Item().PaddingTop(2).Text($"Dirección: {order.ShippingAddress}")
+                                                .FontSize(9).FontColor(Colors.Black);
+                                        }
+                                    });
+                                });
+                            });
+
+                            // Tabla de productos
+                            column.Item().PaddingTop(15).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(3);
+                                    columns.ConstantColumn(60);
+                                    columns.ConstantColumn(70);
+                                    columns.ConstantColumn(80);
+                                });
+
+                                // Encabezado
+                                table.Header(header =>
+                                {
+                                    header.Cell().Element(CellStyle).Text("Producto").FontSize(9).Bold().FontColor(Colors.Black);
+                                    header.Cell().Element(CellStyle).Text("Cant.").FontSize(9).Bold().FontColor(Colors.Black).AlignRight();
+                                    header.Cell().Element(CellStyle).Text("P. Unit.").FontSize(9).Bold().FontColor(Colors.Black).AlignRight();
+                                    header.Cell().Element(CellStyle).Text("Subtotal").FontSize(9).Bold().FontColor(Colors.Black).AlignRight();
+                                });
+
+                                // Items
+                                foreach (var item in orderItems)
+                                {
+                                    table.Cell().Element(CellStyle).Text(item.ProductName).FontSize(9).FontColor(Colors.Black);
+                                    table.Cell().Element(CellStyle).Text(item.Quantity.ToString()).FontSize(9).FontColor(Colors.Black).AlignRight();
+                                    table.Cell().Element(CellStyle).Text($"S/ {item.UnitPrice:F2}").FontSize(9).FontColor(Colors.Black).AlignRight();
+                                    table.Cell().Element(CellStyle).Text($"S/ {item.Subtotal:F2}").FontSize(9).FontColor(Colors.Black).AlignRight();
+                                }
+                            });
+
+                            // Totales
+                            column.Item().PaddingTop(15).Column(totals =>
+                            {
+                                totals.Item().Row(row =>
+                                {
+                                    row.ConstantItem(100).Text("Subtotal:").FontSize(9).FontColor(Colors.Black);
+                                    row.ConstantItem(80).Text($"S/ {order.Subtotal:F2}").FontSize(9).AlignRight().FontColor(Colors.Black);
+                                });
+
+                                totals.Item().PaddingTop(3).Row(row =>
+                                {
+                                    row.ConstantItem(100).Text("Envío:").FontSize(9).FontColor(Colors.Black);
+                                    row.ConstantItem(80).Text($"S/ {order.ShippingCost:F2}").FontSize(9).AlignRight().FontColor(Colors.Black);
+                                });
+
+                                totals.Item().PaddingTop(8).BorderTop(1).BorderColor(Colors.Grey.Lighten2).PaddingTop(8).Row(row =>
+                                {
+                                    row.ConstantItem(100).Text("TOTAL:").FontSize(11).Bold().FontColor(Colors.Black);
+                                    row.ConstantItem(80).Text($"S/ {order.Total:F2}").FontSize(11).Bold().AlignRight().FontColor(Colors.Black);
+                                });
+                            });
+
+                            // Información de pago
+                            column.Item().BorderTop(1).BorderColor(Colors.Grey.Lighten2).PaddingTop(10).Column(payment =>
+                            {
+                                payment.Item().PaddingBottom(5).Text("INFORMACIÓN DE PAGO")
+                                    .FontSize(9).Bold().FontColor(Colors.Grey.Medium);
+
+                                payment.Item().Row(row =>
+                                {
+                                    row.RelativeItem().Column(paymentCol =>
+                                    {
+                                        paymentCol.Item().Text("Método de pago:").FontSize(9).FontColor(Colors.Grey.Medium);
+                                        paymentCol.Item().PaddingTop(2).Text(GetPaymentMethodTextFromString(order.PaymentMethod))
+                                            .FontSize(9).FontColor(Colors.Black).SemiBold();
+                                    });
+                                });
+                            });
+                        });
+
+                    page.Footer()
+                        .BorderTop(1).BorderColor(Colors.Grey.Lighten2).PaddingTop(20).AlignCenter()
+                        .Column(footerCol =>
+                        {
+                            var footerCompanyName = !string.IsNullOrWhiteSpace(companyName) ? companyName : "Minimarket Camucha";
+                            footerCol.Item().Text(footerCompanyName).FontSize(10).Bold().FontColor(Colors.Black);
+
+                            var footerInfo = new List<string>();
+                            if (!string.IsNullOrWhiteSpace(companyAddress))
+                                footerInfo.Add(companyAddress);
+                            if (!string.IsNullOrWhiteSpace(companyPhone))
+                                footerInfo.Add($"Tel: {companyPhone}");
+                            if (!string.IsNullOrWhiteSpace(companyEmail))
+                                footerInfo.Add(companyEmail);
+
+                            if (footerInfo.Any())
+                            {
+                                footerCol.Item().PaddingTop(3).Text(string.Join(" | ", footerInfo))
+                                    .FontSize(8).FontColor(Colors.Grey.Medium);
+                            }
+
+                            footerCol.Item().PaddingTop(5).Text("Gracias por su compra")
+                                .FontSize(9).FontColor(Colors.Grey.Medium);
+                        });
+
+                    static IContainer CellStyle(IContainer container)
+                    {
+                        return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
+                    }
+                });
+            });
+
+            document.GeneratePdf(pdfPath);
+
+            _logger.LogInformation("✅ PDF de pedido generado exitosamente: {Path}", pdfPath);
+            return pdfPath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating PDF for order {OrderId}", orderId);
             throw;
         }
     }
@@ -908,12 +1337,12 @@ public class PdfService : IPdfService
                 ? customSettings["companyRuc"]
                 : brandSettings?.Ruc 
                 ?? _configuration["Company:Ruc"] 
-                ?? "20123456789";
+                ?? "10095190559";
             var companyAddress = customSettings?.ContainsKey("companyAddress") == true && !string.IsNullOrWhiteSpace(customSettings["companyAddress"])
                 ? customSettings["companyAddress"]
                 : brandSettings?.Address 
                 ?? _configuration["Company:Address"] 
-                ?? "Av. Principal 123, Lima, Perú";
+                ?? "Jr. Pedro Labarthe 449 – Ingeniería, San Martín de Porres, Lima, Lima, Perú";
             var companyPhone = customSettings?.ContainsKey("companyPhone") == true && !string.IsNullOrWhiteSpace(customSettings["companyPhone"])
                 ? customSettings["companyPhone"]
                 : brandSettings?.Phone 
@@ -924,10 +1353,10 @@ public class PdfService : IPdfService
                 : brandSettings?.Email 
                 ?? _configuration["Company:Email"] 
                 ?? "";
+            // Siempre usar el logo de assets por defecto
             var logoUrl = customSettings?.ContainsKey("logoUrl") == true && !string.IsNullOrWhiteSpace(customSettings["logoUrl"])
                 ? customSettings["logoUrl"]
-                : brandSettings?.LogoUrl 
-                ?? "";
+                : "/assets/logo.png";
             
             // Para colores, si están en customSettings, usarlos (incluso si están vacíos, usar el valor del formulario)
             // IMPORTANTE: Si customSettings contiene la clave, siempre usar ese valor (incluso si está vacío)
@@ -1110,17 +1539,42 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    // Construir la URL completa si es necesario
-                    var fullLogoUrl = logoUrl;
-                    if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                    // Si es /assets/logo.png, buscar primero en wwwroot local
+                    if (logoUrl.StartsWith("/assets/"))
                     {
-                        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
-                        var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        
+                        if (System.IO.File.Exists(localPath))
+                        {
+                            _logger.LogInformation("✅ Logo encontrado localmente en: {LocalPath}", localPath);
+                            localLogoPath = localPath;
+                        }
+                        else
+                        {
+                            // Si no existe localmente, intentar descargar desde el frontend
+                            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
+                            localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                        }
                     }
-                    
-                    _logger.LogInformation("Descargando logo desde: {LogoUrl}", fullLogoUrl);
-                    localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    else
+                    {
+                        // Construir la URL completa si es necesario
+                        var fullLogoUrl = logoUrl;
+                        if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                        {
+                            var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        }
+                        
+                        _logger.LogInformation("Descargando logo desde: {LogoUrl}", fullLogoUrl);
+                        localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    }
                     
                     if (localLogoPath != null && System.IO.File.Exists(localLogoPath))
                     {
@@ -1128,7 +1582,7 @@ public class PdfService : IPdfService
                     }
                     else
                     {
-                        _logger.LogWarning("⚠️ No se pudo descargar el logo desde: {LogoUrl}", fullLogoUrl);
+                        _logger.LogWarning("⚠️ No se pudo descargar el logo desde: {LogoUrl}", logoUrl);
                     }
                 }
                 catch (Exception ex)
@@ -1489,6 +1943,18 @@ public class PdfService : IPdfService
         };
     }
 
+    private string GetPaymentMethodTextFromString(string paymentMethod)
+    {
+        return paymentMethod?.ToLower() switch
+        {
+            "cash" => "Efectivo",
+            "bank" => "Transferencia Bancaria",
+            "wallet" => "Yape/Plin",
+            "card" => "Tarjeta",
+            _ => paymentMethod ?? "No especificado"
+        };
+    }
+
     public async Task<string> GenerateCashClosurePdfAsync(DateTime startDate, DateTime endDate, List<Domain.Entities.Sale> sales)
     {
         try
@@ -1532,19 +1998,48 @@ public class PdfService : IPdfService
 
             // Descargar logo si existe
             string? localLogoPath = null;
-            var logoUrl = brandSettings?.LogoUrl;
+            // Siempre usar el logo de assets
+            var logoUrl = "/assets/logo.png";
             if (!string.IsNullOrWhiteSpace(logoUrl))
             {
                 try
                 {
-                    var fullLogoUrl = logoUrl;
-                    if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                    // Si es /assets/logo.png, buscar primero en wwwroot local
+                    if (logoUrl.StartsWith("/assets/"))
                     {
-                        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
-                        var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        
+                        if (System.IO.File.Exists(localPath))
+                        {
+                            _logger.LogInformation("✅ Logo encontrado localmente en: {LocalPath}", localPath);
+                            localLogoPath = localPath;
+                        }
+                        else
+                        {
+                            // Si no existe localmente, intentar descargar desde el frontend
+                            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
+                            localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                        }
                     }
-                    localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    else
+                    {
+                        // Construir la URL completa si es necesario
+                        var fullLogoUrl = logoUrl;
+                        if (!logoUrl.StartsWith("http://") && !logoUrl.StartsWith("https://") && !logoUrl.StartsWith("data:") && !Path.IsPathRooted(logoUrl))
+                        {
+                            var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
+                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
+                            fullLogoUrl = $"{baseUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                        }
+                        
+                        _logger.LogInformation("Descargando logo desde: {LogoUrl}", fullLogoUrl);
+                        localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
+                    }
                 }
                 catch (Exception ex)
                 {

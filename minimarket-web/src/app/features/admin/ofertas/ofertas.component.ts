@@ -66,7 +66,7 @@ export class OfertasComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categoriesService.getAll().subscribe({
+    this.categoriesService.getAllWithoutPagination().subscribe({
       next: (categories) => {
         this.categories.set(categories);
       },

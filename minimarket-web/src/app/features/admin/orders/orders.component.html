@@ -1,7 +1,58 @@
 <div class="flex-1 p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
     <!-- Page Heading -->
-    <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-6">Pedidos</h1>
+    <div class="mb-6">
+      <h1 class="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-2">Pedidos</h1>
+      <p class="text-gray-600 dark:text-gray-400">Gestiona y aprueba los pedidos del carrito de compras según su método de pago</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Pendientes</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ pendingCount() }}</p>
+          </div>
+          <div class="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
+            <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">schedule</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Con Comprobante</p>
+            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ pendingWithProof() }}</p>
+          </div>
+          <div class="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
+            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">check_circle</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Sin Comprobante</p>
+            <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ pendingWithoutProof() }}</p>
+          </div>
+          <div class="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
+            <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">warning</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Confirmados</p>
+            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ confirmedCount() }}</p>
+          </div>
+          <div class="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl">verified</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-6">
@@ -19,6 +70,7 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estado</label>
           <select
             [(ngModel)]="selectedStatus"
+            (change)="applyFilters()"
             class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
             @for (status of statuses; track status.value) {
               <option [value]="status.value">{{ status.label }}</option>
@@ -30,6 +82,7 @@
           <input
             type="date"
             [(ngModel)]="startDate"
+            (change)="applyFilters()"
             class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
         </div>
         <div>
@@ -37,6 +90,7 @@
           <input
             type="date"
             [(ngModel)]="endDate"
+            (change)="applyFilters()"
             class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
         </div>
       </div>
@@ -67,6 +121,7 @@
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Número</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método Pago</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método Envío</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
@@ -76,13 +131,31 @@
             </thead>
             <tbody class="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
               @for (order of orders(); track order.id) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    {{ order.orderNumber }}
+                <tr [class]="order.status === 'pending' && needsPaymentProof(order) ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ order.orderNumber }}
+                    </div>
+                    @if (needsPaymentProof(order)) {
+                      <div class="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">warning</span>
+                        <span>Requiere comprobante</span>
+                      </div>
+                    }
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     <div>{{ order.customerName }}</div>
                     <div class="text-xs text-gray-500">{{ order.customerEmail }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-base text-gray-500 dark:text-gray-400">
+                        {{ getPaymentMethodIcon(order.paymentMethod) }}
+                      </span>
+                      <span class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ getPaymentMethodLabel(order.paymentMethod) }}
+                      </span>
+                    </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {{ order.shippingMethod === 'delivery' ? 'Delivery' : 'Recojo' }}
@@ -98,17 +171,39 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {{ formatDate(order.createdAt) }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      (click)="viewOrderDetails(order)"
-                      class="text-primary-admin hover:text-primary-admin/80 mr-3">
-                      Ver
-                    </button>
-                    <button
-                      (click)="openStatusModal(order)"
-                      class="text-blue-600 hover:text-blue-800">
-                      Estado
-                    </button>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                      @if (order.status === 'pending') {
+                        @if (canApproveQuickly(order)) {
+                          <button
+                            (click)="openApproveModal(order)"
+                            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1 shadow-sm">
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                            Aprobar
+                          </button>
+                        }
+                        @if (canRejectQuickly(order)) {
+                          <button
+                            (click)="openRejectModal(order)"
+                            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-1 shadow-sm">
+                            <span class="material-symbols-outlined text-sm">cancel</span>
+                            Rechazar
+                          </button>
+                        }
+                      }
+                      <button
+                        (click)="viewOrderDetails(order)"
+                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-primary-admin text-white hover:bg-primary-admin/90 transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">visibility</span>
+                        Ver
+                      </button>
+                      <button
+                        (click)="openStatusModal(order)"
+                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                        Estado
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }
@@ -163,7 +258,15 @@
   <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Detalles del Pedido</h2>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Detalles del Pedido</h2>
+          @if (selectedOrder() && selectedOrder()!.status === 'pending' && needsPaymentProof(selectedOrder()!)) {
+            <div class="mt-2 flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-sm">
+              <span class="material-symbols-outlined text-base">warning</span>
+              <span>Este pedido requiere comprobante de pago</span>
+            </div>
+          }
+        </div>
         <button
           (click)="closeOrderDetails()"
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
@@ -191,7 +294,15 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Método de Pago</p>
-                <p class="text-gray-900 dark:text-white">{{ order.paymentMethod }} @if (order.walletMethod) { ({{ order.walletMethod }}) }</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="material-symbols-outlined text-lg text-gray-600 dark:text-gray-400">
+                    {{ getPaymentMethodIcon(order.paymentMethod) }}
+                  </span>
+                  <p class="text-gray-900 dark:text-white font-medium">{{ getPaymentMethodLabel(order.paymentMethod) }}</p>
+                  @if (order.walletMethod) {
+                    <span class="text-xs text-gray-500">({{ order.walletMethod }})</span>
+                  }
+                </div>
               </div>
             </div>
 
@@ -228,12 +339,49 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Comprobante de Pago</h3>
                 @if (order.paymentProofUrl) {
                   <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <img [src]="order.paymentProofUrl" alt="Comprobante de pago" class="max-w-full h-auto rounded-lg mb-2">
-                    <a [href]="order.paymentProofUrl" target="_blank" class="text-primary-admin hover:underline text-sm">Ver en tamaño completo</a>
+                    @if (isImageFile(order.paymentProofUrl)) {
+                      <!-- Vista previa de imagen -->
+                      <div class="mb-3">
+                        <img 
+                          [src]="order.paymentProofUrl" 
+                          alt="Comprobante de pago" 
+                          class="max-w-full max-h-96 h-auto rounded-lg border-2 border-gray-300 dark:border-gray-600 object-contain shadow-md mx-auto"
+                          (error)="onProofImageError($event)">
+                      </div>
+                    } @else if (isPdfFile(order.paymentProofUrl)) {
+                      <!-- Vista previa de PDF -->
+                      <div class="mb-3 flex flex-col items-center p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border-2 border-red-200 dark:border-red-700">
+                        <div class="bg-white dark:bg-gray-800 rounded-full p-4 mb-3 shadow-lg">
+                          <span class="material-symbols-outlined text-6xl text-red-600 dark:text-red-400">picture_as_pdf</span>
+                        </div>
+                        <p class="text-base font-bold text-red-900 dark:text-red-200 mb-1">Documento PDF</p>
+                        <p class="text-xs text-red-700 dark:text-red-300">Haz clic en el enlace para ver el documento</p>
+                      </div>
+                    } @else {
+                      <!-- Otro tipo de archivo -->
+                      <div class="mb-3 flex flex-col items-center p-6 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600">
+                        <div class="bg-white dark:bg-gray-800 rounded-full p-4 mb-3 shadow-lg">
+                          <span class="material-symbols-outlined text-6xl text-gray-500 dark:text-gray-400">description</span>
+                        </div>
+                        <p class="text-base font-bold text-gray-700 dark:text-gray-300 mb-1">Comprobante de Pago</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Haz clic en el enlace para ver el documento</p>
+                      </div>
+                    }
+                    <a 
+                      [href]="order.paymentProofUrl" 
+                      target="_blank" 
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-primary-admin text-white rounded-lg hover:bg-primary-admin/90 text-sm font-medium transition-colors shadow-sm">
+                      <span class="material-symbols-outlined text-base">open_in_new</span>
+                      <span>Ver en tamaño completo</span>
+                    </a>
                   </div>
                 } @else {
-                  <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                    <p class="text-yellow-800 dark:text-yellow-200">Comprobante de pago pendiente</p>
+                  <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div class="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                      <span class="material-symbols-outlined">warning</span>
+                      <p class="font-medium">Comprobante de pago pendiente</p>
+                    </div>
+                    <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2">El cliente aún no ha subido el comprobante de pago. No se puede aprobar hasta que se reciba el comprobante.</p>
                   </div>
                 }
               </div>
@@ -281,8 +429,220 @@
                 <span class="text-gray-900 dark:text-white">S/ {{ order.total.toFixed(2) }}</span>
               </div>
             </div>
+
+            <!-- Quick Actions -->
+            @if (order.status === 'pending') {
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
+                <div class="flex flex-col gap-3">
+                  <div class="flex gap-3">
+                    @if (canApproveQuickly(order)) {
+                      <button
+                        (click)="closeOrderDetails(); openApproveModal(order)"
+                        class="flex-1 px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        Aprobar Pedido
+                      </button>
+                    }
+                    @if (canRejectQuickly(order)) {
+                      <button
+                        (click)="closeOrderDetails(); openRejectModal(order)"
+                        class="flex-1 px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <span class="material-symbols-outlined">cancel</span>
+                        Rechazar Pedido
+                      </button>
+                    }
+                  </div>
+                  <button
+                    (click)="closeOrderDetails(); openStatusModal(order)"
+                    class="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-md">
+                    <span class="material-symbols-outlined">edit</span>
+                    Cambiar Estado
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- Acciones para pedidos confirmados -->
+            @if (order.status === 'confirmed') {
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Marcar como Listo</h3>
+                <div class="flex gap-3">
+                  @if (order.shippingMethod === 'pickup') {
+                    <button
+                      (click)="markAsReadyForPickup(order)"
+                      class="flex-1 px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 shadow-md">
+                      <span class="material-symbols-outlined">shopping_bag</span>
+                      Listo para Recoger
+                    </button>
+                  }
+                  @if (order.shippingMethod === 'delivery') {
+                    <button
+                      (click)="markAsShipped(order)"
+                      class="flex-1 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-md">
+                      <span class="material-symbols-outlined">local_shipping</span>
+                      Listo para Enviar
+                    </button>
+                  }
+                </div>
+              </div>
+            }
           </div>
         }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Approve Order Modal -->
+@if (showApproveModal() && selectedOrder()) {
+  <div class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full transform transition-all">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-2xl">check_circle</span>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Aprobar Pedido</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Pedido #{{ selectedOrder()?.orderNumber }}</p>
+            </div>
+          </div>
+          <button
+            (click)="closeApproveModal()"
+            [disabled]="isProcessing()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        @if (selectedOrder()) {
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div class="space-y-2">
+              <p class="text-sm font-medium text-blue-900 dark:text-blue-200">
+                <strong>Cliente:</strong> {{ selectedOrder()!.customerName }}
+              </p>
+              <p class="text-sm text-blue-800 dark:text-blue-300">
+                <strong>Método de Pago:</strong> {{ getPaymentMethodLabel(selectedOrder()!.paymentMethod) }}
+              </p>
+              <p class="text-sm text-blue-800 dark:text-blue-300">
+                <strong>Total:</strong> S/ {{ selectedOrder()!.total.toFixed(2) }}
+              </p>
+              @if (selectedOrder()!.requiresPaymentProof && selectedOrder()!.paymentProofUrl) {
+                <div class="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
+                  <p class="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">verified</span>
+                    Comprobante de pago verificado
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <p class="text-sm text-green-800 dark:text-green-200">
+              <strong>✓</strong> Se enviará un correo electrónico al cliente confirmando la aprobación del pedido.
+              @if (selectedOrder()!.requiresPaymentProof && selectedOrder()!.paymentProofUrl) {
+                <br><strong>✓</strong> También se enviará un correo confirmando la verificación del pago.
+              }
+            </p>
+          </div>
+        }
+        
+        <div class="flex justify-end gap-3 pt-4">
+          <button
+            (click)="closeApproveModal()"
+            [disabled]="isProcessing()"
+            class="px-6 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            (click)="approveOrder()"
+            [disabled]="isProcessing()"
+            class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            @if (isProcessing()) {
+              <span class="material-symbols-outlined animate-spin">sync</span>
+              <span>Procesando...</span>
+            } @else {
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>Confirmar Aprobación</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Reject Order Modal -->
+@if (showRejectModal() && selectedOrder()) {
+  <div class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full transform transition-all">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-2xl">cancel</span>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Rechazar Pedido</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Pedido #{{ selectedOrder()?.orderNumber }}</p>
+            </div>
+          </div>
+          <button
+            (click)="closeRejectModal()"
+            [disabled]="isProcessing()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        @if (selectedOrder()) {
+          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p class="text-sm font-medium text-red-900 dark:text-red-200 mb-2">
+              <strong>⚠️ Advertencia:</strong> Esta acción cancelará el pedido y se enviará un correo al cliente con el motivo del rechazo.
+            </p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Motivo del Rechazo <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              [(ngModel)]="rejectionReason"
+              rows="4"
+              placeholder="Ej: Comprobante de pago no válido, información incompleta, etc."
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+              [disabled]="isProcessing()"></textarea>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Este motivo se incluirá en el correo que se enviará al cliente.
+            </p>
+          </div>
+        }
+        
+        <div class="flex justify-end gap-3 pt-4">
+          <button
+            (click)="closeRejectModal()"
+            [disabled]="isProcessing()"
+            class="px-6 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            (click)="rejectOrder()"
+            [disabled]="isProcessing() || !rejectionReason().trim()"
+            class="px-6 py-2.5 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            @if (isProcessing()) {
+              <span class="material-symbols-outlined animate-spin">sync</span>
+              <span>Procesando...</span>
+            } @else {
+              <span class="material-symbols-outlined">cancel</span>
+              <span>Confirmar Rechazo</span>
+            }
+          </button>
+        </div>
       </div>
     </div>
   </div>

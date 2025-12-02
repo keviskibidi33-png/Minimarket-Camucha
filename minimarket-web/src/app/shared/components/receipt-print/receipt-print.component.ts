@@ -86,7 +86,7 @@ export class ReceiptPrintComponent {
   }
 
   get logoUrl(): string {
-    return '/assets/logo.png'; // Siempre usar el logo de assets
+    return 'assets/logo.png'; // Siempre usar el logo de assets
   }
 
   get companyName(): string {

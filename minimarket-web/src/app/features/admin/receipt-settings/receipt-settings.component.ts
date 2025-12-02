@@ -202,7 +202,7 @@ export class ReceiptSettingsComponent implements OnInit {
       ruc: rucValue || undefined,
       address: addressValue || undefined,
       phone: phoneValue || undefined,
-      logoUrl: '/assets/logo.png', // Siempre usar el logo de assets
+      logoUrl: 'assets/logo.png', // Siempre usar el logo de assets
       // Mantener TODOS los demás campos de BrandSettings
       logoEmoji: currentSettings?.logoEmoji || '',
       faviconUrl: currentSettings?.faviconUrl || '',
@@ -314,7 +314,7 @@ export class ReceiptSettingsComponent implements OnInit {
       companyAddress: this.address().trim() || '',
       companyPhone: this.phone().trim() || '',
       companyEmail: '',
-      logoUrl: '/assets/logo.png' // Siempre usar el logo de assets
+      logoUrl: 'assets/logo.png' // Siempre usar el logo de assets
     };
 
     // Llamar al endpoint que genera el PDF de prueba

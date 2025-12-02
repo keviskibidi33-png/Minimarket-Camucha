@@ -35,9 +35,8 @@ services:
       dockerfile: Minimarket.API/Dockerfile
     container_name: minimarket-api
     restart: unless-stopped
-    # CAMBIO CLAVE: Usamos 'expose' en lugar de 'ports' para no chocar con Coolify/Traefik
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
@@ -86,10 +85,8 @@ services:
       dockerfile: Dockerfile
     container_name: minimarket-web
     restart: unless-stopped
-    # CAMBIO CLAVE: Usamos 'expose' para que Coolify/Traefik maneje el dominio.
-    # El puerto 80 interno del contenedor es correcto para Nginx.
-    expose:
-      - "80"
+    ports:
+      - "3000:80"
     depends_on:
       - app
     networks:

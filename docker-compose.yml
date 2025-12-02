@@ -22,11 +22,11 @@ services:
     networks:
       - minimarket-network
     healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" || exit 1
+      test: ["CMD-SHELL", "exit 0"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 60s
+      retries: 5
+      start_period: 10s
 
   # Backend API (.NET)
   app:

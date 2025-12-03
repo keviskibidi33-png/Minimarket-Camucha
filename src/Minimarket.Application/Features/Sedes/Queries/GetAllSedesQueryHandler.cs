@@ -16,39 +16,70 @@ public class GetAllSedesQueryHandler : IRequestHandler<GetAllSedesQuery, Result<
 
     public async Task<Result<IEnumerable<SedeDto>>> Handle(GetAllSedesQuery request, CancellationToken cancellationToken)
     {
-        var sedes = await _unitOfWork.Sedes.GetAllAsync(cancellationToken);
+        try
+        {
+            var sedes = await _unitOfWork.Sedes.GetAllAsync(cancellationToken);
 
-        var filtered = request.SoloActivas.HasValue && request.SoloActivas.Value
-            ? sedes.Where(s => s.Estado)
-            : sedes;
+            var filtered = request.SoloActivas.HasValue && request.SoloActivas.Value
+                ? sedes.Where(s => s.Estado)
+                : sedes;
 
-        var result = filtered
-            .Select(s => MapToDto(s))
-            .OrderBy(s => s.Nombre)
-            .ToList();
+            var result = filtered
+                .Select(s => MapToDto(s))
+                .OrderBy(s => s.Nombre)
+                .ToList();
 
-        return Result<IEnumerable<SedeDto>>.Success(result);
+            return Result<IEnumerable<SedeDto>>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<SedeDto>>.Failure($"Error al obtener las sedes: {ex.Message}");
+        }
     }
 
     private static SedeDto MapToDto(Domain.Entities.Sede sede)
     {
-        return new SedeDto
+        try
         {
-            Id = sede.Id,
-            Nombre = sede.Nombre,
-            Direccion = sede.Direccion,
-            Ciudad = sede.Ciudad,
-            Pais = sede.Pais,
-            Latitud = sede.Latitud,
-            Longitud = sede.Longitud,
-            Telefono = sede.Telefono,
-            Horarios = sede.GetHorarios(),
-            LogoUrl = sede.LogoUrl,
-            Estado = sede.Estado,
-            IsOpen = sede.IsOpen(DateTime.Now),
-            NextOpenTime = sede.GetNextOpenTime(),
-            GoogleMapsUrl = sede.GoogleMapsUrl
-        };
+            return new SedeDto
+            {
+                Id = sede.Id,
+                Nombre = sede.Nombre ?? string.Empty,
+                Direccion = sede.Direccion ?? string.Empty,
+                Ciudad = sede.Ciudad ?? string.Empty,
+                Pais = sede.Pais ?? "Perú",
+                Latitud = sede.Latitud,
+                Longitud = sede.Longitud,
+                Telefono = sede.Telefono,
+                Horarios = sede.GetHorarios(),
+                LogoUrl = sede.LogoUrl,
+                Estado = sede.Estado,
+                IsOpen = sede.IsOpen(DateTime.Now),
+                NextOpenTime = sede.GetNextOpenTime(),
+                GoogleMapsUrl = sede.GoogleMapsUrl
+            };
+        }
+        catch (Exception ex)
+        {
+            // Si hay error al mapear una sede, retornar un DTO básico
+            return new SedeDto
+            {
+                Id = sede.Id,
+                Nombre = sede.Nombre ?? "Sede sin nombre",
+                Direccion = sede.Direccion ?? string.Empty,
+                Ciudad = sede.Ciudad ?? string.Empty,
+                Pais = sede.Pais ?? "Perú",
+                Latitud = sede.Latitud,
+                Longitud = sede.Longitud,
+                Telefono = sede.Telefono,
+                Horarios = new Dictionary<string, Dictionary<string, string>>(),
+                LogoUrl = sede.LogoUrl,
+                Estado = sede.Estado,
+                IsOpen = false,
+                NextOpenTime = null,
+                GoogleMapsUrl = sede.GoogleMapsUrl
+            };
+        }
     }
 }
 

@@ -23,7 +23,14 @@
         @for (sede of sedes(); track sede.id) {
           <div class="bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
             @if (sede.logoUrl) {
-              <img [src]="sede.logoUrl" [alt]="sede.nombre" class="w-full h-32 object-cover rounded-lg mb-4">
+              <img [src]="sede.logoUrl" 
+                   [alt]="sede.nombre" 
+                   class="w-full h-32 object-cover rounded-lg mb-4"
+                   (error)="$event.target.style.display='none'">
+            } @else {
+              <div class="w-full h-32 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                <span class="text-gray-400 text-sm">Sin logo</span>
+              </div>
             }
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ sede.nombre }}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ sede.direccion }}</p>
@@ -143,7 +150,14 @@
                     type="file"
                     accept="image/*"
                     (change)="onLogoUpload($event)"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 mb-2">
+                  @if (logoUrl()) {
+                    <div class="mt-2">
+                      <img [src]="logoUrl()" 
+                           alt="Preview logo" 
+                           class="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                    </div>
+                  }
                 </div>
               </div>
 

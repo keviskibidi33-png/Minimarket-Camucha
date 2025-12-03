@@ -22,15 +22,22 @@ public class SedesController : ControllerBase
     [AllowAnonymous] // Permitir acceso público para la tienda
     public async Task<IActionResult> GetAll([FromQuery] bool? soloActivas)
     {
-        var query = new GetAllSedesQuery { SoloActivas = soloActivas };
-        var result = await _mediator.Send(query);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            var query = new GetAllSedesQuery { SoloActivas = soloActivas };
+            var result = await _mediator.Send(query);
 
-        return Ok(result.Data);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = result.Error, errors = result.Errors });
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor al obtener sedes", error = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]

@@ -193,17 +193,34 @@ export class SedesComponent implements OnInit {
     }
   }
 
-  onLogoUpload(event: any): void {
-    const file = event.target.files[0];
+  onLogoUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.toastService.error('Solo se permiten archivos de imagen (JPG, PNG, WEBP)');
+      return;
+    }
+
+    // Validar tamaño (5MB máximo)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+      return;
+    }
 
     this.filesService.uploadFile(file, 'sedes').subscribe({
       next: (response) => {
         this.logoUrl.set(response.url);
+        this.toastService.success('Logo subido exitosamente');
       },
       error: (error) => {
         console.error('Error uploading logo:', error);
-        this.toastService.error('Error al subir logo');
+        const errorMessage = error.error?.error || error.error?.message || 'Error al subir logo';
+        this.toastService.error(errorMessage);
       }
     });
   }

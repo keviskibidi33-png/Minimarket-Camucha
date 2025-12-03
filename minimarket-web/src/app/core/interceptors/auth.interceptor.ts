@@ -27,21 +27,24 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     // Headers base para todas las peticiones
-    const headers: { [key: string]: string } = {
-      'Accept': 'application/json'
-    };
+    const headers: { [key: string]: string } = {};
 
     // Agregar token si existe
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Solo agregar Content-Type para peticiones que envían datos
-    // NO establecer Content-Type si:
-    // 1. Ya existe un Content-Type (para FormData, el navegador lo establece automáticamente)
-    // 2. El body es FormData (para uploads de archivos)
+    // Solo agregar Accept y Content-Type para peticiones que no son FormData
+    // NO establecer estos headers si:
+    // 1. El body es FormData (para uploads de archivos)
+    // 2. Ya existe un Content-Type (para FormData, el navegador lo establece automáticamente)
     const isFormData = req.body instanceof FormData;
     const hasContentType = req.headers.has('Content-Type');
+    
+    // Solo agregar Accept para peticiones que no son FormData
+    if (!isFormData) {
+      headers['Accept'] = 'application/json';
+    }
     
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'DELETE') {
       // Solo establecer Content-Type si no es FormData y no tiene Content-Type ya establecido

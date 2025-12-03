@@ -33,6 +33,16 @@ builder.Host.UseSerilog((context, configuration) =>
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{TraceId}] {Message:lj}{NewLine}{Exception}");
 });
 
+// Configurar límites de tamaño de formularios (para subida de archivos)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5MB
+    options.ValueLengthLimit = 5 * 1024 * 1024; // 5MB
+    options.MultipartBoundaryLengthLimit = int.MaxValue;
+    options.MultipartHeadersCountLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
 // Add services to the container
 builder.Services.AddControllers(options =>
     {

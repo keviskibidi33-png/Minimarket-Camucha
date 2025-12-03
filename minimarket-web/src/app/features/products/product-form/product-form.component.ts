@@ -162,7 +162,21 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.error?.errors?.[0] || 'Error al actualizar el producto');
+          let errorMsg = 'Error al actualizar el producto';
+          if (error.error?.errors) {
+            if (Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+              errorMsg = error.error.errors[0];
+            } else if (typeof error.error.errors === 'string') {
+              errorMsg = error.error.errors;
+            } else if (error.error.errors.message) {
+              errorMsg = error.error.errors.message;
+            }
+          } else if (error.error?.message) {
+            errorMsg = error.error.message;
+          } else if (error.error?.error) {
+            errorMsg = error.error.error;
+          }
+          this.errorMessage.set(errorMsg);
         }
       });
     } else {
@@ -176,7 +190,21 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.error?.errors?.[0] || 'Error al crear el producto');
+          let errorMsg = 'Error al crear el producto';
+          if (error.error?.errors) {
+            if (Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+              errorMsg = error.error.errors[0];
+            } else if (typeof error.error.errors === 'string') {
+              errorMsg = error.error.errors;
+            } else if (error.error.errors.message) {
+              errorMsg = error.error.errors.message;
+            }
+          } else if (error.error?.message) {
+            errorMsg = error.error.message;
+          } else if (error.error?.error) {
+            errorMsg = error.error.error;
+          }
+          this.errorMessage.set(errorMsg);
         }
       });
     }

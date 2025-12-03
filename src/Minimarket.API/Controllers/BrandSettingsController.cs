@@ -22,36 +22,55 @@ public class BrandSettingsController : ControllerBase
     [AllowAnonymous] // Permitir acceso público para que la tienda pueda cargar los colores
     public async Task<IActionResult> Get()
     {
-        var query = new GetBrandSettingsQuery();
-        var result = await _mediator.Send(query);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            var query = new GetBrandSettingsQuery();
+            var result = await _mediator.Send(query);
 
-        return Ok(result.Data);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = result.Error, errors = result.Errors });
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor al obtener configuración de marca", error = ex.Message });
+        }
     }
 
     [HttpPut]
     [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Update([FromBody] UpdateBrandSettingsCommand command)
     {
-        // Obtener ID del usuario actual desde el token
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+        try
         {
-            command.UpdatedBy = userId;
+            if (command == null)
+            {
+                return BadRequest(new { message = "Los datos de configuración son requeridos" });
+            }
+
+            // Obtener ID del usuario actual desde el token
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                command.UpdatedBy = userId;
+            }
+
+            var result = await _mediator.Send(command);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = result.Error, errors = result.Errors });
+            }
+
+            return Ok(result.Data);
         }
-
-        var result = await _mediator.Send(command);
-
-        if (!result.Succeeded)
+        catch (Exception ex)
         {
-            return BadRequest(result);
+            return StatusCode(500, new { message = "Error interno del servidor al actualizar configuración de marca", error = ex.Message });
         }
-
-        return Ok(result.Data);
     }
 }
 

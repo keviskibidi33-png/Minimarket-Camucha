@@ -12,7 +12,7 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Build the app with production configuration
-RUN npm run build -- --configuration production
+RUN npm run build -- --configuration=production --project=minimarket-web
 
 # Production stage
 FROM nginx:alpine AS final

@@ -20,8 +20,15 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
 
     public async Task<Result<BrandSettingsDto>> Handle(UpdateBrandSettingsCommand request, CancellationToken cancellationToken)
     {
-        var existingSettings = await _unitOfWork.BrandSettings.GetAllAsync(cancellationToken);
-        var brandSettings = existingSettings.FirstOrDefault();
+        try
+        {
+            if (request.BrandSettings == null)
+            {
+                return Result<BrandSettingsDto>.Failure("Los datos de configuración son requeridos");
+            }
+
+            var existingSettings = await _unitOfWork.BrandSettings.GetAllAsync(cancellationToken);
+            var brandSettings = existingSettings.FirstOrDefault();
 
         if (brandSettings == null)
         {
@@ -206,7 +213,13 @@ public class UpdateBrandSettingsCommandHandler : IRequestHandler<UpdateBrandSett
             UpdatedAt = brandSettings.UpdatedAt
         };
 
-        return Result<BrandSettingsDto>.Success(dto);
+            return Result<BrandSettingsDto>.Success(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar BrandSettings");
+            return Result<BrandSettingsDto>.Failure($"Error al actualizar la configuración de marca: {ex.Message}");
+        }
     }
 }
 

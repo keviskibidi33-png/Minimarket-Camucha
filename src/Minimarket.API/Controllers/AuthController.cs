@@ -200,7 +200,7 @@ public class AuthController : ControllerBase
         var profileCompleted = await CheckProfileCompleted(user.Id);
 
         // Redirigir al frontend con el token
-        var frontendUrl = _configuration["BaseUrl"]?.Replace(":5000", ":4200") ?? "http://localhost:4200";
+        var frontendUrl = _configuration["FrontendUrl"] ?? _configuration["BaseUrl"]?.Replace(":5000", ":4200") ?? "http://localhost:4200";
         var redirectUrl = profileCompleted 
             ? $"{frontendUrl}/?token={token}" 
             : $"{frontendUrl}/auth/complete-profile?token={token}";

@@ -59,14 +59,26 @@ public class SedesController : ControllerBase
     [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Create([FromBody] CreateSedeCommand command)
     {
-        var result = await _mediator.Send(command);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            if (command == null || command.Sede == null)
+            {
+                return BadRequest(new { message = "Los datos de la sede son requeridos" });
+            }
 
-        return Ok(result.Data);
+            var result = await _mediator.Send(command);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = result.Error, errors = result.Errors });
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor al crear sede", error = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -106,15 +118,22 @@ public class SedesController : ControllerBase
     [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var command = new DeleteSedeCommand { Id = id };
-        var result = await _mediator.Send(command);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            var command = new DeleteSedeCommand { Id = id };
+            var result = await _mediator.Send(command);
 
-        return Ok(result.Data);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = result.Error, errors = result.Errors });
+            }
+
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor al eliminar sede", error = ex.Message });
+        }
     }
 }
 

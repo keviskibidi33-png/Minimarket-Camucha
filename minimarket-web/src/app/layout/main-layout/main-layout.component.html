@@ -170,9 +170,15 @@
           <span class="text-sm text-gray-600 dark:text-gray-300" data-cy="user-menu">
             {{ (authService.currentUser()?.firstName && authService.currentUser()?.lastName) ? (authService.currentUser()!.firstName + ' ' + authService.currentUser()!.lastName) : (authService.currentUser()?.firstName || authService.currentUser()?.lastName || 'Usuario') }}
           </span>
-          <img src="assets/logo.png" 
-               alt="Usuario" 
-               class="rounded-full size-10 object-cover">
+          @if (authService.currentUser()?.firstName || authService.currentUser()?.lastName) {
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-sm font-bold">
+              {{ (authService.currentUser()!.firstName?.charAt(0) || authService.currentUser()!.lastName?.charAt(0) || 'U').toUpperCase() }}
+            </div>
+          } @else {
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600">
+              <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">person</span>
+            </div>
+          }
           <button (click)="logout()" 
                   data-cy="logout-button"
                   class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-bold leading-normal tracking-wide hover:bg-gray-200 dark:hover:bg-gray-600">

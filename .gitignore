@@ -115,6 +115,10 @@ _ReSharper*/
 test-results/
 playwright-report/
 *.png
+# Excepciones: imágenes esenciales del proyecto
+!minimarket-web/src/assets/*.png
+!minimarket-web/src/assets/*.jpg
+!minimarket-web/src/assets/*.jpeg
 *.webm
 *.zip
 

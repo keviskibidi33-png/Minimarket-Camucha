@@ -35,18 +35,27 @@
 
 ---
 
-### 4. ✅ Assets (Logo) - Rutas Corregidas
+### 4. ✅ Assets (Logo e Imágenes) - Configuración Completa
 
-**Problema:** 404 en `/assets/logo.png`
+**Problema:** 404 en `/assets/logo.png` y logo no estaba en git
 
 **Solución:** 
 - ✅ Rutas ya corregidas a `assets/logo.png` (sin barra inicial)
 - ✅ `angular.json` configurado correctamente con `"src/assets"`
-- ✅ Logo debe estar en `src/assets/logo.png`
+- ✅ Logo agregado a git (forzado con `-f` porque estaba en `.gitignore`)
+- ✅ `.gitignore` actualizado para permitir imágenes en `minimarket-web/src/assets/`
+- ✅ Avatar de usuario corregido (ya no usa logo, usa iniciales o icono)
 
 **Ubicación física del logo en producción:**
-- En el build: `dist/minimarket-web/assets/logo.png`
+- En el build: `dist/minimarket-web/browser/assets/logo.png`
 - En el contenedor Docker: `/usr/share/nginx/html/assets/logo.png`
+- URL accesible: `https://minimarket.edvio.app/assets/logo.png`
+
+**Imágenes agregadas a git:**
+- ✅ `minimarket-web/src/assets/logo.png`
+- ✅ `minimarket-web/src/assets/angelqr.jpg` (QR de pago)
+
+**Ver documentación completa:** `ASSETS_CONFIGURACION.md`
 
 ---
 

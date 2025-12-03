@@ -55,30 +55,30 @@ JWT_SECRET_KEY=SuperSecretKeyForJWT_MinimumLengthIs32Characters_UseLongRandomStr
 - La aplicación funcionará pero las URLs generadas serán incorrectas
 - Los emails y redirecciones no funcionarán correctamente
 
-**Ejemplo para red local:**
+**Ejemplo para producción:**
 ```
-BASE_URL=http://192.168.100.26:8080
+BASE_URL=https://api-minimarket.edvio.app
 ```
 
 ### 4. `FRONTEND_URL` ⚠️ **OBLIGATORIA**
 
-**Ejemplo para red local:**
+**Ejemplo para producción:**
 ```
-FRONTEND_URL=http://192.168.100.26:3000
+FRONTEND_URL=https://minimarket.edvio.app
 ```
 
 ### 5. `CORS_ORIGINS` ⚠️ **OBLIGATORIA**
 
-**Ejemplo para red local:**
+**Ejemplo para producción:**
 ```
-CORS_ORIGINS=http://192.168.100.26:3000,http://localhost:4200
+CORS_ORIGINS=https://minimarket.edvio.app
 ```
 
 ### 6. `GOOGLE_REDIRECT_URI` ⚠️ **OBLIGATORIA** (si usas Google OAuth)
 
-**Ejemplo para red local:**
+**Ejemplo para producción:**
 ```
-GOOGLE_REDIRECT_URI=http://192.168.100.26:8080/api/auth/google-callback
+GOOGLE_REDIRECT_URI=https://api-minimarket.edvio.app/api/auth/google-callback
 ```
 
 ---
@@ -89,10 +89,10 @@ Antes de hacer Deploy, verifica que tienes estas 6 variables:
 
 - [ ] `DB_PASSWORD` = Contraseña fuerte (8+ caracteres, mayúsculas, minúsculas, números, especiales)
 - [ ] `JWT_SECRET_KEY` = Clave larga (mínimo 32 caracteres)
-- [ ] `BASE_URL` = http://192.168.100.26:8080
-- [ ] `FRONTEND_URL` = http://192.168.100.26:3000
-- [ ] `CORS_ORIGINS` = http://192.168.100.26:3000,http://localhost:4200
-- [ ] `GOOGLE_REDIRECT_URI` = http://192.168.100.26:8080/api/auth/google-callback
+- [ ] `BASE_URL` = https://api-minimarket.edvio.app
+- [ ] `FRONTEND_URL` = https://minimarket.edvio.app
+- [ ] `CORS_ORIGINS` = https://minimarket.edvio.app
+- [ ] `GOOGLE_REDIRECT_URI` = https://api-minimarket.edvio.app/api/auth/google-callback
 
 ---
 

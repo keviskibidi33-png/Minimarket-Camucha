@@ -115,17 +115,17 @@ public class FileStorageService : IFileStorageService
         if (filePath.StartsWith("http://") || filePath.StartsWith("https://"))
             return filePath;
 
+        // Normalizar la ruta (remover barras iniciales duplicadas)
+        var normalizedPath = filePath.Replace("\\", "/").TrimStart('/');
+
         // Si es una ruta de assets (logo, favicon, etc.), retornarla como relativa
         // El frontend servirá estos archivos desde /assets/
-        if (filePath.StartsWith("assets/") || filePath.StartsWith("/assets/"))
+        if (normalizedPath.StartsWith("assets/"))
         {
-            var normalizedPath = filePath.Replace("\\", "/").TrimStart('/');
             return normalizedPath; // Retornar como ruta relativa para que Nginx la sirva
         }
 
         // Para archivos subidos (uploads/), construir URL absoluta
-        var normalizedPath = filePath.Replace("\\", "/").TrimStart('/');
-        
         // Intentar obtener la URL base del contexto HTTP actual si está disponible
         string baseUrl = _baseUrl;
         if (_httpContextAccessor?.HttpContext != null)

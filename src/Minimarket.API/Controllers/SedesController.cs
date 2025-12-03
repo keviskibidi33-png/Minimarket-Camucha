@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Minimarket.Application.Features.Sedes.Commands;
 using Minimarket.Application.Features.Sedes.Queries;
+using Minimarket.Application.Features.Sedes.DTOs;
 using System;
 
 namespace Minimarket.API.Controllers;
@@ -36,7 +37,7 @@ public class SedesController : ControllerBase
             }
 
             // Si result.Data es null, devolver lista vacía en lugar de null
-            var sedes = result.Data ?? Enumerable.Empty<SedeDto>();
+            var sedes = result.Data ?? Array.Empty<SedeDto>();
             return Ok(sedes);
         }
         catch (Exception ex)

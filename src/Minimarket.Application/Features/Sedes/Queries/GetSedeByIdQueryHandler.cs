@@ -57,7 +57,7 @@ public class GetSedeByIdQueryHandler : IRequestHandler<GetSedeByIdQuery, Result<
                 GoogleMapsUrl = sede.GoogleMapsUrl
             };
         }
-        catch (Exception ex)
+        catch
         {
             // Si hay error al mapear, retornar un DTO básico
             return new SedeDto

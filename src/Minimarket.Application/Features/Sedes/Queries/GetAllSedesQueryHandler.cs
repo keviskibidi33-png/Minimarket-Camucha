@@ -24,11 +24,12 @@ public class GetAllSedesQueryHandler : IRequestHandler<GetAllSedesQuery, Result<
             _logger.LogInformation("Obteniendo todas las sedes. SoloActivas: {SoloActivas}", request.SoloActivas);
 
             var sedes = await _unitOfWork.Sedes.GetAllAsync(cancellationToken);
-            _logger.LogInformation("Se encontraron {Count} sedes en la base de datos", sedes?.Count() ?? 0);
+            var sedesList = sedes?.ToList() ?? new List<Domain.Entities.Sede>();
+            _logger.LogInformation("Se encontraron {Count} sedes en la base de datos", sedesList.Count);
 
             var filtered = request.SoloActivas.HasValue && request.SoloActivas.Value
-                ? sedes.Where(s => s.Estado)
-                : sedes;
+                ? sedesList.Where(s => s.Estado)
+                : sedesList;
 
             // Mapear sedes con manejo de errores individual para cada una
             var result = new List<SedeDto>();
@@ -80,7 +81,7 @@ public class GetAllSedesQueryHandler : IRequestHandler<GetAllSedesQuery, Result<
                 GoogleMapsUrl = sede.GoogleMapsUrl
             };
         }
-        catch (Exception ex)
+        catch
         {
             // Si hay error al mapear una sede, retornar un DTO básico
             return new SedeDto

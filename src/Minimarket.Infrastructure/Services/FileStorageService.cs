@@ -131,7 +131,23 @@ public class FileStorageService : IFileStorageService
         if (_httpContextAccessor?.HttpContext != null)
         {
             var request = _httpContextAccessor.HttpContext.Request;
-            baseUrl = $"{request.Scheme}://{request.Host}";
+            // Asegurar que siempre use HTTPS en producción
+            var scheme = request.Scheme;
+            // Si estamos en producción y el request viene por HTTP, forzar HTTPS
+            if (request.Host.Host.Contains("edvio.app") || request.Host.Host.Contains("minimarket"))
+            {
+                scheme = "https";
+            }
+            baseUrl = $"{scheme}://{request.Host}";
+        }
+        else
+        {
+            // Si no hay contexto HTTP, usar BaseUrl de configuración
+            // Asegurar HTTPS si la URL contiene dominios de producción
+            if (baseUrl.Contains("edvio.app") || baseUrl.Contains("minimarket"))
+            {
+                baseUrl = baseUrl.Replace("http://", "https://");
+            }
         }
         
         // Construir URL absoluta para archivos subidos

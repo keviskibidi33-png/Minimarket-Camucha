@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Sedes.DTOs;
 using Minimarket.Domain.Entities;
@@ -9,10 +10,12 @@ namespace Minimarket.Application.Features.Sedes.Commands;
 public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Result<SedeDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CreateSedeCommandHandler> _logger;
 
-    public CreateSedeCommandHandler(IUnitOfWork unitOfWork)
+    public CreateSedeCommandHandler(IUnitOfWork unitOfWork, ILogger<CreateSedeCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<SedeDto>> Handle(CreateSedeCommand request, CancellationToken cancellationToken)
@@ -21,8 +24,12 @@ public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Resul
         {
             if (request.Sede == null)
             {
+                _logger.LogWarning("CreateSedeCommand.Sede es null");
                 return Result<SedeDto>.Failure("Los datos de la sede son requeridos");
             }
+
+            _logger.LogInformation("Creando sede: Nombre={Nombre}, Direccion={Direccion}, Ciudad={Ciudad}, LogoUrl={LogoUrl}", 
+                request.Sede.Nombre, request.Sede.Direccion, request.Sede.Ciudad, request.Sede.LogoUrl ?? "null");
 
             var sede = new Sede
             {
@@ -33,7 +40,7 @@ public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Resul
                 Latitud = request.Sede.Latitud,
                 Longitud = request.Sede.Longitud,
                 Telefono = request.Sede.Telefono,
-                LogoUrl = request.Sede.LogoUrl,
+                LogoUrl = request.Sede.LogoUrl, // LogoUrl es opcional, puede ser null
                 Estado = request.Sede.Estado,
                 GoogleMapsUrl = request.Sede.GoogleMapsUrl
             };
@@ -43,11 +50,14 @@ public class CreateSedeCommandHandler : IRequestHandler<CreateSedeCommand, Resul
             await _unitOfWork.Sedes.AddAsync(sede, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            _logger.LogInformation("Sede creada exitosamente: Id={Id}, Nombre={Nombre}", sede.Id, sede.Nombre);
+
             var dto = MapToDto(sede);
             return Result<SedeDto>.Success(dto);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Excepción al crear sede");
             return Result<SedeDto>.Failure($"Error al crear la sede: {ex.Message}");
         }
     }

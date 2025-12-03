@@ -175,28 +175,36 @@
               <!-- Selección de Categorías o Productos -->
               @if (aplicarA() === 'categorias') {
                 <div class="mb-4 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg p-4">
-                  @for (category of categories(); track category.id) {
-                    <label class="flex items-center gap-2 mb-2">
-                      <input
-                        type="checkbox"
-                        [checked]="categoriasIds().includes(category.id)"
-                        (change)="toggleCategoria(category.id)"
-                        class="w-4 h-4 text-primary-admin">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ category.name }}</span>
-                    </label>
+                  @if (categories().length === 0) {
+                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No hay categorías disponibles</p>
+                  } @else {
+                    @for (category of categories(); track category.id) {
+                      <label class="flex items-center gap-2 mb-2">
+                        <input
+                          type="checkbox"
+                          [checked]="categoriasIds().includes(category.id)"
+                          (change)="toggleCategoria(category.id)"
+                          class="w-4 h-4 text-primary-admin">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ category.name }}</span>
+                      </label>
+                    }
                   }
                 </div>
               } @else {
                 <div class="mb-4 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg p-4">
-                  @for (product of products(); track product.id) {
-                    <label class="flex items-center gap-2 mb-2">
-                      <input
-                        type="checkbox"
-                        [checked]="productosIds().includes(product.id)"
-                        (change)="toggleProducto(product.id)"
-                        class="w-4 h-4 text-primary-admin">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ product.name }}</span>
-                    </label>
+                  @if (products().length === 0) {
+                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No hay productos disponibles</p>
+                  } @else {
+                    @for (product of products(); track product.id) {
+                      <label class="flex items-center gap-2 mb-2">
+                        <input
+                          type="checkbox"
+                          [checked]="productosIds().includes(product.id)"
+                          (change)="toggleProducto(product.id)"
+                          class="w-4 h-4 text-primary-admin">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ product.name }}</span>
+                      </label>
+                    }
                   }
                 </div>
               }

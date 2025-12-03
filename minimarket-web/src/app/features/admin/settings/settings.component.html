@@ -324,17 +324,39 @@
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     QR Code de Yape/Plin
                   </label>
-                  <div class="flex gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      (change)="onYapeQRSelected($event)"
-                      class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
-                    @if (isUploadingYapeQR()) {
-                      <span class="material-symbols-outlined animate-spin text-primary-admin">refresh</span>
-                    }
+                  
+                  <!-- Opción 1: Subir archivo -->
+                  <div class="mb-3">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Subir imagen desde PC
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        (change)="onYapeQRSelected($event)"
+                        class="flex-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-admin file:text-white hover:file:bg-primary-admin/90">
+                      @if (isUploadingYapeQR()) {
+                        <span class="material-symbols-outlined animate-spin text-primary-admin">refresh</span>
+                      }
+                    </div>
                   </div>
-                  @if (yapeQRUrl()) {
+                  
+                  <!-- Opción 2: Ingresar URL -->
+                  <div class="mb-3">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      O ingrese una URL directamente
+                    </label>
+                    <input
+                      type="url"
+                      [value]="yapeQRUrl()"
+                      (input)="yapeQRUrl.set($any($event.target).value)"
+                      placeholder="https://ejemplo.com/qr-yape.jpg"
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  </div>
+                  
+                  <!-- Preview -->
+                  @if (yapeQRUrl() && yapeQRUrl().trim()) {
                     <div class="mt-2">
                       <img [src]="yapeQRUrl()" 
                            alt="Yape/Plin QR" 

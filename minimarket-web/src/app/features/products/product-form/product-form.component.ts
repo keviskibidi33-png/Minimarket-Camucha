@@ -184,16 +184,22 @@ export class ProductFormComponent implements OnInit {
     } else {
       // Crear payload limpio solo con los campos del CreateProductDto
       // No incluir campos como isActive, id, createdAt, etc.
+      // Conversiones seguras de tipos
+      const purchasePrice = parseFloat(String(formValue.purchasePrice || 0));
+      const salePrice = parseFloat(String(formValue.salePrice || 0));
+      const stock = parseInt(String(formValue.stock || 0), 10);
+      const minimumStock = parseInt(String(formValue.minimumStock || 0), 10);
+      
       const createDto: CreateProductDto = {
         code: String(formValue.code || '').trim(),
         name: String(formValue.name || '').trim(),
         description: String(formValue.description || '').trim(),
-        purchasePrice: Number(formValue.purchasePrice) || 0,
-        salePrice: Number(formValue.salePrice) || 0,
-        stock: Number(formValue.stock) || 0,
-        minimumStock: Number(formValue.minimumStock) || 0,
+        purchasePrice: isNaN(purchasePrice) ? 0 : purchasePrice,
+        salePrice: isNaN(salePrice) ? 0 : salePrice,
+        stock: isNaN(stock) ? 0 : stock,
+        minimumStock: isNaN(minimumStock) ? 0 : minimumStock,
         categoryId: String(formValue.categoryId || '').trim(),
-        imageUrl: formValue.imageUrl && !formValue.imageUrl.startsWith('data:') 
+        imageUrl: formValue.imageUrl && !formValue.imageUrl.startsWith('data:') && formValue.imageUrl.trim()
           ? String(formValue.imageUrl).trim() 
           : undefined,
         expirationDate: formValue.expirationDate 

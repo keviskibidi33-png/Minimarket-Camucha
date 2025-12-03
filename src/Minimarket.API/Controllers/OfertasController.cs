@@ -63,8 +63,10 @@ public class OfertasController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> Create([FromBody] CreateOfertaCommand command)
+    public async Task<IActionResult> Create([FromBody] CreateOfertaDto ofertaDto)
     {
+        // Crear el comando desde el DTO recibido
+        var command = new CreateOfertaCommand { Oferta = ofertaDto };
         var result = await _mediator.Send(command);
 
         if (!result.Succeeded)
@@ -77,9 +79,10 @@ public class OfertasController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateOfertaCommand command)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateOfertaDto ofertaDto)
     {
-        command.Id = id;
+        // Crear el comando desde el DTO recibido
+        var command = new UpdateOfertaCommand { Id = id, Oferta = ofertaDto };
         var result = await _mediator.Send(command);
 
         if (!result.Succeeded)

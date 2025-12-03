@@ -146,16 +146,40 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    (change)="onLogoUpload($event)"
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 mb-2">
-                  @if (logoUrl()) {
+                  
+                  <!-- Opción 1: Subir archivo -->
+                  <div class="mb-3">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Subir imagen desde PC
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      (change)="onLogoUpload($event)"
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  </div>
+                  
+                  <!-- Opción 2: Ingresar URL -->
+                  <div class="mb-3">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      O ingrese una URL directamente
+                    </label>
+                    <input
+                      type="url"
+                      [value]="logoUrl()"
+                      (input)="logoUrl.set($any($event.target).value)"
+                      placeholder="https://ejemplo.com/logo-sede.jpg"
+                      class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  </div>
+                  
+                  <!-- Preview -->
+                  @if (logoUrl() && logoUrl().trim()) {
                     <div class="mt-2">
                       <img [src]="logoUrl()" 
                            alt="Preview logo" 
-                           class="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                           class="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+                           (error)="onImageError($event)"
+                           (load)="onImageLoad($event)">
                     </div>
                   }
                 </div>

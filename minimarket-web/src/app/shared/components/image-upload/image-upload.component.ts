@@ -41,10 +41,10 @@ export class ImageUploadComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       
-      // Validar tamaño (5MB máximo)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      // Validar tamaño (10MB máximo - debe coincidir con el backend)
+      const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+        this.toastService.error('El archivo excede el tamaño máximo de 10MB');
         return;
       }
 

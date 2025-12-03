@@ -69,11 +69,13 @@ export class OfertasService {
   }
 
   create(oferta: CreateOferta): Observable<Oferta> {
-    return this.http.post<Oferta>(this.apiUrl, { oferta });
+    // El backend ahora acepta directamente CreateOfertaDto
+    return this.http.post<Oferta>(this.apiUrl, oferta);
   }
 
   update(id: string, oferta: UpdateOferta): Observable<Oferta> {
-    return this.http.put<Oferta>(`${this.apiUrl}/${id}`, { oferta });
+    // El backend ahora acepta directamente UpdateOfertaDto
+    return this.http.put<Oferta>(`${this.apiUrl}/${id}`, oferta);
   }
 
   delete(id: string): Observable<void> {

@@ -37,13 +37,13 @@ public class FilesController : ControllerBase
                 return BadRequest(new { error = "No se proporcionó ningún archivo" });
             }
 
-            // Validar tamaño (5MB máximo)
-            const long maxFileSize = 5 * 1024 * 1024; // 5MB
+            // Validar tamaño (10MB máximo - debe coincidir con RequestFormLimits y RequestSizeLimit)
+            const long maxFileSize = 10 * 1024 * 1024; // 10MB
             if (file.Length > maxFileSize)
             {
                 _logger.LogWarning("Archivo excede tamaño máximo. Tamaño: {Size} bytes, Máximo: {MaxSize} bytes", 
                     file.Length, maxFileSize);
-                return BadRequest(new { error = "El archivo excede el tamaño máximo de 5MB" });
+                return BadRequest(new { error = "El archivo excede el tamaño máximo de 10MB" });
             }
 
             // Validar tipo de archivo

@@ -54,12 +54,15 @@ export class OfertasComponent implements OnInit {
     this.isLoading.set(true);
     this.ofertasService.getAll().subscribe({
       next: (ofertas) => {
-        this.ofertas.set(ofertas);
+        // Asegurar que siempre sea un array válido
+        const ofertasArray = Array.isArray(ofertas) ? ofertas : [];
+        this.ofertas.set(ofertasArray);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading ofertas:', error);
         this.toastService.error('Error al cargar ofertas');
+        this.ofertas.set([]); // Establecer array vacío en caso de error
         this.isLoading.set(false);
       }
     });
@@ -68,10 +71,13 @@ export class OfertasComponent implements OnInit {
   loadCategories(): void {
     this.categoriesService.getAllWithoutPagination().subscribe({
       next: (categories) => {
-        this.categories.set(categories);
+        // Asegurar que siempre sea un array válido
+        const categoriesArray = Array.isArray(categories) ? categories : [];
+        this.categories.set(categoriesArray);
       },
       error: (error) => {
         console.error('Error loading categories:', error);
+        this.categories.set([]); // Establecer array vacío en caso de error
       }
     });
   }
@@ -79,11 +85,13 @@ export class OfertasComponent implements OnInit {
   loadProducts(): void {
     this.productsService.getAll({ pageSize: 1000 }).subscribe({
       next: (result) => {
-        const products = result.items || (Array.isArray(result) ? result : []);
+        // Asegurar que siempre sea un array válido
+        const products = Array.isArray(result?.items) ? result.items : (Array.isArray(result) ? result : []);
         this.products.set(products);
       },
       error: (error) => {
         console.error('Error loading products:', error);
+        this.products.set([]); // Establecer array vacío en caso de error
       }
     });
   }
@@ -208,17 +216,25 @@ export class OfertasComponent implements OnInit {
       return;
     }
 
+    // Asegurar que los arrays sean válidos y convertir strings a arrays
+    const categoriasIdsArray = this.aplicarA() === 'categorias' 
+      ? (Array.isArray(this.categoriasIds()) ? this.categoriasIds().filter(id => id && id.trim()) : [])
+      : [];
+    const productosIdsArray = this.aplicarA() === 'productos'
+      ? (Array.isArray(this.productosIds()) ? this.productosIds().filter(id => id && id.trim()) : [])
+      : [];
+
     const ofertaData: CreateOferta | UpdateOferta = {
-      nombre: this.nombre(),
-      descripcion: this.descripcion() || undefined,
+      nombre: this.nombre().trim(),
+      descripcion: this.descripcion()?.trim() || undefined,
       descuentoTipo: this.descuentoTipo(),
-      descuentoValor: this.descuentoValor(),
-      categoriasIds: this.aplicarA() === 'categorias' ? this.categoriasIds() : [],
-      productosIds: this.aplicarA() === 'productos' ? this.productosIds() : [],
+      descuentoValor: Number(this.descuentoValor()) || 0,
+      categoriasIds: categoriasIdsArray,
+      productosIds: productosIdsArray,
       fechaInicio: new Date(this.fechaInicio()).toISOString(),
       fechaFin: new Date(this.fechaFin()).toISOString(),
       activa: this.activa(),
-      orden: this.orden(),
+      orden: Number(this.orden()) || 0,
       imagenUrl: this.imagenUrl().trim() || undefined
     };
 

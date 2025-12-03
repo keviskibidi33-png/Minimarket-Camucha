@@ -25,21 +25,25 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
         }
 
         // Validar que existan categorías/productos si se especifican
-        if (request.Oferta.CategoriasIds.Any())
+        // Asegurar que las listas no sean null
+        var categoriasIds = request.Oferta.CategoriasIds ?? new List<Guid>();
+        var productosIds = request.Oferta.ProductosIds ?? new List<Guid>();
+        
+        if (categoriasIds.Any())
         {
             var categorias = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
-            var categoriasExistentes = categorias.Where(c => request.Oferta.CategoriasIds.Contains(c.Id)).ToList();
-            if (categoriasExistentes.Count != request.Oferta.CategoriasIds.Count)
+            var categoriasExistentes = categorias.Where(c => categoriasIds.Contains(c.Id)).ToList();
+            if (categoriasExistentes.Count != categoriasIds.Count)
             {
                 throw new BusinessRuleViolationException("Una o más categorías especificadas no existen");
             }
         }
 
-        if (request.Oferta.ProductosIds.Any())
+        if (productosIds.Any())
         {
             var productos = await _unitOfWork.Products.GetAllAsync(cancellationToken);
-            var productosExistentes = productos.Where(p => request.Oferta.ProductosIds.Contains(p.Id)).ToList();
-            if (productosExistentes.Count != request.Oferta.ProductosIds.Count)
+            var productosExistentes = productos.Where(p => productosIds.Contains(p.Id)).ToList();
+            if (productosExistentes.Count != productosIds.Count)
             {
                 throw new BusinessRuleViolationException("Uno o más productos especificados no existen");
             }
@@ -58,8 +62,8 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
             ImagenUrl = request.Oferta.ImagenUrl
         };
 
-        oferta.SetCategoriasIds(request.Oferta.CategoriasIds);
-        oferta.SetProductosIds(request.Oferta.ProductosIds);
+        oferta.SetCategoriasIds(categoriasIds);
+        oferta.SetProductosIds(productosIds);
 
         await _unitOfWork.Ofertas.AddAsync(oferta, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

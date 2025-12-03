@@ -503,9 +503,9 @@ export class SettingsComponent implements OnInit {
       return;
     }
     
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB (debe coincidir con el backend)
     if (file.size > maxSize) {
-      this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+      this.toastService.error('El archivo excede el tamaño máximo de 10MB');
       return;
     }
     
@@ -556,9 +556,9 @@ export class SettingsComponent implements OnInit {
       return;
     }
     
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB (debe coincidir con el backend)
     if (file.size > maxSize) {
-      this.toastService.error('El archivo excede el tamaño máximo de 5MB');
+      this.toastService.error('El archivo excede el tamaño máximo de 10MB');
       return;
     }
     

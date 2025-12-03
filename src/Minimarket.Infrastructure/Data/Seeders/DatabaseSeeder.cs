@@ -39,22 +39,49 @@ public static class DatabaseSeeder
     private static async Task SeedUsersAsync(UserManager<IdentityUser<Guid>> userManager)
     {
         // Admin User
-        if (await userManager.FindByNameAsync("admin") == null)
+        var admin = await userManager.FindByNameAsync("admin") ?? await userManager.FindByEmailAsync("admin@minimarketcamucha.com");
+        if (admin == null)
         {
-            var admin = new IdentityUser<Guid>
+            admin = new IdentityUser<Guid>
             {
                 UserName = "admin",
                 Email = "admin@minimarketcamucha.com",
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                LockoutEnabled = false // Deshabilitar bloqueo para admin inicial en producción
             };
-            await userManager.CreateAsync(admin, "Admin123!");
-            await userManager.AddToRoleAsync(admin, "Administrador");
+            var createResult = await userManager.CreateAsync(admin, "Admin123!");
+            if (createResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin, "Administrador");
+            }
+        }
+        else
+        {
+            // Asegurar que el admin existente tenga EmailConfirmed y no esté bloqueado
+            if (!admin.EmailConfirmed)
+            {
+                admin.EmailConfirmed = true;
+                await userManager.UpdateAsync(admin);
+            }
+            if (admin.LockoutEnabled && admin.LockoutEnd.HasValue && admin.LockoutEnd.Value > DateTimeOffset.UtcNow)
+            {
+                // Desbloquear admin si está bloqueado
+                admin.LockoutEnd = null;
+                await userManager.UpdateAsync(admin);
+            }
+            // Asegurar que tenga el rol Administrador
+            var roles = await userManager.GetRolesAsync(admin);
+            if (!roles.Contains("Administrador"))
+            {
+                await userManager.AddToRoleAsync(admin, "Administrador");
+            }
         }
 
         // Cajero User
-        if (await userManager.FindByNameAsync("cajero") == null)
+        var cajero = await userManager.FindByNameAsync("cajero") ?? await userManager.FindByEmailAsync("cajero@minimarketcamucha.com");
+        if (cajero == null)
         {
-            var cajero = new IdentityUser<Guid>
+            cajero = new IdentityUser<Guid>
             {
                 UserName = "cajero",
                 Email = "cajero@minimarketcamucha.com",
@@ -65,9 +92,10 @@ public static class DatabaseSeeder
         }
 
         // Almacenero User
-        if (await userManager.FindByNameAsync("almacenero") == null)
+        var almacenero = await userManager.FindByNameAsync("almacenero") ?? await userManager.FindByEmailAsync("almacenero@minimarketcamucha.com");
+        if (almacenero == null)
         {
-            var almacenero = new IdentityUser<Guid>
+            almacenero = new IdentityUser<Guid>
             {
                 UserName = "almacenero",
                 Email = "almacenero@minimarketcamucha.com",

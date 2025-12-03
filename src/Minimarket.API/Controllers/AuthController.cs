@@ -50,6 +50,30 @@ public class AuthController : ControllerBase
 
         if (!result.Succeeded)
         {
+            // Determinar código HTTP apropiado basado en el tipo de error
+            var errorMessage = result.Error ?? string.Join(", ", result.Errors);
+            
+            // 401 Unauthorized para credenciales incorrectas o usuario no encontrado
+            if (errorMessage.Contains("No existe") || errorMessage.Contains("contraseña es incorrecta"))
+            {
+                return Unauthorized(new { 
+                    succeeded = false,
+                    errors = result.Errors,
+                    message = result.Error
+                });
+            }
+            
+            // 403 Forbidden para usuarios bloqueados o no permitidos
+            if (errorMessage.Contains("bloqueada") || errorMessage.Contains("no se le permite"))
+            {
+                return StatusCode(403, new { 
+                    succeeded = false,
+                    errors = result.Errors,
+                    message = result.Error
+                });
+            }
+
+            // 400 BadRequest para otros errores de validación
             return BadRequest(new { 
                 succeeded = false,
                 errors = result.Errors,

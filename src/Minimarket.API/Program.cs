@@ -11,6 +11,7 @@ using Minimarket.Infrastructure;
 using Minimarket.Infrastructure.Data;
 using Serilog;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -190,18 +191,31 @@ builder.Services.AddAuthentication(options =>
     }
 });
 
-// CORS
+// CORS - Configuración para producción y desarrollo
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
     ?? new[] { "http://localhost:4200" };
 
+// Agregar orígenes de producción si no están en la configuración
+var productionOrigins = new[]
+{
+    "https://minimarket.edvio.app",
+    "https://api-minimarket.edvio.app"
+};
+
+var allOrigins = allowedOrigins
+    .Concat(productionOrigins)
+    .Distinct()
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularApp", policy =>
+    options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
+        policy.WithOrigins(allOrigins)
              .AllowAnyHeader()
              .AllowAnyMethod()
-             .AllowCredentials();
+             .AllowCredentials()
+             .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight requests
     });
 });
 
@@ -256,7 +270,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
-app.UseCors("AllowAngularApp");
+app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();

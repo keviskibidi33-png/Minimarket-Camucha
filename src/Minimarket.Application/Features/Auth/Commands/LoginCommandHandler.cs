@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Auth.Commands;
@@ -19,17 +20,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly SignInManager<IdentityUser<Guid>> _signInManager;
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         UserManager<IdentityUser<Guid>> userManager,
         SignInManager<IdentityUser<Guid>> signInManager,
         IConfiguration configuration,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<LoginCommandHandler> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -50,12 +54,36 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
                 var errorMessage = isEmail 
                     ? "No existe una cuenta asociada a este correo electrónico" 
                     : "No existe una cuenta con este usuario o correo";
+                _logger.LogWarning("Intento de login con usuario inexistente: {Username}", request.Username);
                 return Result<LoginResponse>.Failure(errorMessage);
             }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+            // Verificar si el usuario está bloqueado
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                _logger.LogWarning("Intento de login con usuario bloqueado: {UserId}", user.Id);
+                return Result<LoginResponse>.Failure("Su cuenta ha sido bloqueada temporalmente. Por favor, intente más tarde.");
+            }
+
+            // Verificar contraseña
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+            
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("Usuario bloqueado por múltiples intentos fallidos: {UserId}", user.Id);
+                return Result<LoginResponse>.Failure("Su cuenta ha sido bloqueada temporalmente debido a múltiples intentos fallidos. Por favor, intente más tarde.");
+            }
+
+            if (result.IsNotAllowed)
+            {
+                _logger.LogWarning("Login no permitido para usuario: {UserId}, EmailConfirmed: {EmailConfirmed}", 
+                    user.Id, user.EmailConfirmed);
+                return Result<LoginResponse>.Failure("No se le permite iniciar sesión. Por favor, verifique su correo electrónico.");
+            }
+
             if (!result.Succeeded)
             {
+                _logger.LogWarning("Contraseña incorrecta para usuario: {UserId}", user.Id);
                 return Result<LoginResponse>.Failure("La contraseña es incorrecta");
             }
 
@@ -70,6 +98,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
                 up => up.UserId == user.Id, cancellationToken);
             var profileCompleted = profile?.ProfileCompleted ?? false;
 
+            _logger.LogInformation("Login exitoso para usuario: {UserId}, Email: {Email}, Roles: {Roles}", 
+                user.Id, user.Email, string.Join(", ", roles));
+
             return Result<LoginResponse>.Success(new LoginResponse
             {
                 Token = token,
@@ -82,9 +113,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
                 ProfileCompleted = profileCompleted
             });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log de error para debugging
+            _logger.LogError(ex, "Error inesperado al procesar login para usuario: {Username}", request.Username);
             return Result<LoginResponse>.Failure("Ocurrió un error al procesar el inicio de sesión. Por favor, intente nuevamente.");
         }
     }

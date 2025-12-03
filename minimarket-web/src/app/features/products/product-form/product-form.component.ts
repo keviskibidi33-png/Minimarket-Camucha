@@ -162,27 +162,65 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading.set(false);
+          console.error('Error updating product:', error);
+          
+          // Manejar diferentes tipos de errores
           let errorMsg = 'Error al actualizar el producto';
-          if (error.error?.errors) {
-            if (Array.isArray(error.error.errors) && error.error.errors.length > 0) {
-              errorMsg = error.error.errors[0];
-            } else if (typeof error.error.errors === 'string') {
-              errorMsg = error.error.errors;
-            } else if (error.error.errors.message) {
-              errorMsg = error.error.errors.message;
+          if (error.error) {
+            if (error.error.errors && Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+              errorMsg = error.error.errors[0].message || error.error.errors[0];
+            } else if (error.error.message) {
+              errorMsg = error.error.message;
+            } else if (error.error.error) {
+              errorMsg = error.error.error;
             }
-          } else if (error.error?.message) {
-            errorMsg = error.error.message;
-          } else if (error.error?.error) {
-            errorMsg = error.error.error;
+          } else if (error.message) {
+            errorMsg = error.message;
           }
+          
           this.errorMessage.set(errorMsg);
         }
       });
     } else {
+      // Crear payload limpio solo con los campos del CreateProductDto
+      // No incluir campos como isActive, id, createdAt, etc.
       const createDto: CreateProductDto = {
-        ...formValue
+        code: String(formValue.code || '').trim(),
+        name: String(formValue.name || '').trim(),
+        description: String(formValue.description || '').trim(),
+        purchasePrice: Number(formValue.purchasePrice) || 0,
+        salePrice: Number(formValue.salePrice) || 0,
+        stock: Number(formValue.stock) || 0,
+        minimumStock: Number(formValue.minimumStock) || 0,
+        categoryId: String(formValue.categoryId || '').trim(),
+        imageUrl: formValue.imageUrl && !formValue.imageUrl.startsWith('data:') 
+          ? String(formValue.imageUrl).trim() 
+          : undefined,
+        expirationDate: formValue.expirationDate 
+          ? new Date(formValue.expirationDate).toISOString() 
+          : undefined
       };
+
+      // Validar que los campos requeridos estén presentes
+      if (!createDto.code || !createDto.name || !createDto.categoryId) {
+        this.errorMessage.set('Por favor complete todos los campos requeridos');
+        this.isLoading.set(false);
+        return;
+      }
+
+      // Validar que los precios sean válidos
+      if (createDto.purchasePrice <= 0 || createDto.salePrice <= 0) {
+        this.errorMessage.set('Los precios deben ser mayores a 0');
+        this.isLoading.set(false);
+        return;
+      }
+
+      // Validar que el precio de venta sea mayor al de compra
+      if (createDto.salePrice <= createDto.purchasePrice) {
+        this.errorMessage.set('El precio de venta debe ser mayor al precio de compra');
+        this.isLoading.set(false);
+        return;
+      }
 
       this.productsService.create(createDto).subscribe({
         next: () => {
@@ -190,20 +228,22 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading.set(false);
+          console.error('Error creating product:', error);
+          
+          // Manejar diferentes tipos de errores
           let errorMsg = 'Error al crear el producto';
-          if (error.error?.errors) {
-            if (Array.isArray(error.error.errors) && error.error.errors.length > 0) {
-              errorMsg = error.error.errors[0];
-            } else if (typeof error.error.errors === 'string') {
-              errorMsg = error.error.errors;
-            } else if (error.error.errors.message) {
-              errorMsg = error.error.errors.message;
+          if (error.error) {
+            if (error.error.errors && Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+              errorMsg = error.error.errors[0].message || error.error.errors[0];
+            } else if (error.error.message) {
+              errorMsg = error.error.message;
+            } else if (error.error.error) {
+              errorMsg = error.error.error;
             }
-          } else if (error.error?.message) {
-            errorMsg = error.error.message;
-          } else if (error.error?.error) {
-            errorMsg = error.error.error;
+          } else if (error.message) {
+            errorMsg = error.message;
           }
+          
           this.errorMessage.set(errorMsg);
         }
       });

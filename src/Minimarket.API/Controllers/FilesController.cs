@@ -20,6 +20,8 @@ public class FilesController : ControllerBase
 
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
+    [RequestFormLimits(MultipartBodyLengthLimit = 10 * 1024 * 1024)] // 10MB
+    [RequestSizeLimit(10 * 1024 * 1024)] // 10MB
     [Authorize(Roles = "Administrador,Almacenero")]
     public async Task<IActionResult> Upload(IFormFile file, [FromQuery] string folder = "products")
     {

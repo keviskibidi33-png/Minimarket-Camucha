@@ -27,40 +27,47 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, R
         // Aplicar filtros en memoria
         var filteredProducts = allProducts.AsEnumerable();
 
+        // Aplicar filtro de búsqueda (case-insensitive)
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchLower = request.SearchTerm.ToLower();
+            var searchLower = request.SearchTerm.Trim().ToLowerInvariant();
             filteredProducts = filteredProducts.Where(p => 
-                p.Name.ToLower().Contains(searchLower) || 
-                p.Code.ToLower().Contains(searchLower) ||
-                (p.Description != null && p.Description.ToLower().Contains(searchLower)));
+                (p.Name != null && p.Name.ToLowerInvariant().Contains(searchLower)) || 
+                (p.Code != null && p.Code.ToLowerInvariant().Contains(searchLower)) ||
+                (p.Description != null && p.Description.ToLowerInvariant().Contains(searchLower)));
         }
 
+        // Aplicar filtro de categoría
         if (request.CategoryId.HasValue)
         {
             filteredProducts = filteredProducts.Where(p => p.CategoryId == request.CategoryId.Value);
         }
 
+        // Aplicar filtro de estado activo (por defecto, si no se especifica, mostrar todos)
         if (request.IsActive.HasValue)
         {
             filteredProducts = filteredProducts.Where(p => p.IsActive == request.IsActive.Value);
         }
 
-        // Ordenar
-        var sortedProducts = filteredProducts.OrderBy(p => p.Name).ToList();
+        // Ordenar por nombre
+        var sortedProducts = filteredProducts.OrderBy(p => p.Name ?? string.Empty).ToList();
 
         // Contar total antes de paginación
         var totalCount = sortedProducts.Count;
 
+        // Validar página
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Max(1, Math.Min(100, request.PageSize)); // Limitar a máximo 100 items por página
+
         // Aplicar paginación
         var products = sortedProducts
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(p => new ProductDto
             {
                 Id = p.Id,
-                Code = p.Code,
-                Name = p.Name,
+                Code = p.Code ?? string.Empty,
+                Name = p.Name ?? string.Empty,
                 Description = p.Description,
                 PurchasePrice = p.PurchasePrice,
                 SalePrice = p.SalePrice,
@@ -78,7 +85,7 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, R
             })
             .ToList();
 
-        var pagedResult = PagedResult<ProductDto>.Create(products, totalCount, request.Page, request.PageSize);
+        var pagedResult = PagedResult<ProductDto>.Create(products, totalCount, page, pageSize);
 
         return Result<PagedResult<ProductDto>>.Success(pagedResult);
     }

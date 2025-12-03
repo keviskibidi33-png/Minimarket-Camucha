@@ -49,8 +49,10 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateProductCommand command)
+    public async Task<IActionResult> Create([FromBody] CreateProductDto productDto)
     {
+        // Crear el comando desde el DTO recibido
+        var command = new CreateProductCommand { Product = productDto };
         var result = await _mediator.Send(command);
 
         if (!result.Succeeded)

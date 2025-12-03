@@ -104,7 +104,8 @@ export class StoreProductsComponent implements OnInit {
       pageSize: 10000 // Obtener todos los productos para calcular el rango
     }).subscribe({
       next: (result) => {
-        const allProducts = result.items || (Array.isArray(result) ? result : []);
+        // Asegurar que siempre sea un array válido
+        const allProducts = Array.isArray(result?.items) ? result.items : (Array.isArray(result) ? result : []);
         
         // Calcular rango de precios disponible de forma inteligente
         if (allProducts.length > 0) {

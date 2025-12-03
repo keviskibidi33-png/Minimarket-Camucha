@@ -97,6 +97,26 @@ export class ProductsService {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Crea un nuevo producto
+   * 
+   * Ejemplo de payload JSON válido:
+   * {
+   *   "code": "PROD-001",
+   *   "name": "Producto Ejemplo",
+   *   "description": "Descripción del producto",
+   *   "purchasePrice": 10.50,
+   *   "salePrice": 15.75,
+   *   "stock": 100,
+   *   "minimumStock": 10,
+   *   "categoryId": "123e4567-e89b-12d3-a456-426614174000",
+   *   "imageUrl": "https://example.com/image.jpg",  // Opcional
+   *   "expirationDate": "2024-12-31T00:00:00Z"     // Opcional
+   * }
+   * 
+   * Campos requeridos: code, name, purchasePrice, salePrice, stock, minimumStock, categoryId
+   * Campos opcionales: description, imageUrl, expirationDate
+   */
   create(product: CreateProductDto): Observable<Product> {
     return this.http.post<Product>(this.apiUrl, product);
   }

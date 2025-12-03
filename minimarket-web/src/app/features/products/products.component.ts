@@ -78,9 +78,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
       categoryId: this.selectedCategory() || undefined
     }).subscribe({
       next: (pagedResult) => {
-        this.products.set(pagedResult.items);
-        this.filteredProducts.set(pagedResult.items);
-        this.totalProducts.set(pagedResult.totalCount);
+        // Asegurar que items siempre sea un array, nunca null o undefined
+        const items = Array.isArray(pagedResult.items) ? pagedResult.items : [];
+        this.products.set(items);
+        this.filteredProducts.set(items);
+        this.totalProducts.set(pagedResult.totalCount || 0);
         this.isLoading.set(false);
       },
       error: (error) => {

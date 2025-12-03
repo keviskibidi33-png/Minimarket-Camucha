@@ -38,12 +38,19 @@ public class FileStorageService : IFileStorageService
         if (!Directory.Exists(_uploadsPath))
         {
             Directory.CreateDirectory(_uploadsPath);
+            _logger.LogInformation("Directorio de uploads creado: {UploadsPath}", _uploadsPath);
         }
 
-        var productsPath = Path.Combine(_uploadsPath, "products");
-        if (!Directory.Exists(productsPath))
+        // Crear subdirectorios comunes
+        var commonFolders = new[] { "products", "sedes", "payment-qr", "banners", "general" };
+        foreach (var folder in commonFolders)
         {
-            Directory.CreateDirectory(productsPath);
+            var folderPath = Path.Combine(_uploadsPath, folder);
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+                _logger.LogInformation("Directorio de carpeta creado: {FolderPath}", folderPath);
+            }
         }
     }
 

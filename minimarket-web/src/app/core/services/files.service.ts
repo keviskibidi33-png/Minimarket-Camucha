@@ -26,9 +26,12 @@ export class FilesService {
       `${this.apiUrl}/upload?folder=${folder}`,
       formData
     ).pipe(
-      map(response => ({
-        url: response.fileUrl
-      }))
+      map(response => {
+        // El backend puede devolver 'fileUrl' o 'url' como alias
+        const url = response.fileUrl || (response as any).url || '';
+        console.log('Archivo subido exitosamente. URL:', url);
+        return { url };
+      })
     );
   }
 }

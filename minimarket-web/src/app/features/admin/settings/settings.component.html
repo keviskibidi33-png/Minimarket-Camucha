@@ -336,7 +336,11 @@
                   </div>
                   @if (yapeQRUrl()) {
                     <div class="mt-2">
-                      <img [src]="yapeQRUrl()" alt="Yape/Plin QR" class="w-32 h-32 border border-gray-300 dark:border-gray-700 rounded-lg object-contain">
+                      <img [src]="yapeQRUrl()" 
+                           alt="Yape/Plin QR" 
+                           class="w-32 h-32 border border-gray-300 dark:border-gray-700 rounded-lg object-contain"
+                           (error)="onImageError($event, 'yape')"
+                           (load)="onImageLoad($event)">
                     </div>
                   }
                   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Se usará el mismo QR para Yape y Plin</p>

@@ -513,15 +513,29 @@ export class SettingsComponent implements OnInit {
     
     this.filesService.uploadFile(file, 'payment-qr').subscribe({
       next: (response) => {
-        this.yapeQRUrl.set(response.url);
-        this.isUploadingYapeQR.set(false);
-        this.toastService.success('QR de Yape subido exitosamente');
+        console.log('QR de Yape subido exitosamente. URL:', response.url);
+        if (response.url) {
+          this.yapeQRUrl.set(response.url);
+          this.isUploadingYapeQR.set(false);
+          this.toastService.success('QR de Yape subido exitosamente');
+        } else {
+          console.error('La respuesta no contiene URL válida:', response);
+          this.isUploadingYapeQR.set(false);
+          this.toastService.error('Error: No se recibió una URL válida del servidor');
+        }
         input.value = '';
       },
       error: (error) => {
         console.error('Error uploading Yape QR:', error);
         this.isUploadingYapeQR.set(false);
-        const errorMessage = error?.error?.error || error?.error?.message || 'Error al subir el QR de Yape';
+        let errorMessage = 'Error al subir el QR de Yape';
+        if (error?.error?.error) {
+          errorMessage = error.error.error;
+        } else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
         this.toastService.error(errorMessage);
         input.value = '';
       }
@@ -552,19 +566,50 @@ export class SettingsComponent implements OnInit {
     
     this.filesService.uploadFile(file, 'payment-qr').subscribe({
       next: (response) => {
-        this.plinQRUrl.set(response.url);
-        this.isUploadingPlinQR.set(false);
-        this.toastService.success('QR de Plin subido exitosamente');
+        console.log('QR de Plin subido exitosamente. URL:', response.url);
+        if (response.url) {
+          this.plinQRUrl.set(response.url);
+          this.isUploadingPlinQR.set(false);
+          this.toastService.success('QR de Plin subido exitosamente');
+        } else {
+          console.error('La respuesta no contiene URL válida:', response);
+          this.isUploadingPlinQR.set(false);
+          this.toastService.error('Error: No se recibió una URL válida del servidor');
+        }
         input.value = '';
       },
       error: (error) => {
         console.error('Error uploading Plin QR:', error);
         this.isUploadingPlinQR.set(false);
-        const errorMessage = error?.error?.error || error?.error?.message || 'Error al subir el QR de Plin';
+        let errorMessage = 'Error al subir el QR de Plin';
+        if (error?.error?.error) {
+          errorMessage = error.error.error;
+        } else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
         this.toastService.error(errorMessage);
         input.value = '';
       }
     });
+  }
+
+  onImageError(event: Event, type: 'yape' | 'plin' = 'yape'): void {
+    const img = event.target as HTMLImageElement | null;
+    if (img) {
+      console.error(`Error al cargar imagen de ${type}. URL:`, img.src);
+      // Ocultar la imagen si falla
+      img.style.display = 'none';
+      this.toastService.error(`Error al cargar la imagen de ${type === 'yape' ? 'Yape' : 'Plin'}. Verifique la URL.`);
+    }
+  }
+
+  onImageLoad(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (img) {
+      console.log('Imagen cargada exitosamente:', img.src);
+    }
   }
 }
 

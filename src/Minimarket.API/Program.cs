@@ -261,13 +261,21 @@ app.UseMiddleware<ResponseLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 
-// Static files para servir imágenes de templates
+// Static files para servir imágenes de templates y uploads
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
-    RequestPath = ""
+    RequestPath = "",
+    OnPrepareResponse = ctx =>
+    {
+        // Permitir CORS para archivos estáticos (imágenes)
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+        // Cache para archivos estáticos
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000");
+    }
 });
 
 app.UseCors("FrontendPolicy");

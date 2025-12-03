@@ -437,12 +437,12 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    // Si es /assets/logo.png, buscar primero en wwwroot local
-                    if (logoUrl.StartsWith("/assets/"))
+                    // Si es assets/logo.png o /assets/logo.png, buscar primero en wwwroot local
+                    var normalizedLogoUrl = logoUrl.Replace("\\", "/").TrimStart('/');
+                    if (normalizedLogoUrl.StartsWith("assets/"))
                     {
                         var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        var localPath = Path.Combine(wwwrootPath, normalizedLogoUrl);
                         
                         if (System.IO.File.Exists(localPath))
                         {
@@ -453,8 +453,7 @@ public class PdfService : IPdfService
                         {
                             // Si no existe localmente, intentar descargar desde el frontend
                             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
-                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoUrl}";
                             _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
                             localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
                         }
@@ -1562,12 +1561,12 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    // Si es /assets/logo.png, buscar primero en wwwroot local
-                    if (logoUrl.StartsWith("/assets/"))
+                    // Si es assets/logo.png o /assets/logo.png, buscar primero en wwwroot local
+                    var normalizedLogoUrl = logoUrl.Replace("\\", "/").TrimStart('/');
+                    if (normalizedLogoUrl.StartsWith("assets/"))
                     {
                         var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        var localPath = Path.Combine(wwwrootPath, normalizedLogoUrl);
                         
                         if (System.IO.File.Exists(localPath))
                         {
@@ -1578,8 +1577,7 @@ public class PdfService : IPdfService
                         {
                             // Si no existe localmente, intentar descargar desde el frontend
                             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
-                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoUrl}";
                             _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
                             localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
                         }
@@ -2029,12 +2027,12 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    // Si es /assets/logo.png, buscar primero en wwwroot local
-                    if (logoUrl.StartsWith("/assets/"))
+                    // Si es assets/logo.png o /assets/logo.png, buscar primero en wwwroot local
+                    var normalizedLogoUrl = logoUrl.Replace("\\", "/").TrimStart('/');
+                    if (normalizedLogoUrl.StartsWith("assets/"))
                     {
                         var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        var localPath = Path.Combine(wwwrootPath, normalizedLogoUrl);
                         
                         if (System.IO.File.Exists(localPath))
                         {
@@ -2045,8 +2043,7 @@ public class PdfService : IPdfService
                         {
                             // Si no existe localmente, intentar descargar desde el frontend
                             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
-                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoUrl}";
                             _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
                             localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
                         }

@@ -46,6 +46,7 @@ public class OfertasController : ControllerBase
         {
             // En caso de excepción no manejada, devolver una lista vacía
             // Esto permite que la aplicación funcione incluso si hay problemas
+            _logger.LogError(ex, "Error inesperado al obtener ofertas");
             return Ok(new List<OfertaDto>());
         }
     }
@@ -142,7 +143,7 @@ public class OfertasController : ControllerBase
 
             if (!result.Succeeded)
             {
-                _logger.LogWarning("Error al crear oferta: {Message}", result.Message);
+                _logger.LogWarning("Error al crear oferta: {Error}", result.Error);
                 return BadRequest(result);
             }
 
@@ -237,7 +238,7 @@ public class OfertasController : ControllerBase
 
             if (!result.Succeeded)
             {
-                _logger.LogWarning("Error al actualizar oferta: {Message}", result.Message);
+                _logger.LogWarning("Error al actualizar oferta: {Error}", result.Error);
                 return BadRequest(result);
             }
 

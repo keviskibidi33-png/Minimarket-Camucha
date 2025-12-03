@@ -241,5 +241,12 @@ export class SedesComponent implements OnInit {
   getHorarioCierra(dia: string): string {
     return this.horarios()[dia]?.cierra || '18:00';
   }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (img) {
+      img.style.display = 'none';
+    }
+  }
 }
 

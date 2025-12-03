@@ -178,5 +178,12 @@ export class StoreHeaderComponent implements OnInit {
     // Cuando se selecciona un producto, navegar a su página de detalle
     this.router.navigate(['/tienda/producto', product.id]);
   }
+
+  onLogoError(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (img) {
+      img.src = 'assets/logo.png';
+    }
+  }
 }
 

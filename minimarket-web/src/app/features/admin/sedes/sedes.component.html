@@ -26,7 +26,7 @@
               <img [src]="sede.logoUrl" 
                    [alt]="sede.nombre" 
                    class="w-full h-32 object-cover rounded-lg mb-4"
-                   (error)="$event.target.style.display='none'">
+                   (error)="onImageError($event)">
             } @else {
               <div class="w-full h-32 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
                 <span class="text-gray-400 text-sm">Sin logo</span>

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Minimarket.Application.Common.Exceptions;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Ofertas.DTOs;
@@ -10,24 +11,39 @@ namespace Minimarket.Application.Features.Ofertas.Commands;
 public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, Result<OfertaDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CreateOfertaCommandHandler> _logger;
 
-    public CreateOfertaCommandHandler(IUnitOfWork unitOfWork)
+    public CreateOfertaCommandHandler(IUnitOfWork unitOfWork, ILogger<CreateOfertaCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<OfertaDto>> Handle(CreateOfertaCommand request, CancellationToken cancellationToken)
     {
-        // Validar fechas
-        if (request.Oferta.FechaInicio >= request.Oferta.FechaFin)
+        try
         {
-            throw new BusinessRuleViolationException("La fecha de inicio debe ser anterior a la fecha de fin");
-        }
+            _logger.LogInformation("Creando oferta. Nombre: {Nombre}, CategoriasIds: {CategoriasCount}, ProductosIds: {ProductosCount}", 
+                request.Oferta.Nombre, 
+                request.Oferta.CategoriasIds?.Count ?? 0,
+                request.Oferta.ProductosIds?.Count ?? 0);
 
-        // Validar que existan categorías/productos si se especifican
-        // Asegurar que las listas no sean null
-        var categoriasIds = request.Oferta.CategoriasIds ?? new List<Guid>();
-        var productosIds = request.Oferta.ProductosIds ?? new List<Guid>();
+            // Validar que el nombre no esté vacío
+            if (string.IsNullOrWhiteSpace(request.Oferta.Nombre))
+            {
+                throw new BusinessRuleViolationException("El nombre de la oferta es requerido");
+            }
+
+            // Validar fechas
+            if (request.Oferta.FechaInicio >= request.Oferta.FechaFin)
+            {
+                throw new BusinessRuleViolationException("La fecha de inicio debe ser anterior a la fecha de fin");
+            }
+
+            // Validar que existan categorías/productos si se especifican
+            // Asegurar que las listas no sean null
+            var categoriasIds = request.Oferta.CategoriasIds ?? new List<Guid>();
+            var productosIds = request.Oferta.ProductosIds ?? new List<Guid>();
         
         if (categoriasIds.Any())
         {
@@ -65,11 +81,24 @@ public class CreateOfertaCommandHandler : IRequestHandler<CreateOfertaCommand, R
         oferta.SetCategoriasIds(categoriasIds);
         oferta.SetProductosIds(productosIds);
 
-        await _unitOfWork.Ofertas.AddAsync(oferta, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Ofertas.AddAsync(oferta, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var dto = MapToDto(oferta);
-        return Result<OfertaDto>.Success(dto);
+            _logger.LogInformation("Oferta creada exitosamente. ID: {Id}", oferta.Id);
+
+            var dto = MapToDto(oferta);
+            return Result<OfertaDto>.Success(dto);
+        }
+        catch (BusinessRuleViolationException ex)
+        {
+            _logger.LogWarning("Error de regla de negocio al crear oferta: {Message}", ex.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al crear oferta. Nombre: {Nombre}", request.Oferta.Nombre);
+            throw new BusinessRuleViolationException($"Error al crear la oferta: {ex.Message}");
+        }
     }
 
     public static OfertaDto MapToDto(Oferta oferta)

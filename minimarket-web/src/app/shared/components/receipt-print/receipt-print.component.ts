@@ -86,7 +86,15 @@ export class ReceiptPrintComponent {
   }
 
   get logoUrl(): string {
-    return 'assets/logo.png'; // Siempre usar el logo de assets
+    // Priorizar logoUrl de BrandSettings si está disponible y es válido
+    if (this.brandSettings?.logoUrl && 
+        this.brandSettings.logoUrl.trim() !== '' && 
+        !this.brandSettings.logoUrl.startsWith('assets/')) {
+      // Si es una URL absoluta (http/https) o ruta de uploads, usarla directamente
+      return this.brandSettings.logoUrl;
+    }
+    // Fallback a assets/logo.png si no hay logoUrl o es assets/logo.png
+    return 'assets/logo.png';
   }
 
   get companyName(): string {

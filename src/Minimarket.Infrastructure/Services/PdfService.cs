@@ -268,8 +268,10 @@ public class PdfService : IPdfService
                 : (!string.IsNullOrWhiteSpace(_configuration["Company:Email"]) 
                     ? _configuration["Company:Email"] 
                     : "");
-            // Siempre usar el logo de assets por defecto
-            var logoUrl = "/assets/logo.png";
+            // Usar logoUrl de BrandSettings si está disponible, sino usar assets/logo.png
+            var logoUrl = !string.IsNullOrWhiteSpace(brandSettings?.LogoUrl) 
+                ? brandSettings.LogoUrl 
+                : "assets/logo.png"; // Sin barra inicial para que funcione con FrontendUrl
             // Usar el color primario de BrandSettings, o un azul por defecto si no existe
             var primaryColor = !string.IsNullOrWhiteSpace(brandSettings?.PrimaryColor) 
                 ? brandSettings.PrimaryColor 
@@ -969,7 +971,10 @@ public class PdfService : IPdfService
                     ? _configuration["Company:Email"]
                     : "");
 
-            var logoUrl = "/assets/logo.png";
+            // Usar logoUrl de BrandSettings si está disponible, sino usar assets/logo.png
+            var logoUrl = !string.IsNullOrWhiteSpace(brandSettings?.LogoUrl) 
+                ? brandSettings.LogoUrl 
+                : "assets/logo.png"; // Sin barra inicial para que funcione con FrontendUrl
             var primaryColor = !string.IsNullOrWhiteSpace(brandSettings?.PrimaryColor)
                 ? brandSettings.PrimaryColor
                 : "#4A90E2";
@@ -1041,21 +1046,22 @@ public class PdfService : IPdfService
             {
                 try
                 {
-                    if (logoUrl.StartsWith("/assets/"))
+                    var normalizedLogoUrl = logoUrl.Replace("\\", "/").TrimStart('/');
+                    if (normalizedLogoUrl.StartsWith("assets/"))
                     {
                         var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                        var normalizedPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                        var localPath = Path.Combine(wwwrootPath, normalizedPath);
+                        var localPath = Path.Combine(wwwrootPath, normalizedLogoUrl);
 
                         if (System.IO.File.Exists(localPath))
                         {
+                            _logger.LogInformation("✅ Logo encontrado localmente en: {LocalPath}", localPath);
                             localLogoPath = localPath;
                         }
                         else
                         {
                             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
-                            var normalizedLogoPath = logoUrl.Replace("\\", "/").TrimStart('/');
-                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoPath}";
+                            var fullLogoUrl = $"{frontendUrl.TrimEnd('/')}/{normalizedLogoUrl}";
+                            _logger.LogInformation("Logo no encontrado localmente, descargando desde: {LogoUrl}", fullLogoUrl);
                             localLogoPath = await DownloadImageToTempFileAsync(fullLogoUrl);
                         }
                     }
@@ -2015,8 +2021,10 @@ public class PdfService : IPdfService
 
             // Descargar logo si existe
             string? localLogoPath = null;
-            // Siempre usar el logo de assets
-            var logoUrl = "/assets/logo.png";
+            // Usar logoUrl de BrandSettings si está disponible, sino usar assets/logo.png
+            var logoUrl = !string.IsNullOrWhiteSpace(brandSettings?.LogoUrl) 
+                ? brandSettings.LogoUrl 
+                : "assets/logo.png"; // Sin barra inicial para que funcione con FrontendUrl
             if (!string.IsNullOrWhiteSpace(logoUrl))
             {
                 try

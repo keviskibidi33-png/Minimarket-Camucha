@@ -29,10 +29,15 @@ public class SedesController : ControllerBase
 
             if (!result.Succeeded)
             {
-                return BadRequest(new { message = result.Error, errors = result.Errors });
+                // Si hay un error, pero es un error de procesamiento interno, devolver 500
+                // Solo devolver 400 si el request es realmente inválido
+                // En este caso, si falla obtener sedes, es un error del servidor, no del cliente
+                return StatusCode(500, new { message = result.Error ?? "Error al obtener las sedes", errors = result.Errors });
             }
 
-            return Ok(result.Data);
+            // Si result.Data es null, devolver lista vacía en lugar de null
+            var sedes = result.Data ?? Enumerable.Empty<SedeDto>();
+            return Ok(sedes);
         }
         catch (Exception ex)
         {

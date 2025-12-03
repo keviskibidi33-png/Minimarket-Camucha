@@ -54,12 +54,26 @@ export class SedesComponent implements OnInit {
     this.isLoading.set(true);
     this.sedesService.getAll().subscribe({
       next: (sedes) => {
-        this.sedes.set(sedes);
+        // Asegurar que siempre sea un array, incluso si viene null o undefined
+        this.sedes.set(Array.isArray(sedes) ? sedes : []);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading sedes:', error);
-        this.toastService.error('Error al cargar sedes');
+        
+        // Manejar diferentes tipos de errores
+        let errorMessage = 'Error al cargar sedes';
+        if (error?.status === 400) {
+          errorMessage = error?.error?.message || 'Solicitud inválida al cargar sedes';
+        } else if (error?.status === 500) {
+          errorMessage = error?.error?.message || 'Error del servidor al cargar sedes';
+        } else if (error?.status === 0) {
+          errorMessage = 'No se pudo conectar con el servidor';
+        }
+        
+        this.toastService.error(errorMessage);
+        // Establecer lista vacía en caso de error para evitar que el componente se rompa
+        this.sedes.set([]);
         this.isLoading.set(false);
       }
     });

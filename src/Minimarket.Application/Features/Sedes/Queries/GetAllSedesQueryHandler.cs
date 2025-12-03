@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Minimarket.Application.Common.Models;
 using Minimarket.Application.Features.Sedes.DTOs;
 using Minimarket.Domain.Interfaces;
@@ -8,31 +9,51 @@ namespace Minimarket.Application.Features.Sedes.Queries;
 public class GetAllSedesQueryHandler : IRequestHandler<GetAllSedesQuery, Result<IEnumerable<SedeDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<GetAllSedesQueryHandler> _logger;
 
-    public GetAllSedesQueryHandler(IUnitOfWork unitOfWork)
+    public GetAllSedesQueryHandler(IUnitOfWork unitOfWork, ILogger<GetAllSedesQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<IEnumerable<SedeDto>>> Handle(GetAllSedesQuery request, CancellationToken cancellationToken)
     {
         try
         {
+            _logger.LogInformation("Obteniendo todas las sedes. SoloActivas: {SoloActivas}", request.SoloActivas);
+
             var sedes = await _unitOfWork.Sedes.GetAllAsync(cancellationToken);
+            _logger.LogInformation("Se encontraron {Count} sedes en la base de datos", sedes?.Count() ?? 0);
 
             var filtered = request.SoloActivas.HasValue && request.SoloActivas.Value
                 ? sedes.Where(s => s.Estado)
                 : sedes;
 
-            var result = filtered
-                .Select(s => MapToDto(s))
-                .OrderBy(s => s.Nombre)
-                .ToList();
+            // Mapear sedes con manejo de errores individual para cada una
+            var result = new List<SedeDto>();
+            foreach (var sede in filtered)
+            {
+                try
+                {
+                    var dto = MapToDto(sede);
+                    result.Add(dto);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error al mapear la sede {SedeId} ({SedeNombre}), se omitirá", sede.Id, sede.Nombre);
+                    // Continuar con las demás sedes en lugar de fallar completamente
+                }
+            }
 
-            return Result<IEnumerable<SedeDto>>.Success(result);
+            var orderedResult = result.OrderBy(s => s.Nombre).ToList();
+            _logger.LogInformation("Se retornarán {Count} sedes mapeadas correctamente", orderedResult.Count);
+
+            return Result<IEnumerable<SedeDto>>.Success(orderedResult);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error crítico al obtener las sedes");
             return Result<IEnumerable<SedeDto>>.Failure($"Error al obtener las sedes: {ex.Message}");
         }
     }

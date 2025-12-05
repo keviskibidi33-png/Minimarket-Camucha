@@ -24,7 +24,7 @@ RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --no-restore
 # Publish stage
 FROM build AS publish
 WORKDIR "/src/Minimarket.API"
-RUN dotnet publish "Minimarket.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-build
+RUN dotnet publish "Minimarket.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final

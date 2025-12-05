@@ -12,11 +12,15 @@ COPY ["Minimarket.Infrastructure/Minimarket.Infrastructure.csproj", "Minimarket.
 RUN dotnet restore "Minimarket.API/Minimarket.API.csproj"
 
 # Copy source code (exclude build artifacts via .dockerignore)
-COPY . .
+# Copy each project directory separately to avoid overwriting issues
+COPY ["Minimarket.API/", "Minimarket.API/"]
+COPY ["Minimarket.Application/", "Minimarket.Application/"]
+COPY ["Minimarket.Domain/", "Minimarket.Domain/"]
+COPY ["Minimarket.Infrastructure/", "Minimarket.Infrastructure/"]
 
-# Build the project (remove --no-restore to ensure all dependencies are available)
+# Build the project
 WORKDIR "/src/Minimarket.API"
-RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build
+RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --no-restore
 
 # Publish stage
 FROM build AS publish

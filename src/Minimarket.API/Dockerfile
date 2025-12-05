@@ -14,9 +14,9 @@ RUN dotnet restore "Minimarket.API/Minimarket.API.csproj"
 # Copy source code (exclude build artifacts via .dockerignore)
 COPY . .
 
-# Build the project
+# Build the project (remove --no-restore to ensure all dependencies are available)
 WORKDIR "/src/Minimarket.API"
-RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --no-restore
+RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish

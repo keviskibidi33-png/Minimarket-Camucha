@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
+# Copy solution and project files first (for better layer caching)
 COPY ["Minimarket.API/Minimarket.API.csproj", "Minimarket.API/"]
 COPY ["Minimarket.Application/Minimarket.Application.csproj", "Minimarket.Application/"]
 COPY ["Minimarket.Domain/Minimarket.Domain.csproj", "Minimarket.Domain/"]
@@ -11,14 +11,20 @@ COPY ["Minimarket.Infrastructure/Minimarket.Infrastructure.csproj", "Minimarket.
 # Restore dependencies
 RUN dotnet restore "Minimarket.API/Minimarket.API.csproj"
 
-# Copy everything else and build
-COPY . .
+# Copy source code (exclude build artifacts)
+COPY ["Minimarket.API/", "Minimarket.API/"]
+COPY ["Minimarket.Application/", "Minimarket.Application/"]
+COPY ["Minimarket.Domain/", "Minimarket.Domain/"]
+COPY ["Minimarket.Infrastructure/", "Minimarket.Infrastructure/"]
+
+# Build the project
 WORKDIR "/src/Minimarket.API"
-RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build
+RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --no-restore
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "Minimarket.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+WORKDIR "/src/Minimarket.API"
+RUN dotnet publish "Minimarket.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-build
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final

@@ -1,0 +1,57 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio / Rider
+**/.vs/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.sln.docstates
+
+# Test results
+**/TestResults/
+**/test-results/
+
+# Logs
+**/logs/
+**/*.log
+
+# Node modules (if any)
+**/node_modules/
+**/package-lock.json
+
+# NuGet packages
+**/packages/
+**/*.nupkg
+
+# Temporary files
+**/tmp/
+**/temp/
+**/*.tmp
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Git
+**/.git/
+**/.gitignore
+
+# Docker
+**/Dockerfile*
+**/.dockerignore
+
+# IDE
+**/.vscode/
+**/.fleet/
+
+# Database
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Uploads (should be in volume)
+**/wwwroot/uploads/
+

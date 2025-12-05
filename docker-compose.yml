@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   # Backend API (.NET)
-  app:
+  api:
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
@@ -67,8 +67,7 @@ services:
       - ./uploads:/app/wwwroot/uploads
       - ./logs:/app/logs
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - minimarket-network
     healthcheck:
@@ -88,7 +87,7 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - app
+      - api
     networks:
       - minimarket-network
     healthcheck:

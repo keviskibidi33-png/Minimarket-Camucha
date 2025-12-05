@@ -29,10 +29,15 @@ export class ImageUploadComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const currentUrl = this.currentImageUrl();
-    if (currentUrl) {
-      this.previewUrl.set(currentUrl);
-      this.uploadedUrl.set(currentUrl);
+    try {
+      const currentUrl = this.currentImageUrl();
+      if (currentUrl) {
+        this.previewUrl.set(currentUrl);
+        this.uploadedUrl.set(currentUrl);
+      }
+    } catch (error) {
+      console.error('Error en ngOnInit de ImageUploadComponent:', error);
+      // No lanzar el error, solo loguearlo para evitar NG0203
     }
   }
 
@@ -147,6 +152,16 @@ export class ImageUploadComponent implements OnInit {
     const input = document.getElementById('file-input') as HTMLInputElement;
     if (input) {
       input.value = '';
+    }
+  }
+
+  onImageError(): void {
+    // Si la imagen falla al cargar, intentar usar la URL temporal si existe
+    if (this.tempPreviewUrl()) {
+      this.previewUrl.set(this.tempPreviewUrl()!);
+    } else {
+      // Si no hay preview temporal, limpiar
+      console.warn('Error al cargar imagen:', this.previewUrl());
     }
   }
 }

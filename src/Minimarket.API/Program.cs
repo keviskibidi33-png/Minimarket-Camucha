@@ -354,8 +354,12 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
         // Cache para archivos estáticos
         ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000");
+        // Log para debugging
+        var logger = ctx.Context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Serving static file: {Path}", ctx.Context.Request.Path);
     },
-    ServeUnknownFileTypes = true // Permitir servir cualquier tipo de archivo
+    ServeUnknownFileTypes = true, // Permitir servir cualquier tipo de archivo
+    DefaultContentType = "application/octet-stream" // Tipo por defecto si no se puede determinar
 });
 
 // CORS - Usar política permisiva en desarrollo, específica en producción

@@ -5,6 +5,7 @@
       <img 
         [src]="previewUrl()" 
         alt="Preview"
+        (error)="onImageError()"
         class="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
       <button
         (click)="removeImage()"

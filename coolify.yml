@@ -1,51 +1,22 @@
 # Coolify Configuration File para Verpex/Coolify con Traefik
-# Este archivo es usado por Coolify cuando Build Pack = Docker Compose
-# IMPORTANTE: Coolify usa este archivo, NO docker-compose.yml
+# Este archivo es usado por Coolify para desplegar la aplicación
 
 version: '3.8'
 
 services:
-  # SQL Server 2022 Database
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: unless-stopped
-    user: root
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
-      - MSSQL_PID=Express
-    # No exponer puerto públicamente - solo comunicación interna
-    expose:
-      - "1433"
-    volumes:
-      - db_data:/var/opt/mssql/data
-      - db_log:/var/opt/mssql/log
-      - db_secrets:/var/opt/mssql/secrets
-    healthcheck:
-      # Health check simple: verificar que SQL Server esté escuchando en el puerto 1433
-      # SQL Server tarda ~30-60 segundos en iniciar completamente
-      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/1433' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
   # Backend API Service (.NET Core)
   api:
     image: ${DOCKER_REGISTRY}/minimarket-api:${VERSION:-latest}
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
-    restart: unless-stopped
     # Servicio interno - no necesita puerto público
     expose:
       - "5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      # Conexión interna directa al servicio 'db'
-      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=${DB_NAME:-MinimarketDB};User Id=${DB_USER:-SA};Password=${DB_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Connection Timeout=30;
-      # JWT Settings
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-MinimarketAPI}
       - JwtSettings__Audience=${JWT_AUDIENCE:-MinimarketWeb}
@@ -69,15 +40,13 @@ services:
     volumes:
       - uploads:/app/wwwroot/uploads
       - logs:/app/logs
-    depends_on:
-      db:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
 
   # Frontend Service (Angular + Nginx)
   web:
@@ -87,7 +56,6 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    restart: unless-stopped
     # CRÍTICO: En Coolify NO usar ports: - Traefik maneja el puerto 80 externamente
     # Usamos expose: para que Traefik pueda enrutar internamente usando las labels
     expose:
@@ -95,34 +63,31 @@ services:
     depends_on:
       - api
     # Labels de Traefik para SSL automático y enrutamiento
-    # IMPORTANTE: Usar nombre único 'minimarket' para evitar conflictos con Coolify
     labels:
       # Habilitar Traefik para este servicio
       - "traefik.enable=true"
       # Redirección HTTP → HTTPS (entrypoint web)
-      - "traefik.http.routers.minimarket-http.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.minimarket-http.entrypoints=web"
-      - "traefik.http.routers.minimarket-http.middlewares=minimarket-https-redirect"
-      # Middleware para redirección HTTP → HTTPS
-      - "traefik.http.middlewares.minimarket-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.minimarket-https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web-http.entrypoints=web"
+      - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
       # Configuración HTTPS (entrypoint websecure)
-      - "traefik.http.routers.minimarket.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.minimarket.entrypoints=websecure"
-      - "traefik.http.routers.minimarket.tls=true"
-      - "traefik.http.routers.minimarket.tls.certresolver=letsencrypt"
-      # Puerto del servicio interno (CRÍTICO: debe coincidir con el puerto que expone el contenedor)
-      - "traefik.http.services.minimarket.loadbalancer.server.port=80"
+      - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=myresolver"
+      - "traefik.http.routers.web.tls=true"
+      # Middleware para redirección HTTP → HTTPS
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
+      # Puerto del servicio
+      - "traefik.http.services.web.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
+    restart: unless-stopped
 
 volumes:
-  db_data:
-  db_log:
-  db_secrets:
   uploads:
   logs:

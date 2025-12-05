@@ -11,11 +11,8 @@ COPY ["Minimarket.Infrastructure/Minimarket.Infrastructure.csproj", "Minimarket.
 # Restore dependencies
 RUN dotnet restore "Minimarket.API/Minimarket.API.csproj"
 
-# Copy source code (exclude build artifacts)
-COPY ["Minimarket.API/", "Minimarket.API/"]
-COPY ["Minimarket.Application/", "Minimarket.Application/"]
-COPY ["Minimarket.Domain/", "Minimarket.Domain/"]
-COPY ["Minimarket.Infrastructure/", "Minimarket.Infrastructure/"]
+# Copy source code (exclude build artifacts via .dockerignore)
+COPY . .
 
 # Build the project
 WORKDIR "/src/Minimarket.API"

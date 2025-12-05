@@ -5,6 +5,27 @@
 version: '3.8'
 
 services:
+  # SQL Server 2022 Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+      - MSSQL_PID=Express
+    expose:
+      - "1433"
+    volumes:
+      - db_data:/var/opt/mssql/data
+      - db_log:/var/opt/mssql/log
+      - db_secrets:/var/opt/mssql/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/1433' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
   # Backend API Service (.NET Core)
   api:
     image: ${DOCKER_REGISTRY}/minimarket-api:${VERSION:-latest}
@@ -37,6 +58,9 @@ services:
     volumes:
       - uploads:/app/wwwroot/uploads
       - logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
@@ -59,16 +83,20 @@ services:
       - api
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.web-http.entrypoints=web"
-      - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
-      - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.web.entrypoints=websecure"
-      - "traefik.http.routers.web.tls=true"
-      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
-      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
-      - "traefik.http.services.web.loadbalancer.server.port=80"
+      # Redirección HTTP → HTTPS (entrypoint web)
+      - "traefik.http.routers.minimarket-http.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.minimarket-http.entrypoints=web"
+      - "traefik.http.routers.minimarket-http.middlewares=minimarket-https-redirect"
+      # Middleware para redirección HTTP → HTTPS
+      - "traefik.http.middlewares.minimarket-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.minimarket-https-redirect.redirectscheme.permanent=true"
+      # Configuración HTTPS (entrypoint websecure)
+      - "traefik.http.routers.minimarket.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.minimarket.entrypoints=websecure"
+      - "traefik.http.routers.minimarket.tls=true"
+      - "traefik.http.routers.minimarket.tls.certresolver=letsencrypt"
+      # Puerto del servicio
+      - "traefik.http.services.minimarket.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -78,5 +106,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  db_data:
+  db_log:
+  db_secrets:
   uploads:
   logs:

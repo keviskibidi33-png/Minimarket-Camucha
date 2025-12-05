@@ -34,8 +34,10 @@ WORKDIR /app
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Create directories for logs and uploads
-RUN mkdir -p /app/logs /app/wwwroot/uploads
+# Create directories for logs and uploads with proper permissions
+RUN mkdir -p /app/logs /app/wwwroot/uploads && \
+    chmod -R 755 /app/wwwroot/uploads && \
+    chmod -R 755 /app/logs
 
 # Copy published app
 COPY --from=publish /app/publish .

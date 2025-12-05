@@ -42,7 +42,7 @@ public class FileStorageService : IFileStorageService
         }
 
         // Crear subdirectorios comunes
-        var commonFolders = new[] { "products", "sedes", "payment-qr", "banners", "general" };
+        var commonFolders = new[] { "products", "sedes", "payment-qr", "banners", "categories", "general" };
         foreach (var folder in commonFolders)
         {
             var folderPath = Path.Combine(_uploadsPath, folder);

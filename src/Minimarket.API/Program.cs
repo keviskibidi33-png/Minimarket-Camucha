@@ -314,6 +314,17 @@ if (!Directory.Exists(uploadsPath))
     Directory.CreateDirectory(Path.Combine(uploadsPath, "payment-qr"));
     Directory.CreateDirectory(Path.Combine(uploadsPath, "categories"));
     Directory.CreateDirectory(Path.Combine(uploadsPath, "banners"));
+    Directory.CreateDirectory(Path.Combine(uploadsPath, "sedes"));
+}
+// Asegurar que los subdirectorios existan incluso si el directorio principal ya existe
+var subdirectories = new[] { "products", "payment-qr", "categories", "banners", "sedes" };
+foreach (var subdir in subdirectories)
+{
+    var subdirPath = Path.Combine(uploadsPath, subdir);
+    if (!Directory.Exists(subdirPath))
+    {
+        Directory.CreateDirectory(subdirPath);
+    }
 }
 
 app.UseStaticFiles(new StaticFileOptions

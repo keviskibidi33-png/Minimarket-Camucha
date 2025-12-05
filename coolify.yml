@@ -56,9 +56,9 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    # No exponer puertos aquí - Coolify los gestiona automáticamente
-    expose:
-      - "80"
+    # Verpex/Coolify necesita que el servicio principal exponga el puerto 80
+    ports:
+      - "80:80"
     depends_on:
       - api
     healthcheck:

@@ -20,7 +20,7 @@ COPY ["Minimarket.Infrastructure/", "Minimarket.Infrastructure/"]
 
 # Build the project
 WORKDIR "/src/Minimarket.API"
-RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --no-restore || dotnet build "Minimarket.API.csproj" -c Release -o /app/build
+RUN dotnet build "Minimarket.API.csproj" -c Release -o /app/build --verbosity normal
 
 # Publish stage
 FROM build AS publish

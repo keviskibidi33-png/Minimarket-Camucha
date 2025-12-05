@@ -34,15 +34,15 @@ RUN mkdir -p /app/logs /app/wwwroot/uploads
 COPY --from=publish /app/publish .
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:5000/health || exit 1
 
 # Run the app
 ENTRYPOINT ["dotnet", "Minimarket.API.dll"]

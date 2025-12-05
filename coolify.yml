@@ -1,6 +1,6 @@
 # Coolify Configuration File para Verpex/Coolify con Traefik
-# Este archivo es usado por Coolify para desplegar la aplicación
-# IMPORTANTE: Coolify usa este archivo cuando Build Pack = Docker Compose
+# Este archivo es usado por Coolify cuando Build Pack = Docker Compose
+# IMPORTANTE: Coolify usa este archivo, NO docker-compose.yml
 
 version: '3.8'
 
@@ -8,7 +8,6 @@ services:
   # SQL Server 2022 Database
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: minimarket-db
     restart: unless-stopped
     user: root
     environment:
@@ -22,8 +21,6 @@ services:
       - db_data:/var/opt/mssql/data
       - db_log:/var/opt/mssql/log
       - db_secrets:/var/opt/mssql/secrets
-    networks:
-      - minimarket-network
     healthcheck:
       # Health check simple: verificar que SQL Server esté escuchando en el puerto 1433
       # SQL Server tarda ~30-60 segundos en iniciar completamente
@@ -39,7 +36,6 @@ services:
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
-    container_name: minimarket-api
     restart: unless-stopped
     # Servicio interno - no necesita puerto público
     expose:
@@ -76,15 +72,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - minimarket-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    restart: unless-stopped
 
   # Frontend Service (Angular + Nginx)
   web:
@@ -94,7 +87,6 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    container_name: minimarket-web
     restart: unless-stopped
     # CRÍTICO: En Coolify NO usar ports: - Traefik maneja el puerto 80 externamente
     # Usamos expose: para que Traefik pueda enrutar internamente usando las labels
@@ -102,9 +94,8 @@ services:
       - "80"
     depends_on:
       - api
-    networks:
-      - minimarket-network
     # Labels de Traefik para SSL automático y enrutamiento
+    # IMPORTANTE: Usar nombre único 'minimarket' para evitar conflictos con Coolify
     labels:
       # Habilitar Traefik para este servicio
       - "traefik.enable=true"
@@ -120,7 +111,7 @@ services:
       - "traefik.http.routers.minimarket.entrypoints=websecure"
       - "traefik.http.routers.minimarket.tls=true"
       - "traefik.http.routers.minimarket.tls.certresolver=letsencrypt"
-      # Puerto del servicio interno
+      # Puerto del servicio interno (CRÍTICO: debe coincidir con el puerto que expone el contenedor)
       - "traefik.http.services.minimarket.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -128,20 +119,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    restart: unless-stopped
 
 volumes:
   db_data:
-    driver: local
   db_log:
-    driver: local
   db_secrets:
-    driver: local
   uploads:
-    driver: local
   logs:
-    driver: local
-
-networks:
-  minimarket-network:
-    driver: bridge

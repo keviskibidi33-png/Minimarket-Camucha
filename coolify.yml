@@ -56,10 +56,10 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    # CRÍTICO: Verpex/Coolify necesita que el servicio principal exponga el puerto 80
-    # Nginx corre en puerto 80 interno, mapeamos 80:80 para que Traefik lo detecte
-    ports:
-      - "80:80"
+    # CRÍTICO: En Coolify NO usar ports: - Traefik maneja el puerto 80 externamente
+    # Usamos expose: para que Traefik pueda enrutar internamente usando las labels
+    expose:
+      - "80"
     depends_on:
       - api
     # Labels de Traefik para SSL automático y enrutamiento

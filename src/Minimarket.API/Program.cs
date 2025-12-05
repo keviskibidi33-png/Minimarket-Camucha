@@ -203,28 +203,55 @@ builder.Services.AddAuthentication(options =>
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
     ?? new[] { "http://localhost:4200" };
 
-// Agregar orígenes de producción si no están en la configuración
-var productionOrigins = new[]
-{
-    "https://minimarket.edvio.app",
-    "https://api-minimarket.edvio.app"
-};
-
-var allOrigins = allowedOrigins
-    .Concat(productionOrigins)
-    .Distinct()
-    .ToArray();
+// En producción, usar solo los orígenes configurados en variables de entorno
+// En desarrollo, permitir localhost por defecto
+var allOrigins = allowedOrigins;
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins(allOrigins)
-             .AllowAnyHeader()
-             .AllowAnyMethod()
-             .AllowCredentials()
-             .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight requests
+        // Permitir orígenes específicos y cualquier dominio de ngrok
+        policy.SetIsOriginAllowed(origin => 
+        {
+            // Permitir localhost para desarrollo (cualquier puerto)
+            if (origin.StartsWith("http://localhost") || 
+                origin.StartsWith("https://localhost") ||
+                origin.StartsWith("http://127.0.0.1") ||
+                origin.StartsWith("https://127.0.0.1"))
+                return true;
+            
+            // Permitir orígenes de producción configurados
+            if (allOrigins.Contains(origin))
+                return true;
+            
+            // Permitir cualquier dominio de ngrok (para desarrollo con ngrok)
+            if (origin.Contains(".ngrok-free.dev") || 
+                origin.Contains(".ngrok.io") || 
+                origin.Contains(".ngrok.app") ||
+                origin.Contains("ngrok-free.app") ||
+                origin.Contains("ngrok.dev"))
+                return true;
+            
+            return false;
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()
+        .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight requests
     });
+    
+    // Política adicional para permitir cualquier origen (solo para desarrollo/ngrok)
+    // Esto es más permisivo y útil cuando se usa ngrok con URLs dinámicas
+    if (builder.Environment.IsDevelopment())
+    {
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+    }
 });
 
 // Authorization con permisos granulares
@@ -286,7 +313,15 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-app.UseCors("FrontendPolicy");
+// CORS - Usar política permisiva en desarrollo, específica en producción
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("AllowAll"); // Más permisivo para desarrollo/ngrok
+}
+else
+{
+    app.UseCors("FrontendPolicy"); // Política específica para producción
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -334,6 +369,26 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 });
 
 app.MapControllers();
+
+// Servir frontend Angular compilado (solo si existe)
+// Esto permite que backend y frontend funcionen en el mismo puerto
+var frontendPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "minimarket-web", "dist", "minimarket-web", "browser");
+if (Directory.Exists(frontendPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(frontendPath),
+        RequestPath = ""
+    });
+    
+    // Fallback para SPA routing - todas las rutas que no sean API devuelven index.html
+    // IMPORTANTE: Esto debe ir DESPUÉS de MapControllers para que las rutas /api/* tengan prioridad
+    // También debe ir ANTES de app.Run() pero DESPUÉS de todas las rutas de API
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(frontendPath)
+    });
+}
 
 // Seed database on startup
 await app.SeedDatabaseAsync();

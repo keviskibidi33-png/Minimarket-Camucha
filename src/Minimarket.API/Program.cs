@@ -354,7 +354,8 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
         // Cache para archivos estáticos
         ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000");
-    }
+    },
+    ServeUnknownFileTypes = true // Permitir servir cualquier tipo de archivo
 });
 
 // CORS - Usar política permisiva en desarrollo, específica en producción

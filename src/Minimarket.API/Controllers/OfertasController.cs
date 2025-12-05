@@ -144,7 +144,15 @@ public class OfertasController : ControllerBase
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Error al crear oferta: {Error}", result.Error);
-                return BadRequest(result);
+                // Si es un error de validación de negocio, devolver 400
+                // Si es un error interno (excepción), devolver 500
+                if (result.Error?.Contains("Error al crear") == true || 
+                    result.Error?.Contains("Exception") == true ||
+                    result.Error?.Contains("excepción") == true)
+                {
+                    return StatusCode(500, new { message = result.Error ?? "Error interno al crear la oferta", errors = result.Errors });
+                }
+                return BadRequest(new { message = result.Error, errors = result.Errors });
             }
 
             _logger.LogInformation("Oferta creada exitosamente. ID: {Id}", result.Data?.Id);

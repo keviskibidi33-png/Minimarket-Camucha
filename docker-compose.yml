@@ -101,19 +101,19 @@ services:
       # Habilitar Traefik para este servicio
       - "traefik.enable=true"
       # Redirección HTTP → HTTPS (entrypoint web)
-      - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.web-http.entrypoints=web"
-      - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
+      - "traefik.http.routers.minimarket-http.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.minimarket-http.entrypoints=web"
+      - "traefik.http.routers.minimarket-http.middlewares=minimarket-to-https-redirect"
       # Configuración HTTPS (entrypoint websecure)
-      - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
-      - "traefik.http.routers.web.entrypoints=websecure"
-      - "traefik.http.routers.web.tls.certresolver=myresolver"
-      - "traefik.http.routers.web.tls=true"
+      - "traefik.http.routers.minimarket.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.minimarket.entrypoints=websecure"
+      - "traefik.http.routers.minimarket.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minimarket.tls=true"
       # Middleware para redirección HTTP → HTTPS
-      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.minimarket-to-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.minimarket-to-https-redirect.redirectscheme.permanent=true"
       # Puerto del servicio
-      - "traefik.http.services.web.loadbalancer.server.port=80"
+      - "traefik.http.services.minimarket.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s

@@ -1,5 +1,6 @@
-# Coolify Configuration File para Verpex/Coolify con Traefik
-# Este archivo es usado por Coolify para desplegar la aplicación
+# Coolify Configuration File - Producción
+# Este archivo es usado por Coolify para desplegar la aplicación en producción
+# Documentación: https://coolify.io/docs
 
 version: '3.8'
 
@@ -10,7 +11,6 @@ services:
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
-    # Servicio interno - no necesita puerto público
     expose:
       - "5000"
     environment:
@@ -20,7 +20,6 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-MinimarketAPI}
       - JwtSettings__Audience=${JWT_AUDIENCE:-MinimarketWeb}
-      # Email Settings - Valores por defecto (pueden sobrescribirse en Coolify)
       - EmailSettings__SmtpServer=${SMTP_SERVER:-smtp.gmail.com}
       - EmailSettings__SmtpPort=${SMTP_PORT:-587}
       - EmailSettings__SmtpUser=${SMTP_USER:-minimarket.camucha@gmail.com}
@@ -29,11 +28,9 @@ services:
       - EmailSettings__FromName=${FROM_NAME:-Minimarket Camucha}
       - EmailSettings__ApiKey=${RESEND_API_KEY:-}
       - EmailSettings__ApiUrl=https://api.resend.com/emails
-      # URLs - Configurar en Coolify (obligatorias)
       - BaseUrl=${BASE_URL}
       - FrontendUrl=${FRONTEND_URL}
       - Cors__AllowedOrigins=${CORS_ORIGINS}
-      # Google OAuth - Valores por defecto (pueden sobrescribirse en Coolify)
       - GoogleOAuth__ClientId=${GOOGLE_CLIENT_ID:-259590059487-5k8bk2sor6r9oa02pojkhj5nrd8c9h2e.apps.googleusercontent.com}
       - GoogleOAuth__ClientSecret=${GOOGLE_CLIENT_SECRET:-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}
       - GoogleOAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
@@ -56,36 +53,28 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    # CRÍTICO: En Coolify NO usar ports: - Traefik maneja el puerto 80 externamente
-    # Usamos expose: para que Traefik pueda enrutar internamente usando las labels
     expose:
       - "80"
     depends_on:
       - api
-    # Labels de Traefik para SSL automático y enrutamiento
     labels:
-      # Habilitar Traefik para este servicio
       - "traefik.enable=true"
-      # Redirección HTTP → HTTPS (entrypoint web)
       - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
       - "traefik.http.routers.web-http.entrypoints=web"
       - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
-      # Configuración HTTPS (entrypoint websecure)
       - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
       - "traefik.http.routers.web.entrypoints=websecure"
-      - "traefik.http.routers.web.tls.certresolver=myresolver"
       - "traefik.http.routers.web.tls=true"
-      # Middleware para redirección HTTP → HTTPS
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
       - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
-      # Puerto del servicio
       - "traefik.http.services.web.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

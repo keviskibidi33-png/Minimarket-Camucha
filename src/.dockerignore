@@ -39,8 +39,7 @@
 **/.git/
 **/.gitignore
 
-# Docker
-**/Dockerfile*
+# Docker (keep Dockerfile in Minimarket.API)
 **/.dockerignore
 
 # IDE

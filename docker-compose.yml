@@ -21,11 +21,14 @@ services:
     networks:
       - minimarket-network
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P ${DB_PASSWORD} -Q 'SELECT 1' || exit 1"]
+      # Health check simple: verificar que SQL Server esté escuchando en el puerto 1433
+      # SQL Server tarda ~30-60 segundos en iniciar completamente
+      # Usamos un comando simple que verifica que el puerto esté abierto
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/1433' || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
 
   # Backend API (.NET Core)
   api:

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Minimarket.Application.Features.Pages.Commands;
 using Minimarket.Application.Features.Pages.Queries;
+using Minimarket.Application.Features.Pages.DTOs;
+using System.Linq;
 
 namespace Minimarket.API.Controllers;
 
@@ -33,16 +35,16 @@ public class PagesController : ControllerBase
             {
                 // En lugar de BadRequest, devolver lista vacía para evitar errores 500 en frontend
                 _logger.LogWarning("Error al obtener páginas: {Error}", result.Error);
-                return Ok(result.Data ?? Array.Empty<object>());
+                return Ok(result.Data ?? Enumerable.Empty<PageDto>());
             }
 
-            return Ok(result.Data ?? Array.Empty<object>());
+            return Ok(result.Data ?? Enumerable.Empty<PageDto>());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Excepción al obtener páginas");
             // Devolver lista vacía en lugar de 500 para evitar errores en frontend
-            return Ok(Array.Empty<object>());
+            return Ok(Enumerable.Empty<PageDto>());
         }
     }
 

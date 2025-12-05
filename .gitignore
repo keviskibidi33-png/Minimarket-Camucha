@@ -111,6 +111,14 @@ _ReSharper*/
 .env
 .env.local
 
+# Local configuration files (ngrok, local settings)
+ngrok-config.yml
+start-ngrok.ps1
+*.local.ts
+*.Local.json
+appsettings.Local.json
+environment.local.ts
+
 # Test results and reports
 test-results/
 playwright-report/

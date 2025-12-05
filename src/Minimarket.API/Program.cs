@@ -211,7 +211,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        // Permitir orígenes específicos y cualquier dominio de ngrok
+        // Permitir orígenes específicos configurados
         policy.SetIsOriginAllowed(origin => 
         {
             // Permitir localhost para desarrollo (cualquier puerto)
@@ -225,14 +225,6 @@ builder.Services.AddCors(options =>
             if (allOrigins.Contains(origin))
                 return true;
             
-            // Permitir cualquier dominio de ngrok (para desarrollo con ngrok)
-            if (origin.Contains(".ngrok-free.dev") || 
-                origin.Contains(".ngrok.io") || 
-                origin.Contains(".ngrok.app") ||
-                origin.Contains("ngrok-free.app") ||
-                origin.Contains("ngrok.dev"))
-                return true;
-            
             return false;
         })
         .AllowAnyHeader()
@@ -241,8 +233,7 @@ builder.Services.AddCors(options =>
         .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight requests
     });
     
-    // Política adicional para permitir cualquier origen (solo para desarrollo/ngrok)
-    // Esto es más permisivo y útil cuando se usa ngrok con URLs dinámicas
+    // Política adicional para desarrollo (más permisiva)
     if (builder.Environment.IsDevelopment())
     {
         options.AddPolicy("AllowAll", policy =>
@@ -316,7 +307,7 @@ app.UseStaticFiles(new StaticFileOptions
 // CORS - Usar política permisiva en desarrollo, específica en producción
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors("AllowAll"); // Más permisivo para desarrollo/ngrok
+    app.UseCors("AllowAll"); // Más permisivo para desarrollo
 }
 else
 {

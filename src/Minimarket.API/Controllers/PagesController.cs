@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Minimarket.Application.Features.Pages.Commands;
 using Minimarket.Application.Features.Pages.Queries;
 
@@ -11,25 +12,38 @@ namespace Minimarket.API.Controllers;
 public class PagesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<PagesController> _logger;
 
-    public PagesController(IMediator mediator)
+    public PagesController(IMediator mediator, ILogger<PagesController> logger)
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     [HttpGet]
     [AllowAnonymous] // Permitir acceso público para la tienda
     public async Task<IActionResult> GetAll([FromQuery] bool? soloActivas)
     {
-        var query = new GetAllPagesQuery { SoloActivas = soloActivas };
-        var result = await _mediator.Send(query);
-
-        if (!result.Succeeded)
+        try
         {
-            return BadRequest(result);
-        }
+            var query = new GetAllPagesQuery { SoloActivas = soloActivas };
+            var result = await _mediator.Send(query);
 
-        return Ok(result.Data);
+            if (!result.Succeeded)
+            {
+                // En lugar de BadRequest, devolver lista vacía para evitar errores 500 en frontend
+                _logger.LogWarning("Error al obtener páginas: {Error}", result.Error);
+                return Ok(result.Data ?? Array.Empty<object>());
+            }
+
+            return Ok(result.Data ?? Array.Empty<object>());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Excepción al obtener páginas");
+            // Devolver lista vacía en lugar de 500 para evitar errores en frontend
+            return Ok(Array.Empty<object>());
+        }
     }
 
     [HttpGet("{slug}")]

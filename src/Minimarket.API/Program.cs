@@ -221,9 +221,23 @@ builder.Services.AddCors(options =>
                 origin.StartsWith("https://127.0.0.1"))
                 return true;
             
-            // Permitir orígenes de producción configurados
-            if (allOrigins.Contains(origin))
+            // Permitir orígenes de producción configurados (comparación case-insensitive)
+            if (allOrigins.Any(o => string.Equals(o, origin, StringComparison.OrdinalIgnoreCase)))
                 return true;
+            
+            // Permitir el dominio de producción si está configurado en BaseUrl o FrontendUrl
+            var baseUrl = builder.Configuration["BaseUrl"] ?? builder.Configuration["FrontendUrl"];
+            if (!string.IsNullOrEmpty(baseUrl))
+            {
+                try
+                {
+                    var uri = new Uri(baseUrl);
+                    var originUri = new Uri(origin);
+                    if (uri.Scheme == originUri.Scheme && uri.Host == originUri.Host)
+                        return true;
+                }
+                catch { /* Ignorar errores de parsing */ }
+            }
             
             return false;
         })
@@ -289,11 +303,39 @@ app.UseHttpsRedirection();
 
 // Static files para servir imágenes de templates y uploads
 app.UseStaticFiles();
+
+// Configurar archivos estáticos de uploads con ruta específica
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+    // Crear subdirectorios comunes
+    Directory.CreateDirectory(Path.Combine(uploadsPath, "products"));
+    Directory.CreateDirectory(Path.Combine(uploadsPath, "payment-qr"));
+    Directory.CreateDirectory(Path.Combine(uploadsPath, "categories"));
+    Directory.CreateDirectory(Path.Combine(uploadsPath, "banners"));
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
     RequestPath = "",
+    OnPrepareResponse = ctx =>
+    {
+        // Permitir CORS para archivos estáticos (imágenes)
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+        // Cache para archivos estáticos
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000");
+    }
+});
+
+// Configurar ruta específica para /uploads/ con mejor manejo de errores
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads",
     OnPrepareResponse = ctx =>
     {
         // Permitir CORS para archivos estáticos (imágenes)

@@ -68,7 +68,7 @@ public class OfertasController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> Create([FromBody] CreateOfertaRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateOfertaRequest? request)
     {
         try
         {

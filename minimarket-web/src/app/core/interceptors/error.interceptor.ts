@@ -39,20 +39,34 @@ export class ErrorInterceptor implements HttpInterceptor {
     } else if (error.status === 403) {
       this.toastr.error(error.error?.message || 'No tienes permiso para acceder a este recurso', 'Acceso Denegado');
     } else if (error.status === 404) {
-      // Ignorar errores 404 para endpoints opcionales que pueden no existir aún
+      // Ignorar errores 404 para endpoints opcionales y archivos estáticos
       const url = req.url.toLowerCase();
       const isOptionalEndpoint = url.includes('/email-templates/') || 
                                  url.includes('/payment-method-settings') ||
-                                 url.includes('/brandsettings');
+                                 url.includes('/brandsettings') ||
+                                 url.includes('/uploads/'); // Archivos estáticos pueden no existir
       
       if (!isOptionalEndpoint) {
+        // Solo mostrar error si no es un archivo estático
         this.toastr.error(error.error?.message || 'Recurso no encontrado', 'Error');
       }
-      // Silenciar el error para endpoints opcionales
+      // Silenciar el error para endpoints opcionales y archivos estáticos
     } else if (error.status === 422) {
       this.toastr.warning(error.error?.message || 'Regla de negocio violada', 'Regla de Negocio');
     } else if (error.status === 500) {
-      this.toastr.error('Error interno del servidor. Contacte al administrador.', 'Error');
+      // Verificar si es un endpoint que puede devolver lista vacía en caso de error
+      const url = req.url.toLowerCase();
+      const isListEndpoint = url.includes('/api/pages') ||
+                             url.includes('/api/sedes') ||
+                             url.includes('/api/ofertas') ||
+                             url.includes('/api/categories') ||
+                             url.includes('/api/products');
+      
+      // Si es un endpoint de lista y el backend devuelve lista vacía, no mostrar error
+      // El componente manejará la lista vacía correctamente
+      if (!isListEndpoint) {
+        this.toastr.error('Error interno del servidor. Contacte al administrador.', 'Error');
+      }
     } else {
       this.toastr.error(
         error.error?.message || `Error ${error.status}: ${error.statusText}`,

@@ -11,10 +11,9 @@ services:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${DB_PASSWORD}
       - MSSQL_PID=Express
-    # Exponemos el puerto solo si quieres conectar tu SQL Management Studio desde tu PC.
-    # Si no lo necesitas, puedes borrar estas dos líneas de 'ports' por seguridad.
-    ports:
-      - "1433:1433"
+    # No exponer puerto públicamente - solo comunicación interna
+    expose:
+      - "1433"
     volumes:
       - db_data:/var/opt/mssql/data
       - db_log:/var/opt/mssql/log
@@ -22,21 +21,22 @@ services:
     networks:
       - minimarket-network
     healthcheck:
-      test: ["CMD-SHELL", "exit 0"]
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P ${DB_PASSWORD} -Q 'SELECT 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s
 
-  # Backend API (.NET)
+  # Backend API (.NET Core)
   api:
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
     container_name: minimarket-api
     restart: unless-stopped
-    ports:
-      - "5000:5000"
+    # Puerto interno - no se expone públicamente (solo comunicación con web)
+    expose:
+      - "5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
@@ -55,7 +55,7 @@ services:
       - EmailSettings__FromName=${FROM_NAME:-Minimarket Camucha}
       - EmailSettings__ApiKey=${RESEND_API_KEY:-}
       - EmailSettings__ApiUrl=https://api.resend.com/emails
-      # URLs - Configurar en Coolify
+      # URLs - Configurar en Coolify (obligatorias)
       - BaseUrl=${BASE_URL}
       - FrontendUrl=${FRONTEND_URL}
       - Cors__AllowedOrigins=${CORS_ORIGINS}
@@ -64,10 +64,11 @@ services:
       - GoogleOAuth__ClientSecret=${GOOGLE_CLIENT_SECRET:-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}
       - GoogleOAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
     volumes:
-      - ./uploads:/app/wwwroot/uploads
-      - ./logs:/app/logs
+      - uploads:/app/wwwroot/uploads
+      - logs:/app/logs
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - minimarket-network
     healthcheck:
@@ -77,19 +78,39 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend (Angular)
+  # Frontend (Angular + Nginx)
   web:
     build:
       context: ./minimarket-web
       dockerfile: Dockerfile
     container_name: minimarket-web
     restart: unless-stopped
+    # CRÍTICO: Verpex/Coolify necesita que el servicio principal exponga el puerto 80
+    # Nginx corre en puerto 80 interno, mapeamos 80:80 para que Traefik lo detecte
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - api
     networks:
       - minimarket-network
+    # Labels de Traefik para SSL automático y enrutamiento
+    labels:
+      # Habilitar Traefik para este servicio
+      - "traefik.enable=true"
+      # Redirección HTTP → HTTPS (entrypoint web)
+      - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web-http.entrypoints=web"
+      - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
+      # Configuración HTTPS (entrypoint websecure)
+      - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=myresolver"
+      - "traefik.http.routers.web.tls=true"
+      # Middleware para redirección HTTP → HTTPS
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
+      # Puerto del servicio
+      - "traefik.http.services.web.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -103,6 +124,10 @@ volumes:
   db_log:
     driver: local
   db_secrets:
+    driver: local
+  uploads:
+    driver: local
+  logs:
     driver: local
 
 networks:

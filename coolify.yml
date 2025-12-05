@@ -1,16 +1,16 @@
-# Coolify Configuration File
-# Este archivo ayuda a Coolify a entender cómo desplegar tu aplicación
+# Coolify Configuration File para Verpex/Coolify con Traefik
+# Este archivo es usado por Coolify para desplegar la aplicación
 
 version: '3.8'
 
 services:
-  # Backend API Service
+  # Backend API Service (.NET Core)
   api:
     image: ${DOCKER_REGISTRY}/minimarket-api:${VERSION:-latest}
     build:
       context: ./src
       dockerfile: Minimarket.API/Dockerfile
-    # No exponer puertos aquí - Coolify los gestiona automáticamente
+    # Servicio interno - no necesita puerto público
     expose:
       - "5000"
     environment:
@@ -48,7 +48,7 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # Frontend Service
+  # Frontend Service (Angular + Nginx)
   web:
     image: ${DOCKER_REGISTRY}/minimarket-web:${VERSION:-latest}
     build:
@@ -56,11 +56,30 @@ services:
       dockerfile: Dockerfile
       args:
         - API_URL=${API_URL}
-    # Verpex/Coolify necesita que el servicio principal exponga el puerto 80
+    # CRÍTICO: Verpex/Coolify necesita que el servicio principal exponga el puerto 80
+    # Nginx corre en puerto 80 interno, mapeamos 80:80 para que Traefik lo detecte
     ports:
       - "80:80"
     depends_on:
       - api
+    # Labels de Traefik para SSL automático y enrutamiento
+    labels:
+      # Habilitar Traefik para este servicio
+      - "traefik.enable=true"
+      # Redirección HTTP → HTTPS (entrypoint web)
+      - "traefik.http.routers.web-http.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web-http.entrypoints=web"
+      - "traefik.http.routers.web-http.middlewares=web-to-websecure-redirect"
+      # Configuración HTTPS (entrypoint websecure)
+      - "traefik.http.routers.web.rule=Host(`minimarket.edvio.app`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=myresolver"
+      - "traefik.http.routers.web.tls=true"
+      # Middleware para redirección HTTP → HTTPS
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.web-to-websecure-redirect.redirectscheme.permanent=true"
+      # Puerto del servicio
+      - "traefik.http.services.web.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -72,4 +91,3 @@ services:
 volumes:
   uploads:
   logs:
-

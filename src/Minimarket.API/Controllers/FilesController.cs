@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Minimarket.Domain.Interfaces;
 
 namespace Minimarket.API.Controllers;
@@ -112,6 +113,32 @@ public class FilesController : ControllerBase
             _logger.LogError(ex, "Error al eliminar archivo: {FilePath}", filePath);
             return StatusCode(500, new { error = "Error al eliminar el archivo" });
         }
+    }
+
+    // Endpoint temporal para debugging - REMOVER EN PRODUCCIÓN
+    [HttpGet("debug/config")]
+    [AllowAnonymous]
+    public IActionResult GetConfig([FromServices] IConfiguration configuration)
+    {
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        var uploadsExists = Directory.Exists(uploadsPath);
+        var uploadsFiles = uploadsExists 
+            ? Directory.GetFiles(uploadsPath, "*", SearchOption.AllDirectories).Length 
+            : 0;
+
+        return Ok(new
+        {
+            baseUrl = configuration["BaseUrl"],
+            fileStorageBaseUrl = configuration["FileStorage:BaseUrl"],
+            environment = configuration["ASPNETCORE_ENVIRONMENT"],
+            currentDirectory = Directory.GetCurrentDirectory(),
+            uploadsPath = uploadsPath,
+            uploadsExists = uploadsExists,
+            uploadsFilesCount = uploadsFiles,
+            testFileUrl = uploadsExists && uploadsFiles > 0
+                ? _fileStorageService.GetFileUrl("uploads/test/test.png")
+                : "No hay archivos para probar"
+        });
     }
 }
 

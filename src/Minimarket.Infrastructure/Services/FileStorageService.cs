@@ -159,6 +159,12 @@ public class FileStorageService : IFileStorageService
         
         // Construir URL absoluta para archivos subidos
         var url = $"{baseUrl.TrimEnd('/')}/{normalizedPath}";
+        
+        // Log detallado para debugging
+        _logger.LogInformation(
+            "GetFileUrl - Input: {FilePath}, Normalized: {NormalizedPath}, BaseUrl: {BaseUrl}, FinalUrl: {FinalUrl}",
+            filePath, normalizedPath, baseUrl, url);
+        
         return url;
     }
 }

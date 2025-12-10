@@ -21,8 +21,8 @@ COPY . .
 RUN npm run build -- --configuration=production --project=minimarket-web
 
 # Production stage
-# Usar versión específica de nginx para evitar problemas de red
-FROM nginx:1.27-alpine AS final
+# Usar imagen de GitHub Container Registry para evitar timeouts con Docker Hub
+FROM ghcr.io/nginxinc/nginx-unprivileged:1.27-alpine AS final
 
 # Copy built app to nginx
 COPY --from=build /app/dist/minimarket-web/browser /usr/share/nginx/html
